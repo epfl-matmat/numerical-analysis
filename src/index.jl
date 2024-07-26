@@ -29,9 +29,18 @@ md"""
 
 # ╔═╡ d448115a-6857-4082-893b-37549fe83b8b
 md"""
-If you spot an error feel free to make a pull request to the
-[github repository](https://github.com/epfl-matmat/numerical-analysis)
+If you **spot an error** feel free to make a pull request to the
+[**github repository**](https://github.com/epfl-matmat/numerical-analysis)
 generating this website.
+"""
+
+# ╔═╡ 786a2620-1962-4ee2-950c-b47e28d66e99
+md"""
+## EPFL resources
+
+If you are an EPFL student, you can find the following course resources:
+- **Moodle link:** <https://go.epfl.ch/numerical-analysis>
+
 """
 
 # ╔═╡ ebf43572-95f2-401e-aa2e-d7748d3bf639
@@ -468,6 +477,7 @@ version = "17.4.0+2"
 # ╟─a9d71171-dd24-472a-be5f-12619295c4bf
 # ╟─fefc5308-7caf-465a-afc0-b1a6f2e68ba2
 # ╟─d448115a-6857-4082-893b-37549fe83b8b
+# ╟─786a2620-1962-4ee2-950c-b47e28d66e99
 # ╟─ebf43572-95f2-401e-aa2e-d7748d3bf639
 # ╟─7e571edb-6206-4138-863e-5a9d804e07ec
 # ╟─0ccf77bd-0c5d-4c3c-82b5-b25c4adbc3ba
