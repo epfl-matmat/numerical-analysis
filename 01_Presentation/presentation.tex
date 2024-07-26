@@ -1,0 +1,57 @@
+\documentclass[nostatus,
+%aspectratio=1610
+]{MFHpresentation}
+\usepackage{MFHcolours}
+\usepackage{MFHscience}
+\usepackage{MFHabbr}
+\usetikzlibrary{positioning,arrows,backgrounds,fit,calc,tikzmark}
+\usepackage{fontawesome}
+\usepackage{multirow}
+\usepackage{bbold}
+\usepackage{qrcode}
+\usepackage{bm}
+\usepackage{marvosym}
+\usepackage{ifthen}
+\usepackage{transparent}
+
+\usetheme{MFHepfl}
+
+%------------------------------------------------------------------
+
+\newcommand{\matmat}{\raisebox{-0.35em}{\includegraphics[height=1.45em]{img/matmat.png}}\xspace}
+
+%------------------------------------------------------------------
+
+\title{
+    Numerical analysis for MX / EL
+}
+\author{Michael F. Herbst, Cédric Travelletti}
+\date{Spring semester 2024}
+
+\institute{Mathematics for Materials Modelling (\href{https://matmat.org}{\texttt{matmat.org}}), EPFL}
+
+\titlegraphic{
+    \raisebox{0.5em}{
+    \includegraphics[width=0.3\textwidth]{img/EPFLlogo50.pdf}
+    }
+    \qquad
+    \includegraphics[width=0.25\textwidth]{img/matmat.png}
+}
+
+\newcommand{\julia}{\raisebox{-0.21em}{\includegraphics[height=1.2em]{img/julia.pdf}}\xspace}
+
+\begin{document}
+\setbeamerfont{footnote}{size=\tiny}
+
+\showlogotrue
+\begin{frame}[plain]
+ \titlepage
+ \addtocounter{framenumber}{-1}
+\end{frame}
+
+\showlogofalse
+\input{motivation}
+\input{course}
+\input{about_you}
+
+\end{document}
