@@ -52,6 +52,8 @@ jobs:
                 julia -e 'using Pkg
                   Pkg.activate(mktempdir())
                   Pkg.add([
+                    Pkg.PackageSpec(name="Pluto"),
+                    Pkg.PackageSpec(name="PlutoPDF", version="1"),
                     Pkg.PackageSpec(name="PlutoSliderServer", version="0.3.2-0.3"),
                   ])
 
@@ -62,7 +64,10 @@ jobs:
                     Export_baked_notebookfile=false,
                     Export_baked_state=false,
                     # more parameters can go here
-                  )'
+                  )
+
+                  include("to_pdf.jl")
+                  '
 
 
             - name: Deploy to gh-pages
