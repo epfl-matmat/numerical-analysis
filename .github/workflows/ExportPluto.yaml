@@ -52,9 +52,11 @@ jobs:
                 julia -e 'using Pkg
                   Pkg.activate(mktempdir())
                   Pkg.add([
-                    Pkg.PackageSpec(name="PlutoSliderServer", version="0.3.2-0.3"),
+                    Pkg.PackageSpec(name="PlutoPDF", version="1.2.1"),
+                    Pkg.PackageSpec(name="PlutoSliderServer", version="1"),
                   ])
 
+                  import PlutoPDF
                   import PlutoSliderServer
 
                   PlutoSliderServer.github_action("src/.";
@@ -62,7 +64,15 @@ jobs:
                     Export_baked_notebookfile=false,
                     Export_baked_state=false,
                     # more parameters can go here
-                  )'
+                  )
+
+                  notebooks = PlutoSliderServer.find_notebook_files_recursive("src")
+                  for notebook in notebooks
+                      file = joinpath("src", notebook)
+                      println("Converting $file to PDF...")
+                      PlutoPDF.pluto_to_pdf(file; open=false)
+                  end
+                  '
 
 
             - name: Deploy to gh-pages
