@@ -77,14 +77,19 @@ The course is designed with an audience of applied scientists (physics, biology,
 
 # ╔═╡ b1c510c9-4130-4f5e-8d15-3bfaf0a61033
 md"""
-## Literature
-There are a number of excellent numerical analysis textbooks, all of which should cover most of the content we discuss here. Of particular mention are the following resources, which are available freely online:
+## Literature and further reading
 
-* Giray Ökten First Semester Numerical analysis (2023). [Online pdf](https://diginole.lib.fsu.edu/islandora/object/fsu%3A657877/datastream/PDF/view)
+The outline of the course as well as many examples are taken from the excellent lecture notes **"Numerical analysis" by Prof. Fabio Nobile**. A copy of these notes in French as well as English is available [on moodle](https://go.epfl.ch/numerical-analysis).
 
-* MIT's [Introduction to computational thinking](https://computationalthinking.mit.edu/), which introduces Julia as well as its way of solving scientific problems in a hands-on and fun way.
+For further reading and plenty of Julia code examples related to our subjects,
+take a look at the book
+**Fundamentals of Numerical Computation by Tobin A. Driscoll and Richard J. Braun**
+published by SIAM. An online version is further available at [https://tobydriscoll.net/fnc-julia/](https://tobydriscoll.net/fnc-julia/).
+I will also link to this text in the lecture notes from time to time.
 
-* Tobin A. Driscoll, Richard J. Braun *Fundamentals of Numerical Computation*, SIAM (2022). [Web version](https://tobydriscoll.net/fnc-julia/), [FundamentalsNumericalComputation.jl](https://github.com/fncbook/FundamentalsNumericalComputation.jl) julia package
+A slightly different emphasis in topics, but otherwise a good summary provide the lecture notes [**First Semester Numerical analysis**](https://diginole.lib.fsu.edu/islandora/object/fsu%3A657877/datastream/PDF/view) **by Giray Ökten**. At places the text is more mathematical than our treatment. In the initial sections it has a good summary of basic Julia commands an concepts. [An online PDF](https://diginole.lib.fsu.edu/islandora/object/fsu%3A657877/datastream/PDF/view) is available.
+
+Finally, if you are curious about Julia, I can highly recommend [**MIT's computational thinking class**](https://computationalthinking.mit.edu), which introduces Julia as well as its way of solving scientific problems in a hands-on and fun way.
 """
 
 # ╔═╡ 4e1fa8a0-ad16-417f-ba58-5cb0ccff45a3
