@@ -8,66 +8,468 @@ using InteractiveUtils
 begin
 	using PlutoUI
 	using PlutoTeachingTools
+end
+
+# ╔═╡ 831aef2e-e129-4183-95c2-b6f98afb6b44
+let
 	using HypertextLiteral
+	
+	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
+	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
+		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 400)
 end
 
 # ╔═╡ 2ff23584-4b35-11ef-0c69-a98bfb3ca906
 md"""
 # Revision and preliminaries
 
+
+This chapter provides some rough and sketchy notes on concepts we will frequently need throughout the course. It is strongly advised you read in carefully in your own time to remind yourself.
 """
 
 # ╔═╡ 514be580-6ba5-45bc-9a8f-cfcbfaedf9df
 TableOfContents()
 
-# ╔═╡ 281ad700-bafb-4bef-bea1-55ced7c14643
+# ╔═╡ 4c126a61-f2dd-42ca-bddc-6db64eb10dc5
+md"""
+## Taylor expansion and approximation
+
+Given an infinitely differentiable function $f$ its **Taylor series** at the point **$a$** is the infinite sum
+```math
+\tag{1}
+\begin{align*}
+f(x) &= f(a) + f'(a) \cdot (x-a) +  \frac{1}{2!} f''(a) \cdot (x-a)^2
++ \frac{1}{3!} f^{(3)}(a) (x-a)^3 \\
+&= \sum_{n=0}^\infty \frac{1}{n!} f^{(n)}(a) (x-a)^n
+\end{align*}
+```
+where $f^{(n)}$ is a short-hand for differentiating $f$ $n$ number of times.
+"""
+
+# ╔═╡ 316a1688-1315-4542-999d-a1dc4289a79f
+md"""
+### Big O notation
+
+Truncating this sum early (i.e. not summing all the way to infinity)
+is a frequent approximation technique often termed **Taylor approximation**.
+
+Here we choose the example of a **second-degree approximation**,
+i.e. truncating the sum at $n=2$ when we take at most two derivatives.
+We would thus get an approximation
+```math
+f(x) \approx f(a) + (x-a) \  f'(a) + \frac12 f''(a) \  (x-a)^2.
+```
+
+Comparing with (1) we see
+```math
+\tag{2}
+f(x) = f(a) + (x-a) \  f'(a) + \frac12 f''(a) \  (x-a)^2 + R(x)
+```
+where $R(x) = \sum_{n=3}^\infty \frac{1}{n!} f^{(n)}(a) (x-a)^n$
+is usually called the **remainder term**.
+
+As $x \to a$ the remainder $R(x)$ vanishes and more precisely
+it becomes small *at least as fast as $(x-a)^3$*, which mathematically one writes as
+follows:
+
+> There exist positive constants $M, δ > 0$ such that
+> ```math
+> |R(x)| ≤ M |x - a|^3 \qquad \forall 0 < |x-a| < δ,
+> ```
+
+or more compactly using **big O notation** as
+
+> ```math
+> R(x) = O(|x - a|^3) \qquad \text{as $x \to a$}.
+> ```
+
+Employing this within (2) we arrive at
+
+```math
+\tag{3}
+f(x) = f(a) + (x-a) \  f'(a) + \frac12 f''(a) \  (x-a)^2 + O(|x-a|^3)
+```
+
+This **big O notation** is thus a mathematically precise way of saying
+that there are more terms in the expansion (3) that we don't show
+but their order is at most $|x - a|^3$.
+Or more generally
+
+```math
+\tag{4}
+f(x) = \sum_{k=0}^n \frac{1}{k!} f^{(k)}(a) (x-a)^k + O(|x-a|^{n+1})
+```
+"""
+
+# ╔═╡ 1405fdc1-614e-4f22-915e-1707e3cfec8b
+md"""
+### Lagrange form of the reminder
+
+An important result of the study of Taylor approximations is, that the remainder term can in fact be also expressed in terms of the next term of the Taylor approximation itself.
+Considering for example the general approximation (4)
+we can find a $ξ$ between $x$ and $a$
+--- i.e. assuming $x < a$ a number $ξ \in (x, a)$ ---
+such that
+```math
+f(x) = \sum_{k=0}^n \frac{1}{k!} f^{(k)}(a) (x-a)^k + 
+\textcolor{red}{
+\frac{1}{(k+1)!} f^{(k+1)}(ξ) \ (x-a)^{k+1}
+}
+```
+holds. This is the so-called **Lagrange form** of the remainder.
+Note, how the red part is the next term of the Taylor polynomial,
+just with the derivative evaluated at a (generally unknown) position $\xi$.
+
+!!! warning "Second-degree approximation (continued)"
+    To return to our example of a second-degree approximation
+    and assuming $x < a$ we would thus be able to write
+	```math
+	f(x) = f(a) + (x-a) \cdot f'(a) + \frac12 f''(a) \cdot (x-a)^2 + \frac1{6} f'''(ξ) (x-a)^3
+	```
+	for some $ξ \in (x, a)$.
+"""
+
+# ╔═╡ 9ace76f9-1601-411d-ac70-dc20e3c8c55d
+md"""
+### Typical Taylor variants
+
+In the above example we considered the expansion of $f(x)$ around a point $x = a$
+leading to an expansion of the form
+```math
+f(x) = \sum_{k=0}^n \frac{1}{k!} f^{(k)}(a) (x-a)^k + O(|x-a|^{n+1}).
+```
+Another common setting is to expand a function $f(x+h)$ about $x$.
+Replacing $x$ by $x+h$ in the above expression directly yields
+```math
+f(x+h) = \sum_{k=0}^n \frac{1}{k!} f^{(k)}(x) \, h^k + O(|h|^{n+1})
+```
+!!! warning "Second-degree approximation (continued)"
+	Again in our second-degree example we would obtain
+	```math
+	f(x+h) = f(x) + h \ f'(x) + \frac12 f''(x) \  h^2 + O(|h|^3)
+	```
+	or using the Lagrange remainder
+	```math
+	f(x+h) = f(x) + h \ f'(x) + \frac12 f''(x) \  h^2 + \frac16 f'''(ξ) \ h^3
+	```
+	for some $ξ \in (x, x+h)$.
+"""
+
+# ╔═╡ 00744f80-67ef-4613-bd4c-ed428c5dba0f
 md"""
 ## Vector spaces
 
-??
+From a physical point of view the concept of a vector space $V$ boils down
+to a well-defined set of objects, which are closed under linear combination.
+That is to say for two vectors $\textbf{v} \in V$ and $\textbf{w} \in V$
+and real scalars $α, β \in \mathbb{R}$ we want to have that any linear combination
+is also a vector, i.e.
+```math
+α \textbf{v} + β \textbf{w} \in V.
+```
+Provided that ask the scalar multiplication $α \textbf{v}$
+and the vector addition $\textbf{v} + \textbf{w}$ to satisfy
+a few basic axioms, such as
+-   $\textbf{v} + \textbf{w} = \textbf{w} + \textbf{v}$ ($+$ is commutative)
+-   $α \textbf{v} + α \textbf{w} = α (\textbf{v} + \textbf{w})$
+  and $α \textbf{v} + β \textbf{v} = (α+β) \textbf{v}$
+  ($+$ and scalar multiplication are distributive)
+- ... (see [Wikipedia](https://en.wikipedia.org/wiki/Vector_space) for the full list)
+
+we get a range of important properties, such as:
+
+- Concept of linear independence,
+  i.e. $n$ vectors $\textbf{v}_1, \textbf{v}_2, \ldots, \textbf{v}_n$
+  are linearly independent if the only scalars $α_1, α_2, \ldots, α_n$
+  to obtain
+  ```math
+  \textbf{0} = \sum_{i=1}^n α_i \textbf{v}_i
+  ```
+  are the zeros $α_1 =  α_2 =  \cdots =  α_n = 0$.
+
+- Existance of a **basis**, i.e. a set of $n$ linearly independent vectors
+  $\textbf{v}_1, \textbf{v}_2, \ldots, \textbf{v}_n$
+  such that all elements of $V$ can be generated as linear combinations
+  of these vectors, i.e. for all $\textbf{w} \in V$ we can find scalars
+  $α_1, α_2, \ldots, α_n \in \mathbb{R}$ such that
+  ```math
+  \tag{5}
+  \textbf{w} = \sum_{k=1}^n α_k \textbf{v}_k
+  ```
 """
 
-# ╔═╡ d6b898c6-69a7-473d-98fc-a34eb16006d0
+# ╔═╡ 3579e3fb-e540-4c9c-94c5-d336047258c5
 md"""
-## Big-O notation
+### Euclidean vector spaces
 
+In this lecture when talking about vectors $\textbf{v}$ without specifying any further details we usually refer to elements of the Euclidean vector space $\mathbb{R}^n$, that is elements
+```math
+	\textbf{v} = \left( \begin{array}{c} v_1 \\ \vdots \\ v_n \end{array}\right)
+```
 """
 
-# ╔═╡ 6564e46c-b8b7-46e8-b037-6d418173860c
+# ╔═╡ bbc55b67-c0fd-48a5-9c87-3cf1a4d5fd07
 md"""
-## Taylor expansions
+### Polynomials as vector spaces
 
+Any polynomial $p(x)$ of degree less than $n$ can be written as
+```math
+\tag{6}
+p(x) = \sum_{k=1}^n a_k x^k
+```
+where $a_k \in \mathbb{R}$. Comparing with (5) immediately suggests the
+set of all polynomials of degree less than $n$ to be a vector space.
+This indeed can be shown to be the case.
 
-in all variants (x+h around x, x around x0, x0 around x, etc.)
-
-Also Theorem with the remainder term
-
+- In comparing with (5) we notice the **monomials** $1 = x^0, x = x^1, x^2, x^3, \ldots, x^n$ to be a possible choice for a basis.
+- Similar to Euclidean vector spaces this is not the only choice of basis and in fact many families of polynomials are known, which are frequently employed as basis functions (e.g. [Lagrange polynomials](https://en.wikipedia.org/wiki/Lagrange_polynomial), [Chebyshev polynomials](https://en.wikipedia.org/wiki/Chebyshev_polynomials), [Hermite polynomials](https://en.wikipedia.org/wiki/Hermite_polynomials), ...)
+- One basis we will discuss in the context of [polynomial interpolation](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html) are Lagrange polynomials, which have the form 
+  ```math
+  \begin{aligned}
+  L_{\textcolor{red}{i}}(x) &= \prod_{\stackrel{j=1}{\textcolor{red}{j\neq i}}}^{n+1} \frac{x-x_j}{\textcolor{red}{x_i} - x_j} \\
+  	   &= \frac{(x-x_1)(x - x_2) \cdots (x - x_{i-1}) (x - x_{i+1}) \cdots (x-x_{n+1})}{
+  (\textcolor{red}{x_i} - x_1)
+  (\textcolor{red}{x_i} - x_2)
+  \cdots
+  (\textcolor{red}{x_i} - x_{i-1})
+  (\textcolor{red}{x_i} - x_{i+1})
+  \cdots
+  (\textcolor{red}{x_i} - x_{n})
+  	   }
+  \end{aligned}
+  ```
+  for $i = 1, \ldots, n+1$.
 """
 
-# ╔═╡ b4452938-6cec-48ad-b9b4-d14324522d12
+# ╔═╡ 8e287200-7bb7-4a6a-a20f-2fdfaf450e33
 md"""
-# Multi-dimensional functions
-
-Multi-dimensional taylor etc.
-
+## Taylor expansions of multi-dimensional functions
+### Scalar-valued functions
+We consider a function $f : \mathbb{R}^n \to \mathbb{R}$.
+It's **second-order Taylor expansion** around $\mathbf{a} \in \mathbb{R}^n$
+can be written as
+```math
+f(\mathbf{x}) = f(\mathbf{a})
++ \left(\nabla f(\mathbf{a})\right)^T \ (\mathbf{x} - \mathbf{a})
++ \frac12 (\mathbf{x} - \mathbf{a})^T \ \mathbf{H}_f(\mathbf{a}) \ (\mathbf{x} - \mathbf{a})
++ O(\|\mathbf{x} - \mathbf{a}\|^3),
+```
+where we introduced the gradient of $f$ at $\mathbf{x} = \mathbf{a}$
+```math
+\nabla f(\mathbf{a}) = \left( \begin{array}{c}
+\left.\frac{\partial f}{\partial x_1}\right|_{\mathbf{x} = \mathbf{a}} \\
+\left.\frac{\partial f}{\partial x_2}\right|_{\mathbf{x} = \mathbf{a}} \\
+\vdots\\
+\left.\frac{\partial f}{\partial x_n}\right|_{\mathbf{x} = \mathbf{a}}
+\end{array}\right) \in \mathbb{R}^n
+```
+which is a vector of first partial derivatives.
+Similarly the Hessian of $f$ at $\mathbf{x} = \mathbf{a}$
+is the matrix of all second partial derivatives
+```math
+\mathbf{H}_f(\mathbf{a}) = \left( \begin{array}{cccc}
+\left.\frac{\partial^2 f}{\partial x_1 \partial x_1}\right|_{\mathbf{x} = \mathbf{a}} &
+\left.\frac{\partial^2 f}{\partial x_1 \partial x_2}\right|_{\mathbf{x} = \mathbf{a}} &
+\ldots &
+\left.\frac{\partial^2 f}{\partial x_1 \partial x_n}\right|_{\mathbf{x} = \mathbf{a}} \\
+%
+\left.\frac{\partial^2 f}{\partial x_2 \partial x_1}\right|_{\mathbf{x} = \mathbf{a}} &
+\left.\frac{\partial^2 f}{\partial x_2 \partial x_2}\right|_{\mathbf{x} = \mathbf{a}} &
+\ldots &
+\left.\frac{\partial^2 f}{\partial x_2 \partial x_n}\right|_{\mathbf{x} = \mathbf{a}} \\
+%
+\vdots & \vdots && \vdots \\
+%
+\left.\frac{\partial^2 f}{\partial x_n \partial x_1}\right|_{\mathbf{x} = \mathbf{a}} &
+\left.\frac{\partial^2 f}{\partial x_n \partial x_2}\right|_{\mathbf{x} = \mathbf{a}} &
+\ldots &
+\left.\frac{\partial^2 f}{\partial x_n \partial x_n}\right|_{\mathbf{x} = \mathbf{a}}
+\end{array}\right) \in \mathbb{R}^{n\times n}
+```
 """
 
-# ╔═╡ e80fd7a4-7c72-492d-b1a4-5716f90382a9
+# ╔═╡ e363da18-0001-4870-adb5-ef7d73514a36
 md"""
-## Infinity norm
-
+!!! warning "Example"
+	We consider the function $f : \mathbb{R}^3 \to \mathbb{R}$ defined as
+	```math
+	f(\textbf{x}) = f(\, (x_1, x_2, x_3)^T\,) = x_1^3 + x_1 x_3^2 + x_2^2 x_3 + 3 x_3^2
+	```
+	and compute the second-order Taylor expansion at
+	```math
+	\textbf{a} = \left(\begin{array}{c} 1 \\ 0 \\ 1 \end{array}\right)
+	```
+	First we compute the gradient $\nabla f(\textbf{a})$
+	```math
+	\nabla f(\mathbf{a}) = \left( \begin{array}{c}
+	\left.\frac{\partial f}{\partial x_1}\right|_{\mathbf{x} = \mathbf{a}} \\
+	\left.\frac{\partial f}{\partial x_2}\right|_{\mathbf{x} = \mathbf{a}} \\
+	\left.\frac{\partial f}{\partial x_3}\right|_{\mathbf{x} = \mathbf{a}}
+	\end{array}\right)
+	= \left( \begin{array}{c}
+	3a_1^2 + a_3^2 \\
+	2a_2a_3 \\
+	2a_1 a_3 + a_2^2 + 6a_3
+	\end{array}\right)
+	= \left( \begin{array}{c}
+	4 \\
+	0 \\
+	8
+	\end{array}\right)
+	```
+	Next the Hessian matrix $\mathbf{H}_f(\textbf{a})$
+	```math
+	\begin{align*}
+	\mathbf{H}_f(\mathbf{a}) &= \left( \begin{array}{ccc}
+	\left.\frac{\partial^2 f}{\partial x_1 \partial x_1}\right|_{\mathbf{x} = \mathbf{a}} &
+	\left.\frac{\partial^2 f}{\partial x_1 \partial x_2}\right|_{\mathbf{x} = \mathbf{a}} &
+	\left.\frac{\partial^2 f}{\partial x_1 \partial x_3}\right|_{\mathbf{x} = \mathbf{a}} \\
+	%
+	\left.\frac{\partial^2 f}{\partial x_2 \partial x_1}\right|_{\mathbf{x} = \mathbf{a}} &
+	\left.\frac{\partial^2 f}{\partial x_2 \partial x_2}\right|_{\mathbf{x} = \mathbf{a}} &
+	\left.\frac{\partial^2 f}{\partial x_2 \partial x_3}\right|_{\mathbf{x} = \mathbf{a}} \\
+	\left.\frac{\partial^2 f}{\partial x_3 \partial x_1}\right|_{\mathbf{x} = \mathbf{a}} &
+	\left.\frac{\partial^2 f}{\partial x_3 \partial x_2}\right|_{\mathbf{x} = \mathbf{a}} &
+	\left.\frac{\partial^2 f}{\partial x_3 \partial x_3}\right|_{\mathbf{x} = \mathbf{a}}
+	\end{array}\right) \\[0.3em]
+	&= \left( \begin{array}{ccc}
+	6a_1 & 0 & 2 a_3 \\
+	0    & 2a_3 & 2a_2 \\
+	2 a_3 & 2a_2 & 6 \\
+	\end{array}\right)
+	= \left( \begin{array}{ccc}
+	6 & 0 & 2 \\
+	0  & 2 & 0 \\
+	2  & 0 & 6 \\
+	\end{array}\right)
+	\end{align*}
+	```
+	Combining the results we get
+	```math
+	f(\mathbf{x}) = f(\textbf{a})
+	+ \left( \begin{array}{c}
+	4 \\
+	0 \\
+	8
+	\end{array}\right)^T (\mathbf{x} - \mathbf{a})
+	+ \frac12 (\mathbf{x} - \mathbf{a})^T \ \left( \begin{array}{ccc}
+	6 & 0 & 2 \\
+	0  & 2 & 0 \\
+	2  & 0 & 6 \\
+	\end{array}\right) \ (\mathbf{x} - \mathbf{a})
+	+ O(\|\mathbf{x} - \mathbf{a}\|^3),
+	```
+	which simplifies (after some algebra) to
+	```math
+	f(\mathbf{x}) = 4
+	- \left( \begin{array}{c}
+	10 \\
+	0 \\
+	0
+	\end{array}\right)^T \mathbf{x}
+	%
+	+ 
+	\mathbf{x}^T \ \left( \begin{array}{ccc}
+	3  & 0 & 1 \\
+	0  & 1 & 0 \\
+	1  & 0 & 3 \\
+	\end{array}\right) \ \mathbf{x} 
+	+ O(\|\mathbf{x} - \mathbf{a}\|^3),
+	```
 """
 
-# ╔═╡ ca7827e7-d0fe-4d1d-8daa-f98acd96184d
-TODO("Put some more revision of concepts and notation here that we will need a lot.")
+# ╔═╡ bd53a113-a153-405e-9340-da78a61b775a
+md"""
+### Vector-valued function
+Now we consider a vector-valued function $\mathbf{f} : \mathbb{R}^n \to \mathbb{R}^m$.
+It's **first-order Taylor expansion** around $\mathbf{a} \in \mathbb{R}^n$
+can be written as
+```math
+\mathbf{f}(\mathbf{x}) = \mathbf{f}(\mathbf{a})
++ \textbf{J}_\textbf{f}(\mathbf{a}) \ (\mathbf{x} - \mathbf{a})
++ O(\|\mathbf{x} - \mathbf{a}\|^2).
+```
+In this the **Jacobian matrix**
+$\textbf{J}_\textbf{f}(\textbf{x}) \in \mathbb{R}^{m\times n}$
+is the collection of all partial derivatives of $\textbf{f}$, i.e.
+```math
+\textbf{J}_\textbf{f}(\mathbf{a}) = \left(\begin{array}{cccc}
+\left.\frac{\partial f_1}{\partial x_1}\right|_{\textbf{x} = \textbf{a}} &
+\left.\frac{\partial f_1}{\partial x_2}\right|_{\textbf{x} = \textbf{a}} &
+\ldots &
+\left.\frac{\partial f_1}{\partial x_n}\right|_{\textbf{x} = \textbf{a}} \\
 
-# ╔═╡ 831aef2e-e129-4183-95c2-b6f98afb6b44
-let
-	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
-	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
-		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 300)
-end
+\left.\frac{\partial f_2}{\partial x_1}\right|_{\textbf{x} = \textbf{a}} &
+\left.\frac{\partial f_2}{\partial x_2}\right|_{\textbf{x} = \textbf{a}} &
+\ldots &
+\left.\frac{\partial f_2}{\partial x_n}\right|_{\textbf{x} = \textbf{a}} \\
+
+\vdots & & \ddots & \vdots\\
+
+\left.\frac{\partial f_m}{\partial x_1}\right|_{\textbf{x} = \textbf{a}} &
+\left.\frac{\partial f_m}{\partial x_2}\right|_{\textbf{x} = \textbf{a}} &
+\ldots &
+\left.\frac{\partial f_m}{\partial x_n}\right|_{\textbf{x} = \textbf{a}}
+\end{array}\right) \in \mathbb{R}^{m\times n}.
+```
+"""
+
+# ╔═╡ f8720ba3-9f6e-476c-adf2-bf66e07c3755
+md"""
+!!! warning "Example"
+	We consider the function $\textbf{f} : \mathbb{R}^3 \to \mathbb{R}^2$
+	defined as
+	```math
+	\left\{ \begin{aligned}
+	f_1(x_1, x_2, x_3) &= -x_1 \cos(x_2) - 1\\
+	f_2(x_1, x_2, x_3) &= x_1 \, x_2 + x_3\\
+	\end{aligned} \right.
+	```
+	and compute its first-order Taylor expansion at 
+	```math
+	\textbf{a} = \left(\begin{array}{c} 1 \\ 0 \\ 1 \end{array}\right)
+	```
+	The Jacobian is
+	```math
+	\begin{align*}
+	\textbf{J}_\textbf{f}(\mathbf{a}) &= \left(\begin{array}{ccc}
+	\left.\frac{\partial f_1}{\partial x_1}\right|_{\textbf{x} = \textbf{a}} &
+	\left.\frac{\partial f_1}{\partial x_2}\right|_{\textbf{x} = \textbf{a}} &
+	\left.\frac{\partial f_1}{\partial x_3}\right|_{\textbf{x} = \textbf{a}} \\
+	%
+	\left.\frac{\partial f_2}{\partial x_1}\right|_{\textbf{x} = \textbf{a}} &
+	\left.\frac{\partial f_2}{\partial x_2}\right|_{\textbf{x} = \textbf{a}} &
+	\left.\frac{\partial f_2}{\partial x_3}\right|_{\textbf{x} = \textbf{a}} \\
+	\end{array}\right) \\
+	&= \left(\begin{array}{ccc}
+	-\cos(a_2) & a_1 \sin(a_2) & 0 \\
+	a_2 & a_1 & 1
+    \end{array}\right)\\
+	&= \left(\begin{array}{ccc}
+	-1 & 0 & 0 \\
+	0 & 1 & 1
+    \end{array}\right)
+	\end{align*}
+	```
+	such that we arrive at
+	```math
+	\mathbf{f}(\mathbf{x}) = \mathbf{f}(\mathbf{a})
+	+  \left(\begin{array}{ccc}
+	-1 & 0 & 0 \\
+	0 & 1 & 1
+    \end{array}\right) \ (\mathbf{x} - \mathbf{a})
+	+ O(\|\mathbf{x} - \mathbf{a}\|^2)
+	```
+	Again some algebra this is simplified to
+	```math
+	\mathbf{f}(\mathbf{x}) = \left(\begin{array}{c} -3 \\ 2 \end{array}\right)
+	+  \left(\begin{array}{ccc}
+		-1 & 0 & 0 \\
+		0 & 1 & 1
+	    \end{array}\right)\mathbf{x} + O(\|\mathbf{x} - \mathbf{a}\|^2) \\
+	```
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -468,12 +870,17 @@ version = "17.4.0+2"
 # ╟─2ff23584-4b35-11ef-0c69-a98bfb3ca906
 # ╟─a8e3750d-62bf-4c1f-8309-3ef8981b5d26
 # ╟─514be580-6ba5-45bc-9a8f-cfcbfaedf9df
-# ╠═281ad700-bafb-4bef-bea1-55ced7c14643
-# ╠═d6b898c6-69a7-473d-98fc-a34eb16006d0
-# ╠═6564e46c-b8b7-46e8-b037-6d418173860c
-# ╠═b4452938-6cec-48ad-b9b4-d14324522d12
-# ╠═e80fd7a4-7c72-492d-b1a4-5716f90382a9
-# ╠═ca7827e7-d0fe-4d1d-8daa-f98acd96184d
+# ╟─4c126a61-f2dd-42ca-bddc-6db64eb10dc5
+# ╟─316a1688-1315-4542-999d-a1dc4289a79f
+# ╟─1405fdc1-614e-4f22-915e-1707e3cfec8b
+# ╟─9ace76f9-1601-411d-ac70-dc20e3c8c55d
+# ╟─00744f80-67ef-4613-bd4c-ed428c5dba0f
+# ╟─3579e3fb-e540-4c9c-94c5-d336047258c5
+# ╟─bbc55b67-c0fd-48a5-9c87-3cf1a4d5fd07
+# ╟─8e287200-7bb7-4a6a-a20f-2fdfaf450e33
+# ╟─e363da18-0001-4870-adb5-ef7d73514a36
+# ╟─bd53a113-a153-405e-9340-da78a61b775a
+# ╟─f8720ba3-9f6e-476c-adf2-bf66e07c3755
 # ╟─831aef2e-e129-4183-95c2-b6f98afb6b44
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

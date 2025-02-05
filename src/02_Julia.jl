@@ -84,10 +84,11 @@ f(x) =     a * x
 g(x) = 5 + b * x
 
 # ╔═╡ 69d55a01-5ddf-41b5-abe1-b4a67a7c2514
-md"What is the point where the two curves intersect?
+md"""What is the point where the two curves intersect?
 
-Code the expression that gives the $x$ coordinate:
-"
+!!! exercise
+	Code the expression that gives the $x$ coordinate:
+"""
 
 # ╔═╡ 0c868a84-582e-4c46-9121-9fea116e13aa
 x = missing
@@ -116,7 +117,7 @@ end
 hint(md"
 Equating $f(x) = g(x)$ one can easily find that
 ```math
-a x = 5 + b x \quad \Leftrightarrow \quad 0 = 5 + (b-a) x
+a x = 5 + b x \quad \Leftrightarrow \quad 0 = 5 + (b-a) x \quad \Leftrightarrow \quad x = \frac5{a-b}
 ```
 So what is $x$ ?
 ")

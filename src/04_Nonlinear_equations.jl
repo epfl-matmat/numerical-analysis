@@ -25,7 +25,16 @@ begin
 	using Printf
 	using ForwardDiff
 	using LinearAlgebra
+end
+
+# ╔═╡ 6d25666f-68c2-4a15-bf01-732fa2ebd4e3
+let
 	using HypertextLiteral
+	
+	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
+	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
+		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 490)
 end
 
 # ╔═╡ b258697b-4c4f-4e47-8472-73b72178c108
@@ -1440,14 +1449,6 @@ md"""
 As can be see the most constant is the sequence corresponding to $q=2$,
 such that we conclude that the method converges quadratically.
 """
-
-# ╔═╡ 6d25666f-68c2-4a15-bf01-732fa2ebd4e3
-let
-	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
-	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
-		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 490)
-end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

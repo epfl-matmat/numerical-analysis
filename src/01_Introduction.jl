@@ -32,7 +32,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 270)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 320)
 end
 
 # ╔═╡ 71c91579-a894-44b5-b4d7-f8d98667b977
@@ -47,7 +47,7 @@ md"""
 
 In modern practice **every scientist employs computers**. Some use them to symbolically derive equations for complex theories, others perform simulations, yet others analyse and visualise experimental results. In all these cases we encounter **mathematical problems**, which we need to **solve using numerical techniques**.
 The point of this lecture is to learn how to **formalise such numerical procedures** mathematically,
-**implement them** using the [Julia programming languge](https://julialang.org/)
+**implement them** using the [Julia programming language](https://julialang.org/)
 and **analyse using pen and paper** why some methods work better,
 some worse and some not at all.
 
