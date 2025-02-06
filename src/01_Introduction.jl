@@ -23,16 +23,7 @@ begin
 	using PlutoUI
 	using PlutoTeachingTools
 	using LaTeXStrings
-end
-
-# ╔═╡ ac1a0435-6447-45fc-97b6-475e8586eebd
-let
 	using HypertextLiteral
-	
-	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
-	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
-		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 320)
 end
 
 # ╔═╡ 71c91579-a894-44b5-b4d7-f8d98667b977
@@ -422,6 +413,14 @@ md"""
 	- What are numerically stable techniques for interpolation, basic data analysis or solving standard scientific problems ?
 	- How can I understand and evaluate the speed of convergence of an algorithm and improve it even further ?
 """
+
+# ╔═╡ ac1a0435-6447-45fc-97b6-475e8586eebd
+let
+	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
+	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
+		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 320)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

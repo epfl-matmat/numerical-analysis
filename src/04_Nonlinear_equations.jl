@@ -25,16 +25,7 @@ begin
 	using Printf
 	using ForwardDiff
 	using LinearAlgebra
-end
-
-# ╔═╡ 6d25666f-68c2-4a15-bf01-732fa2ebd4e3
-let
 	using HypertextLiteral
-	
-	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
-	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
-		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 490)
 end
 
 # ╔═╡ b258697b-4c4f-4e47-8472-73b72178c108
@@ -851,7 +842,20 @@ md"""
 [^2]: Our analysis does not include the effect of finite-precision floating point arithmetic, which in theory and in practice can inhibit convergence for some tricky cases.
 """
 
-# ╔═╡ f3eab5ff-c8c9-467c-be04-25fe9ddf7d59
+# ╔═╡ f7c28631-92fd-4bc8-a408-358481413972
+md"""
+## Zooming out: The broader lesson of analysing fixed-point methods
+
+
+
+"""
+
+# ╔═╡ b108c2b7-4d78-4586-806a-9fedc2490c4f
+TODO("""
+Make a case that any iterative method can be written as a fixed-point method. Therefore the kind of analytical tools we developed here (tracking convergence of fixed-point iterations) can be applied to any iterative method.
+""")
+
+# ╔═╡ d365a1b6-ca5d-4719-99af-ce16b078b6b2
 md"""
 ## Newton's method
 
@@ -896,7 +900,10 @@ with $g'(x_\ast) = 0$ to give quadratic convergence.
 More generally if $g'(x_\ast) = g''(x_\ast) = \cdots = g^{(q-1)}(x_\ast) = 0$
 and $g^{(q)}(x_\ast) \neq 0$ we obtain a method of order $q$.
 We summarise in a theorem:
+"""
 
+# ╔═╡ ac5a79d7-07e0-499e-9dab-519ae0b5f638
+md"""
 !!! info "Theorem 3"
     Let $g : [a, b] \to \mathbb{R}$ be a $p$ times
     continuously differentiable fixed-point map
@@ -1449,6 +1456,14 @@ md"""
 As can be see the most constant is the sequence corresponding to $q=2$,
 such that we conclude that the method converges quadratically.
 """
+
+# ╔═╡ 6d25666f-68c2-4a15-bf01-732fa2ebd4e3
+let
+	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
+	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
+		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 490)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2792,7 +2807,10 @@ version = "1.4.1+2"
 # ╟─1bbe92e6-3a06-4c0f-bc7d-e2117da4f6c1
 # ╟─ac693757-bb8e-467e-b19d-c15ed7fd244a
 # ╟─46620c64-a43c-4d08-bb3e-5fda3c8ff57c
-# ╟─f3eab5ff-c8c9-467c-be04-25fe9ddf7d59
+# ╠═f7c28631-92fd-4bc8-a408-358481413972
+# ╠═b108c2b7-4d78-4586-806a-9fedc2490c4f
+# ╟─d365a1b6-ca5d-4719-99af-ce16b078b6b2
+# ╟─ac5a79d7-07e0-499e-9dab-519ae0b5f638
 # ╟─5432f7ad-8422-478c-882c-bd57c508f092
 # ╟─e678148f-5878-4ca8-8957-9250fd8eb06f
 # ╠═929010af-2af6-4b63-bfb4-7987f1b790ca
