@@ -23,6 +23,8 @@ begin
 	using PlutoUI
 	using PlutoTeachingTools
 	using LaTeXStrings
+	using Symbolics
+	using NLsolve
 	using HypertextLiteral
 end
 
@@ -94,8 +96,9 @@ end
 # ╔═╡ f01345c5-3b96-40f1-8ed3-0fbe85f908d9
 md"""
 Still, it seems reasonable that 
-we should be able to determine some continuous function $f$ *from the observed data*,
-which establishes a good model for the relationship $k = f(T)$.
+we should be able to **determine some continuous function**
+$f$ **from the observed data**,
+which **establishes a good model** for the relationship $k = f(T)$.
 Albeit $255 K$ has not been measured, we can thus evaluate $f(255 K)$
 and get an estimate for the rate at this temperature.
 Since the new temperature $255 K$ islocated *within* the observed data range (i.e. here $250K$ to $350K$) we call this procedure **interpolation**.
@@ -157,16 +160,6 @@ As a result derivatives are everywhere. But computing derivatives by hand is not
 # ╔═╡ f8bf0e47-0089-4553-8604-cd8347345658
 v(t) = 64t * (1 − t) * (1 − 2t)^2 * (1 − 8t + 8t^2)^2
 
-# ╔═╡ 2dad6ffd-92a2-4b60-9e33-ea978dba474f
-let
-	using Symbolics  # Package for symbolic computations (e.g. taking derivatives)
-	
-	@variables t          # Define a variable
-	dt = Differential(t)  # Differentiating wrt. t
-	dv_dt = dt( v(t) )    # Compute dv / dt
-	expand_derivatives(dv_dt)
-end
-
 # ╔═╡ 4e2edbda-28ae-4978-a94a-1d23766d4937
 md"
 We can plot it to get an idea:
@@ -177,7 +170,7 @@ let
 	p = plot(v;
 			 ylims=(-10, 2),     # Limit on y axis
 			 xlims=(-0.5, 1.5),  # Limit on x axis
-			 lw=2,               # Width of the blue line
+			 linewidth=2,        # Width of the blue line
 		     label="Velocity",   # Label of the graph
 			 xlabel="t",
 		     ylabel="v")
@@ -189,6 +182,14 @@ Clearly between $0$ and $1$ the function changes quite rapidly. To investigate t
 
 This can be done by hand, but instead we will employ a Julia package (namely [`Symbolics`](https://symbolics.juliasymbolics.org/)) to take the derivative for us. The result is:
 """
+
+# ╔═╡ 2dad6ffd-92a2-4b60-9e33-ea978dba474f
+let
+	@variables t          # Define a variable
+	dt = Differential(t)  # Differentiating wrt. t
+	dv_dt = dt( v(t) )    # Compute dv / dt
+	expand_derivatives(dv_dt)
+end
 
 # ╔═╡ 25b75acf-9cf7-4aa7-a7ec-7d80ee68d076
 h_values = 10 .^ (-15:0.5:1)
@@ -251,9 +252,12 @@ let
 		xflip=true,  # Flip order of x axis
 	    ylims=(1e-8, 1),
 		mark=:o,     # Mark all points by circle
-		xlabel="h", ylabel="Absolute error",
-		lw=2, label="", xticks=10.0 .^ (-16:2:0),
-		title = "Error of derivative at t = $t0",
+		xlabel="h",
+		ylabel="Absolute error",
+		linewidth=2,
+		label="",
+		xticks=10.0 .^ (-16:2:0),
+		title="Error of derivative at t = $t0",
 	)
 end
 
@@ -271,7 +275,7 @@ md"""
 """
 
 # ╔═╡ 562be5ef-f8b6-4633-8c25-895371078558
-TODO("Some motivating ODE example")
+md"$\text{\textcolor{red}{TODO Some motivating ODE example}}$"
 
 # ╔═╡ 4f9ed1a2-bb88-11ee-07bf-eb30cea74209
 md"""
@@ -373,8 +377,6 @@ end
 
 # ╔═╡ ffe95f16-f754-4e27-a60a-63da312393a9
 begin
-	using NLsolve  # Package supporting solving non-linear equations
-	
 	# Define our function
 	f(vD) = R*i0*(exp(vD/v0) - 1) + vD - V
 
@@ -389,10 +391,11 @@ tells us the root is located at $v_D \simeq$ $(round(z[1]; digits=3)). We can al
 
 # ╔═╡ 8c226159-984b-4992-b728-cd1050ecac37
 let
-	plot(f; xlims=(-0.5, 0.5), ylims=(-3, 3), legend=:topleft,
-	        label=L"f", lw=2, xlabel=L"v_D", ylabel=L"f(v_D)")
-	hline!([0], ls=:dash, lw=2, label=L"f(v_D) = 0")
-	scatter!([z], [0], label="NLsolve solution")
+	vs = range(-0.5, 0.5; length=100)
+	plot(vs, f.(vs); xlims=(-0.5, 0.5), ylims=(-3, 3), legend=:topleft,
+	        label=L"f", linewidth=2, xlabel=L"v_D", ylabel=L"f(v_D)")
+	hline!([0], linestyle=:dash, linewidth=2, label=L"f(v_D) = 0")
+	scatter!(z, [0], label="NLsolve solution")
 end
 
 # ╔═╡ 86590ede-19cd-4610-baa4-eb3f1286bd67
@@ -419,7 +422,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 320)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 300)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2334,7 +2337,7 @@ version = "1.4.1+2"
 # ╟─4e2edbda-28ae-4978-a94a-1d23766d4937
 # ╠═cfc885de-9dd9-4008-9124-fbd31a799535
 # ╟─d0257ff3-6873-44df-886d-0236f0b729ea
-# ╟─2dad6ffd-92a2-4b60-9e33-ea978dba474f
+# ╠═2dad6ffd-92a2-4b60-9e33-ea978dba474f
 # ╟─2255ea65-76a7-403b-af0a-d9dd489b105c
 # ╠═25b75acf-9cf7-4aa7-a7ec-7d80ee68d076
 # ╟─be44b23a-fd7f-4536-96c0-cd1c7326294d

@@ -99,7 +99,7 @@ let
 	plot!(p, g; linewidth=2, label="g")
 
 	if !ismissing(x)
-		scatter!(p, [x], [f(x)], label="Computed intersection")
+		scatter!(p, [x], [f(x)], label="Computed intersection", markersize=6)
 	end
 	p
 end
@@ -219,7 +219,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 430)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 470)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
