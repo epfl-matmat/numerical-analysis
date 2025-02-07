@@ -12,6 +12,7 @@
 \usepackage[stretch=10,shrink=10]{microtype}
 \usepackage{parskip}
 \usepackage{url}
+\usepackage{qrcode}
 \usepackage{pgfpages}
 \usepackage{tikz}
 
@@ -31,7 +32,52 @@
 \setlength{\parindent}{15pt}
 \setbeamerfont{footnote}{size=\smaller}
 
-\usetheme{MFHepfl}
+\useinnertheme{rounded}
+\useoutertheme{miniframes}
+
+\setbeamercovered{transparent}
+\setbeamertemplate{footline}[frame number]
+\beamertemplatenavigationsymbolsempty
+\setbeamertemplate{headline}{}
+\logo{%
+    \raisebox{0.175cm}{\includegraphics[height=0.35cm]{img/EpflLogoTransparent.pdf}}
+    \hspace{0.07cm}%
+    \includegraphics[height=0.8cm]{img/MatMatLogo.pdf}%
+    \hspace{0.2cm}\:%
+}
+
+
+\setbeamercolor{structure}{fg=MfhRed}
+\setbeamercolor{alerted text}{fg=MfhRed}
+\setbeamercolor{example text}{fg=MfhGreen}
+\setbeamercolor{palette primary}{fg=MfhRed,bg=MfhVeryLightGray!65!white}
+
+% remaining colors (all depend on above):
+\setbeamercolor{palette secondary}{use=structure,fg=structure.bg,bg=structure.fg}
+\setbeamercolor{palette tertiary}{use={palette primary},fg=palette primary.fg!85!black,bg=palette primary.bg!60!white}
+\setbeamercolor{palette quaternary}{use={palette primary},fg=palette primary.fg,bg=palette primary.bg!50!white}
+
+\setbeamercolor{block body alerted}{use={palette primary},bg=palette primary.bg!30!white}
+\setbeamercolor{block body}{use={palette primary},bg=palette primary.bg!30!white}
+\setbeamercolor{block body example}{use={palette primary},bg=palette primary.bg!30!white}
+\setbeamercolor{block title alerted}{use={palette primary,alerted text},fg=alerted text.fg,bg=palette primary.bg!75!white}
+\setbeamercolor{block title}{use={normal text,palette primary},fg=MfhBlue, bg=palette primary.bg!75!white}
+\setbeamercolor{block title example}{use={palette primary,example text},fg=example text.fg,bg=palette primary.bg!75!white}
+
+\setbeamercolor{page number in head/foot}{use=structure,fg=structure.fg}
+\setbeamercolor*{titlelike}{parent=palette primary}
+
+\setbeamercolor*{separation line}{}
+\setbeamercolor*{fine separation line}{}
+
+%Note: these colors are not tested:
+\setbeamercolor{sidebar}{use=structure,bg=structure.fg!20!white}
+
+\setbeamercolor{palette sidebar primary}{use=normal text,fg=normal text.fg}
+\setbeamercolor{palette sidebar secondary}{use=structure,fg=structure.fg}
+\setbeamercolor{palette sidebar tertiary}{use=normal text,fg=normal text.fg}
+\setbeamercolor{palette sidebar quaternary}{use=structure,fg=structure.fg}
+
 
 %------------------------------------------------------------------
 
@@ -65,8 +111,8 @@
    \addtocounter{framenumber}{-1}
 \end{frame}
 
-\input{motivation}
-\input{course}
-\input{about_you}
+\input{1_motivation}
+\input{2_course}
+\input{3_about_you}
 
 \end{document}
