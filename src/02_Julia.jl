@@ -24,9 +24,12 @@ begin
 	using HypertextLiteral
 end
 
-# ╔═╡ 98dfc101-24e4-420e-8549-f9e543c3e0c7
+# ╔═╡ 3677e0ff-dc19-467a-93e9-297cbeed9895
 md"""
 # The Julia programming language
+
+!!! exercise "Related exercise sheets"
+	- [Sheet 0: Getting Started with Julia](https://teaching.matmat.org/numerical-analysis/exercises/ex0_introduction_julia_pluto.html)
 
 In this class we employ the [Julia programming language](https://julialang.org/) for code examples and programming exercises. In this notebook you will learn a little about why this choice has been made and some details on how set it up and get started.
 """
@@ -1461,7 +1464,7 @@ version = "1.4.1+2"
 """
 
 # ╔═╡ Cell order:
-# ╟─98dfc101-24e4-420e-8549-f9e543c3e0c7
+# ╟─3677e0ff-dc19-467a-93e9-297cbeed9895
 # ╟─b65f6939-d6b2-43e5-8e32-730fe4a9cba1
 # ╟─9f8734c4-75d8-4875-bf0e-103277b3db41
 # ╟─cf121248-e406-44c7-8c17-ed36cea3e23c

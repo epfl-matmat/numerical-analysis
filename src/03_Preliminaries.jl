@@ -6,18 +6,9 @@ using InteractiveUtils
 
 # ╔═╡ a8e3750d-62bf-4c1f-8309-3ef8981b5d26
 begin
+	using HypertextLiteral
 	using PlutoUI
 	using PlutoTeachingTools
-end
-
-# ╔═╡ 831aef2e-e129-4183-95c2-b6f98afb6b44
-let
-	using HypertextLiteral
-	
-	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
-	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
-		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 400)
 end
 
 # ╔═╡ 2ff23584-4b35-11ef-0c69-a98bfb3ca906
@@ -470,6 +461,14 @@ md"""
 	    \end{array}\right)\mathbf{x} + O(\|\mathbf{x} - \mathbf{a}\|^2) \\
 	```
 """
+
+# ╔═╡ 831aef2e-e129-4183-95c2-b6f98afb6b44
+let
+	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
+	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
+		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 400)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
