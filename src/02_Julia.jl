@@ -139,8 +139,14 @@ for example:
 # ╔═╡ c17c25e1-bae2-4ec5-9d1d-1b9d4cb03a57
 md"""
 ## Installing Julia
+A working Julia installation is provided to you as part of the VirtualBox image you can download [on moodle](https://go.epfl.ch/numerical-analysis).
+
+Alternatively, you can install Julia on your own computer. It is not difficult and will be a nicer experience than working inside a Virtual Machine, however assistants will only be able to provide limited help with installation problems.
+
+Assistants are there to provide support during the first week and you are welcome to ask for help. After that, Julia is assumed to be installed and working, and there will be a check in the second exercise session.
+
 ### VirtualBox image
-A working Julia installation is provided to you as part of the VirtualBox images you can download [on moodle](https://go.epfl.ch/numerical-analysis).
+See the **Virtual Machine Installation Instructions** document [on moodle](https://go.epfl.ch/numerical-analysis).
 
 ### Installing on your own computer
 If you want to install Julia on your computer (it's not difficult !), take a look at the [installation notes](https://computationalthinking.mit.edu/Fall24/installation/) of MIT's computational thinking class or watch:
@@ -153,12 +159,12 @@ html"""<iframe style="width: 100%; aspect-ratio: 16/9;" src="https://www.youtube
 md"""
 Essentially this boils down to:
 
-- Download Julia for your operating system from [https://julialang.org/downloads](https://julialang.org/downloads). **Windows users** can install [Julia in the Microsoft store](https://www.microsoft.com/store/apps/9NJNWW8PVKMN).
-- Start Julia, e.g. by starting the **Julia 1.10** from your program menu or by executing `julia` in a Terminal.
-- Install [Pluto](https://github.com/fonsp/Pluto.jl), the notebook environment that we will are using in this course. Note, that Pluto is not the only way you can run Julia, but it is particularly well-suited for the quick and interactive experiments we will perform. To install Pluto run in your Julia REPL:
+- Download Julia **1.11.3** for your operating system from [https://julialang.org/downloads](https://julialang.org/downloads). **Windows users** can install [Julia in the Microsoft store](https://www.microsoft.com/store/apps/9NJNWW8PVKMN).
+- Start Julia, e.g. by starting the **Julia 1.11.3** from your program menu or by executing `julia` in a Terminal.
+- Install [Pluto](https://github.com/fonsp/Pluto.jl), the notebook environment that we will be using in this course. Note, that Pluto is not the only way you can run Julia, but it is particularly well-suited for the quick and interactive experiments we will perform. To install Pluto run in your Julia REPL:
   ```julia
   import Pkg
-  Pkg.add("Pluto")
+  Pkg.add(; name="Pluto", version="0.20.4")
   ```
 - Run Pluto: Still in the REPL execute
   ```julia
@@ -166,6 +172,8 @@ Essentially this boils down to:
   Pluto.run()
   ```
 See the [installation notes](https://computationalthinking.mit.edu/Fall24/installation/) of MIT's computational thinking class for more details.
+
+The exercise notebooks are written and tested with **Julia 1.11.3** and **Pluto 0.20.4**. These are the versions installed inside the Virtual Machine. Prefer those.
 """
 
 # ╔═╡ 14e88ee8-8505-483e-bf68-0c19990cae40
