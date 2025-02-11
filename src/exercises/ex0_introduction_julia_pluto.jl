@@ -226,9 +226,21 @@ md"""
 """
 
 # ╔═╡ 35887694-5ad2-463a-b4a9-9f115542c9e2
+# split: statement
 # Set var1 to 2 and var2 to 3
 
+# ╔═╡ 6e206cf6-b623-417b-97e1-ab253c2f0d73
+# ╠═╡ disabled = true
+#=╠═╡
+# split: solution
+begin
+	var1 = 2
+	var2 = 3
+end
+  ╠═╡ =#
+
 # ╔═╡ 5e381128-b6f6-4594-8baa-f585d1e44061
+#=╠═╡
 if !isdefined(@__MODULE__, :var1)
 	var_not_defined("var1")
 elseif !isdefined(@__MODULE__, :var2)
@@ -238,6 +250,7 @@ elseif var1 == 2 && var2 == 3
 else
 	almost(md"The variables exist but their values are not correct.")
 end
+  ╠═╡ =#
 
 # ╔═╡ 1b2086c1-9b29-4b7d-8e88-7e8fbd86bde3
 md"""
@@ -379,9 +392,19 @@ md"""
 """
 
 # ╔═╡ 971be2b7-d1e6-4e16-be24-a6a8d3092772
+# split: statement
 function line(a, b, x)
 	nothing
 end
+
+# ╔═╡ e04fa379-f980-42b0-8c73-308fb0c4b66c
+# ╠═╡ disabled = true
+#=╠═╡
+# split: solution
+function line(a, b, x)
+	a*x + b
+end
+  ╠═╡ =#
 
 # ╔═╡ 7cfb56d4-b978-4e02-a64e-96431db95b61
 let res = line(0.2885, 0.1026, 0.3452)
@@ -489,9 +512,27 @@ md"""
 """
 
 # ╔═╡ 54a7f75f-9835-497e-a1da-ecc36ac61641
+# split: statement
 function is_leap_year(year)
 	nothing
 end
+
+# ╔═╡ 60863b54-bfd5-4655-894e-7091ecf4e57f
+# ╠═╡ disabled = true
+#=╠═╡
+# split: solution
+function is_leap_year(year)
+	if year % 400 == 0
+		true
+	elseif year % 100 == 0
+		false
+	elseif year % 4 == 0
+		true
+	else
+		false
+	end
+end
+  ╠═╡ =#
 
 # ╔═╡ 4053a6a7-54a0-4b05-aa44-f6ffaf38cfe7
 if isnothing(is_leap_year(2000))
@@ -580,9 +621,23 @@ Before we move on, let us implement a classic exercise.
 """
 
 # ╔═╡ 0cfc3b0d-c662-4399-9c60-3bc851890338
+# split: statement
 function fibonacci(n)
 	nothing
 end
+
+# ╔═╡ bffd4953-cd6a-4634-983e-10aa0e24536a
+# ╠═╡ disabled = true
+#=╠═╡
+# split: solution
+function fibonacci(n)
+	if n <= 1
+		n
+	else
+		fibonacci(n-1) + fibonacci(n-2)
+	end
+end
+  ╠═╡ =#
 
 # ╔═╡ e3c394dc-b8f7-408a-a129-df42b5e0914d
 if isnothing(fibonacci(0))
@@ -744,7 +799,15 @@ Let's put this into practice with the Fibonacci function you wrote above:
 """
 
 # ╔═╡ f538c5f7-f5c3-4c47-9db3-b785d8b7b9ca
+# split: statement
 many_fibonacci(ns) = fibonacci(0)
+
+# ╔═╡ 4a40ed9d-c5f1-4262-998e-6b4bfff123d2
+# ╠═╡ disabled = true
+#=╠═╡
+# split: solution
+many_fibonacci(ns) = fibonacci.(ns)
+  ╠═╡ =#
 
 # ╔═╡ 8f51ebf4-7dc7-4441-a0b6-9225acbbbfb0
 if isnothing(many_fibonacci([0]))
@@ -1032,6 +1095,15 @@ This is needed because in Pluto notebooks each variable name may only be used a 
 and the disabling of one cell.
 """
 
+# ╔═╡ 34c12be4-e036-4a1b-a3f8-72530073c6d4
+# ╠═╡ disabled = true
+#=╠═╡
+variable = 4
+  ╠═╡ =#
+
+# ╔═╡ 7c3a5972-a0b8-44ba-8525-ade8c0bc4135
+variable = 5
+
 # ╔═╡ ab70be10-5821-44ac-8a5b-aeb32f24d1cf
 md"""
 This is a safety feature to avoid overwriting computational results.
@@ -1047,17 +1119,6 @@ let
 	p
 end
 
-# ╔═╡ 34c12be4-e036-4a1b-a3f8-72530073c6d4
-# ╠═╡ disabled = true
-#=╠═╡
-variable = 4
-  ╠═╡ =#
-
-# ╔═╡ 7c3a5972-a0b8-44ba-8525-ade8c0bc4135
-#=╠═╡
-variable = 5
-  ╠═╡ =#
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1067,9 +1128,9 @@ PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
-Plots = "~1.40.0"
-PlutoTeachingTools = "~0.2.14"
-PlutoUI = "~0.7.55"
+Plots = "~1.40.9"
+PlutoTeachingTools = "~0.3.1"
+PlutoUI = "~0.7.61"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1078,7 +1139,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.3"
 manifest_format = "2.0"
-project_hash = "89730529162ab46df08960c2558313e74d0f9085"
+project_hash = "7ec9f4118533c31acd2534dd9f9563218c17315c"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1129,9 +1190,9 @@ version = "1.3.6"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
-git-tree-sha1 = "bce6804e5e6044c6daab27bb533d1295e4a2e759"
+git-tree-sha1 = "545a177179195e442472a1c4dc86982aa7a1bef0"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.7.6"
+version = "0.7.7"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
@@ -1398,9 +1459,9 @@ version = "3.1.1+0"
 
 [[deps.JuliaInterpreter]]
 deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "a729439c18f7112cbbd9fcdc1771ecc7f071df6a"
+git-tree-sha1 = "4bf4b400a8234cff0f177da4a160a90296159ce9"
 uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.9.39"
+version = "0.9.41"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1433,9 +1494,9 @@ version = "1.4.0"
 
 [[deps.Latexify]]
 deps = ["Format", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
-git-tree-sha1 = "ce5f5621cac23a86011836badfedf664a612cee4"
+git-tree-sha1 = "cd714447457c660382fe634710fb56eb255ee42e"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.16.5"
+version = "0.16.6"
 
     [deps.Latexify.extensions]
     DataFramesExt = "DataFrames"
@@ -1737,10 +1798,10 @@ uuid = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 version = "0.1.6"
 
 [[deps.PlutoTeachingTools]]
-deps = ["Downloads", "HypertextLiteral", "LaTeXStrings", "Latexify", "Markdown", "PlutoLinks", "PlutoUI", "Random"]
-git-tree-sha1 = "5d9ab1a4faf25a62bb9d07ef0003396ac258ef1c"
+deps = ["Downloads", "HypertextLiteral", "Latexify", "Markdown", "PlutoLinks", "PlutoUI"]
+git-tree-sha1 = "8252b5de1f81dc103eb0293523ddf917695adea1"
 uuid = "661c6b06-c737-4d37-b85c-46df65de6f69"
-version = "0.2.15"
+version = "0.3.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -2327,6 +2388,7 @@ version = "1.4.1+2"
 # ╟─72e5b9d3-df98-4f6e-b283-52f928e7a80c
 # ╟─44986e44-3371-477f-967e-9af708d103b3
 # ╠═35887694-5ad2-463a-b4a9-9f115542c9e2
+# ╠═6e206cf6-b623-417b-97e1-ab253c2f0d73
 # ╟─5e381128-b6f6-4594-8baa-f585d1e44061
 # ╟─1b2086c1-9b29-4b7d-8e88-7e8fbd86bde3
 # ╟─7e46f0e8-edeb-11ea-1092-4b5e8acd9ee0
@@ -2364,6 +2426,7 @@ version = "1.4.1+2"
 # ╠═b5e5cee9-dcf2-4e23-afce-72e136cbd988
 # ╟─d15f35df-23af-4793-bb4a-5878a4a52b23
 # ╠═971be2b7-d1e6-4e16-be24-a6a8d3092772
+# ╠═e04fa379-f980-42b0-8c73-308fb0c4b66c
 # ╟─7cfb56d4-b978-4e02-a64e-96431db95b61
 # ╟─93a231f4-edec-11ea-3b39-299b3be2da78
 # ╟─82e63a24-eded-11ea-3887-15d6bfabea4b
@@ -2384,6 +2447,7 @@ version = "1.4.1+2"
 # ╠═18adab01-e74e-4537-8549-fadad03f30b7
 # ╟─77d9277c-54bc-4d80-acc7-d8d866753e27
 # ╠═54a7f75f-9835-497e-a1da-ecc36ac61641
+# ╠═60863b54-bfd5-4655-894e-7091ecf4e57f
 # ╟─4053a6a7-54a0-4b05-aa44-f6ffaf38cfe7
 # ╟─e297c5cc-edeb-11ea-3bdd-090f415685ab
 # ╟─ec751446-edeb-11ea-31ba-2372e7c71b42
@@ -2397,6 +2461,7 @@ version = "1.4.1+2"
 # ╠═ddcac2dc-f5b4-47fe-81f2-262b1b4718b2
 # ╟─1b49f71c-a8b4-440b-a46a-17dfb4220fa5
 # ╠═0cfc3b0d-c662-4399-9c60-3bc851890338
+# ╠═bffd4953-cd6a-4634-983e-10aa0e24536a
 # ╟─e3c394dc-b8f7-408a-a129-df42b5e0914d
 # ╟─ffee7d80-eded-11ea-26b1-1331df204c67
 # ╟─903b52a1-47dd-4924-bd10-4d4573f7e7a8
@@ -2434,6 +2499,7 @@ version = "1.4.1+2"
 # ╠═9632c36a-8fe2-4e11-b949-8213a6ac4bdb
 # ╟─39bc95f9-74e8-468d-b7e4-700438675bf0
 # ╠═f538c5f7-f5c3-4c47-9db3-b785d8b7b9ca
+# ╠═4a40ed9d-c5f1-4262-998e-6b4bfff123d2
 # ╟─8f51ebf4-7dc7-4441-a0b6-9225acbbbfb0
 # ╟─d364fa16-edee-11ea-2050-0f6cb70e1bcf
 # ╟─db99ae9a-edee-11ea-393e-9de420a545a1
