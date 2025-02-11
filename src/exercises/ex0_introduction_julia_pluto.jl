@@ -287,6 +287,19 @@ md"""
 `Float64` means that this variable contains a 64-bit [floating point number](https://en.wikipedia.org/wiki/Floating-point_arithmetic). In practice, this means a number that can have a decimal part. 
 """
 
+# ╔═╡ 685174e3-21ca-46f7-bd6d-467718a6850e
+md"""
+As you learn Julia, you will discover more and more types. Sometimes, it can get quite complicated:
+"""
+
+# ╔═╡ 71bcb101-8715-4754-82ce-1d24fea8a512
+typeof((; x=[[[[[1]]]]]))
+
+# ╔═╡ d3287858-b154-42f6-9046-7030e6b8d722
+md"""
+## Strings
+"""
+
 # ╔═╡ 9072a34d-862f-4d6a-bbc4-7fce7a55c575
 md"""
 Another common type is `String`, which is used for text:
@@ -295,13 +308,41 @@ Another common type is `String`, which is used for text:
 # ╔═╡ 19c956cb-776b-4628-911d-a119f51c62d8
 typeof("Some text")
 
-# ╔═╡ 685174e3-21ca-46f7-bd6d-467718a6850e
+# ╔═╡ cefeb394-9322-432d-8f25-6f70f1d15432
+md"Variables can be inserted in a string using `$`:"
+
+# ╔═╡ b9e1c787-3594-4107-b1f0-0293a666d565
+let
+	variable = 10
+	"variable is $variable"
+end
+
+# ╔═╡ d3b94264-ff93-455e-a44c-3798cdacc660
+md"To add a `$` to a string, escape it with `\\` as follows:"
+
+# ╔═╡ ae409c89-ec72-4d7f-8d39-79aa8946e533
+println("0.02 \$")
+
+# ╔═╡ 4a4dcb69-89b9-4622-b43f-d806bb27e861
+md"To combine strings, use the `*` operator:"
+
+# ╔═╡ 0af19cc8-d47c-4e01-afe9-d4f5d9225396
+"part 1 " * "part 2 " * "part 3"
+
+# ╔═╡ b7684e96-5a32-4e12-bbca-92ce7f57ce70
 md"""
-As you learn Julia, you will discover more and more types. Sometimes, it can get quite complicated:
+## Symbols
+You may occasionally encounter symbols. They are typically used to represent identifiers and start with `:`.
 """
 
-# ╔═╡ 71bcb101-8715-4754-82ce-1d24fea8a512
-typeof((; x=[[[[[1]]]]]))
+# ╔═╡ f7b4f385-78ed-4191-b2a9-fa4423b58f72
+typeof(:name)
+
+# ╔═╡ 273e451c-17fc-4816-831c-82f0c1f2f2ad
+md"Keep in mind they are different from strings:"
+
+# ╔═╡ 8ca29458-10dc-401a-b681-e63564552cf4
+:name == "name"
 
 # ╔═╡ 8e2dd3be-edeb-11ea-0703-354fb31c12f5
 md"## Functions"
@@ -2398,10 +2439,21 @@ version = "1.4.1+2"
 # ╟─89336d7d-ebb8-46cc-92b2-dea09e3282c0
 # ╠═8a695b86-edeb-11ea-08cc-17263bec09df
 # ╟─769ed521-7faa-459a-b77e-15d5fbeef046
-# ╟─9072a34d-862f-4d6a-bbc4-7fce7a55c575
-# ╠═19c956cb-776b-4628-911d-a119f51c62d8
 # ╟─685174e3-21ca-46f7-bd6d-467718a6850e
 # ╠═71bcb101-8715-4754-82ce-1d24fea8a512
+# ╟─d3287858-b154-42f6-9046-7030e6b8d722
+# ╟─9072a34d-862f-4d6a-bbc4-7fce7a55c575
+# ╠═19c956cb-776b-4628-911d-a119f51c62d8
+# ╟─cefeb394-9322-432d-8f25-6f70f1d15432
+# ╠═b9e1c787-3594-4107-b1f0-0293a666d565
+# ╟─d3b94264-ff93-455e-a44c-3798cdacc660
+# ╠═ae409c89-ec72-4d7f-8d39-79aa8946e533
+# ╟─4a4dcb69-89b9-4622-b43f-d806bb27e861
+# ╠═0af19cc8-d47c-4e01-afe9-d4f5d9225396
+# ╟─b7684e96-5a32-4e12-bbca-92ce7f57ce70
+# ╠═f7b4f385-78ed-4191-b2a9-fa4423b58f72
+# ╟─273e451c-17fc-4816-831c-82f0c1f2f2ad
+# ╠═8ca29458-10dc-401a-b681-e63564552cf4
 # ╟─8e2dd3be-edeb-11ea-0703-354fb31c12f5
 # ╟─82a0aae9-3937-4f60-9f75-532feb59e3f7
 # ╠═80074898-5414-445b-8831-4c94fd8c9d52
