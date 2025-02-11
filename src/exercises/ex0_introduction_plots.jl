@@ -182,14 +182,14 @@ end
 md"""
 ## Practice Time
 Here is a plot:
-$(RobustLocalResource("TODO", "../img/ex0_plots_exercise.png"; cache=false))
+$(RobustLocalResource("TODO", "img/ex0_plots_exercise.png"; cache=false))
 
 !!! exercise
     Complete the cell below to produce a similar plot. The data for the line and the scatter plot is provided, and you have to plot it. Pay attention to the axes, the legend, the title, and so on.
 """
 
 # ╔═╡ f92a25a4-6cc5-4705-956a-8da3af041636
-#= begin statement =#
+# split: statement
 let
 	# The data points are given to you.
 	xs = range(0, 10; length=11)
@@ -198,12 +198,11 @@ let
 	# Fill in the plotting code here:
 	plot()
 end
-#= end statement =#
 
 # ╔═╡ 5c944aa2-1163-4e1e-b4cf-d57c39f30831
 # ╠═╡ disabled = true
 #=╠═╡
-#= begin solution =#
+# split: solution
 let
 	# The data points are given to you
 	xs = range(0, 10; length=11)
@@ -216,7 +215,6 @@ let
 	plot!(; xlabel="x value between -5 and 15. Data is only available from 0 to 10.", xlims=[-5, 15])
 	plot!(; legend=:bottomright)
 end
-#= end solution =#
   ╠═╡ =#
 
 # ╔═╡ 95c50a2e-5c64-4403-8c54-babb99951e28
@@ -271,7 +269,7 @@ end;
 # ╔═╡ 04583aa3-4f05-431a-9fa1-e37e77f95b56
 md"""
 If you open the above image, you will notice that it looks blurry. For example it might look like this:
-$(RobustLocalResource("TODO", "../img/ex0_plots_sin_plot.png"; cache=false))
+$(RobustLocalResource("TODO", "img/ex0_plots_sin_plot.png"; cache=false))
 
 The number of pixels used by the image can be increased with the `dpi` attribute:
 """
@@ -286,7 +284,7 @@ end;
 # ╔═╡ 893020b2-0984-4149-8893-bbfe73e0b821
 md"""
 Here is an example of the high DPI version:
-$(RobustLocalResource("TODO", "../img/ex0_plots_sin_plot_high_dpi.png"; cache=false))
+$(RobustLocalResource("TODO", "img/ex0_plots_sin_plot_high_dpi.png"; cache=false))
 """
 
 # ╔═╡ c19b7b55-ca63-475d-83c1-12d4951a5d41
@@ -298,9 +296,8 @@ linestyle_values = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
   ╠═╡ =#
 
 # ╔═╡ c8baf08d-b7fe-4666-919b-90509a764463
-#= begin statement =#
+# split: statement
 linestyle_values = [:solid]
-#= end statement =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -310,7 +307,7 @@ PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 
 [compat]
 Plots = "~1.40.9"
-PlutoTeachingTools = "~0.2.15"
+PlutoTeachingTools = "~0.3.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -319,7 +316,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.3"
 manifest_format = "2.0"
-project_hash = "7b0d17a60d5dfd03c2bdd6b6c16daf546a96e03c"
+project_hash = "ce8354791b3cc321ed3d52e760f3abef4195a343"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -376,9 +373,9 @@ version = "0.7.7"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
-git-tree-sha1 = "b5278586822443594ff615963b0c09755771b3e0"
+git-tree-sha1 = "26ec26c98ae1453c692efded2b17e15125a5bea1"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.26.0"
+version = "3.28.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -387,16 +384,22 @@ uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 version = "0.11.5"
 
 [[deps.ColorVectorSpace]]
-deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "SpecialFunctions", "Statistics", "TensorCore"]
-git-tree-sha1 = "600cc5508d66b78aae350f7accdb58763ac18589"
+deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "Requires", "Statistics", "TensorCore"]
+git-tree-sha1 = "a1f44953f2382ebb937d60dafbe2deea4bd23249"
 uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
-version = "0.9.10"
+version = "0.10.0"
+
+    [deps.ColorVectorSpace.extensions]
+    SpecialFunctionsExt = "SpecialFunctions"
+
+    [deps.ColorVectorSpace.weakdeps]
+    SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
-git-tree-sha1 = "362a287c3aa50601b0bc359053d5c2468f0e7ce0"
+git-tree-sha1 = "64e15186f0aa277e174aa81798f7eb8598e0157e"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
-version = "0.12.11"
+version = "0.13.0"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
@@ -633,9 +636,9 @@ version = "3.1.1+0"
 
 [[deps.JuliaInterpreter]]
 deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "a729439c18f7112cbbd9fcdc1771ecc7f071df6a"
+git-tree-sha1 = "4bf4b400a8234cff0f177da4a160a90296159ce9"
 uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.9.39"
+version = "0.9.41"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -879,12 +882,6 @@ git-tree-sha1 = "7493f61f55a6cce7325f197443aa80d32554ba10"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
 version = "3.0.15+3"
 
-[[deps.OpenSpecFun_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "1346c9208249809840c91b26703912dff463d335"
-uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
-version = "0.5.6+0"
-
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "6703a85cb3781bd5909d48730a67205f3f31a575"
@@ -978,10 +975,10 @@ uuid = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 version = "0.1.6"
 
 [[deps.PlutoTeachingTools]]
-deps = ["Downloads", "HypertextLiteral", "LaTeXStrings", "Latexify", "Markdown", "PlutoLinks", "PlutoUI", "Random"]
-git-tree-sha1 = "5d9ab1a4faf25a62bb9d07ef0003396ac258ef1c"
+deps = ["Downloads", "HypertextLiteral", "Latexify", "Markdown", "PlutoLinks", "PlutoUI"]
+git-tree-sha1 = "8252b5de1f81dc103eb0293523ddf917695adea1"
 uuid = "661c6b06-c737-4d37-b85c-46df65de6f69"
-version = "0.2.15"
+version = "0.3.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -1125,18 +1122,6 @@ version = "1.2.1"
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 version = "1.11.0"
-
-[[deps.SpecialFunctions]]
-deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "64cca0c26b4f31ba18f13f6c12af7c85f478cfde"
-uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.5.0"
-
-    [deps.SpecialFunctions.extensions]
-    SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
-
-    [deps.SpecialFunctions.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 
 [[deps.StableRNGs]]
 deps = ["Random"]
