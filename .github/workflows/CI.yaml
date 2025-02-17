@@ -1,0 +1,72 @@
+name: CI
+on:
+    push:
+        # Only on branches, not tags/releases
+        branches:
+            - '*'
+    pull_request:
+        branches:
+            - '*'
+
+concurrency:
+    # Skip intermediate builds: always.
+    # Cancel intermediate builds: only if it is a pull request build.
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout this repository
+              uses: actions/checkout@v3
+
+            - name: Install Julia
+              uses: julia-actions/setup-julia@v1
+              with:
+                  version: "1" # This will automatically pick the latest Julia version
+
+            - name: Cache Julia artifacts & such
+              uses: julia-actions/cache@v1
+              with:
+                cache-registries: "true"
+
+            # We set up a folder that Pluto can use to cache exported
+            # notebooks. If the notebook file did not change, then Pluto can
+            # take the exported file from cache instead of running the
+            # notebook.
+            - name: Set up notebook state cache
+              uses: actions/cache@v3
+              with:
+                  path: pluto_state_cache
+                  key: ${{ runner.os }}-pluto_state_cache-v2-${{ hashFiles('**/Project.toml', '**/Manifest.toml', '.github/workflows/*' ) }}-${{ hashFiles('**/*jl') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pluto_state_cache-v2-${{ hashFiles('**/Project.toml', '**/Manifest.toml', '.github/workflows/*' ) }}
+
+
+            - name: Run & export Pluto notebooks
+              run: |
+                julia -e 'using Pkg
+                  Pkg.activate(mktempdir())
+                  Pkg.add([
+                    Pkg.PackageSpec(name="PlutoPDF", version="1.2.1"),
+                    Pkg.PackageSpec(name="PlutoSliderServer", version="1"),
+                  ])
+
+                  import PlutoPDF
+                  import PlutoSliderServer
+
+                  PlutoSliderServer.github_action("src/.";
+                    Export_cache_dir="pluto_state_cache",
+                    Export_baked_notebookfile=false,
+                    Export_baked_state=false,
+                    # more parameters can go here
+                  )
+
+                  notebooks = PlutoSliderServer.find_notebook_files_recursive("src")
+                  for notebook in notebooks
+                      file = joinpath("src", notebook)
+                      println("Converting $file to PDF...")
+                      PlutoPDF.pluto_to_pdf(file; open=false)
+                  end
+                  '
