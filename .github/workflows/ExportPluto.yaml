@@ -30,16 +30,25 @@ jobs:
                   version: "1" # This will automatically pick the latest Julia version
 
             - name: Cache Julia artifacts & such
-              uses: julia-actions/cache@v1
+              uses: julia-actions/cache@v2
               with:
-                cache-registries: "true"
+                # Contains the node .env for PlutoPDF.
+                # Since it needs to be in sync with the puppeteer cache, we cache it separately.
+                cache-scratchspaces: false
+            - name: Set up PlutoPDF caches
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.julia/scratchspaces
+                      ~/.cache/puppeteer
+                  key: ${{ runner.os }}-plutopdf_cache-${{ hashFiles('**/Project.toml', '**/Manifest.toml', '.github/workflows/*' ) }}
 
             # We set up a folder that Pluto can use to cache exported
             # notebooks. If the notebook file did not change, then Pluto can
             # take the exported file from cache instead of running the
             # notebook.
             - name: Set up notebook state cache
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: pluto_state_cache
                   key: ${{ runner.os }}-pluto_state_cache-v2-${{ hashFiles('**/Project.toml', '**/Manifest.toml', '.github/workflows/*' ) }}-${{ hashFiles('**/*jl') }}
