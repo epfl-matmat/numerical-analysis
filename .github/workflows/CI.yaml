@@ -9,8 +9,7 @@ on:
             - '*'
 
 concurrency:
-    # Skip intermediate builds: always.
-    # Cancel intermediate builds: only if it is a pull request build.
+    # Skip and cancel intermediate builds: always.
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
