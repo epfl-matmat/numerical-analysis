@@ -4,1072 +4,282 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 33490d1f-ef11-4159-823f-0040c096539c
-# Install some packages
+# ╔═╡ 37bb4168-cbe8-4382-8ffb-89684d59ed57
 begin
-	using LinearAlgebra
-	using PlutoUI
-	using PlutoTeachingTools
 	using Plots
+	using PlutoTeachingTools
 end
 
-# ╔═╡ 0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
-md"# Exercice Session 0: Getting Started with Julia
-
-This first session is meant for you to get acquainted with the [Julia programming language](https://julialang.org/). 
-
-The following tutorial will give you an interactive tour of the main Julia functionalities we will need for the rest of the semester. 
-By reading and running this notebook, you should be able to get a decent overview of Julia.
-
-**References**: 
-- When in doubt about syntax, have a look at the [Julia Cheatsheet](https://cheatsheet.juliadocs.org/)
-- This introduction is inspired by the MIT lecture [Introduction to Computational Thinking](https://computationalthinking.mit.edu) where you can find more examples of Julia code and Pluto notebooks.
-- Perhaps you also find the [Comparative cheatsheet Python <-> Julia <-> Matlab](https://cheatsheets.quantecon.org/) useful.
-"
-
-
-# ╔═╡ 4dbd5dd5-02d9-4243-a0fc-ac7089fc588a
-md"""# Pluto 
-
-[Pluto](https://plutojl.org/) is a browser-based notebook framework for Julia. 
-All programming for this lecture will be done within Pluto notebooks. 
-
-Pluto allows for running code in an interactive fashion while also presenting computation results in a readable way, also integrating formatted text.
-
-
-### Cells
-All Pluto inputs and outputs appear in **cells**. Cells can contain **text** or **code** and can be **visible** or **invisible**.
-
-A cell can be run by **clicking the play button** below it or by hitting `Shift + Enter`. Its **visibility** can be toggled by clicking the *eye* button on its left (note that this only hides the cell's input, not its output).
-
-
-#### Text cells
-Text can be formatted by using [Markdown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax). 
-Markdown cells begin with `\"md ` and end with `\"`.
-
-!!! exercise "Exercise"
-    **Modify** the cell below, **run** it and look at the output. Then **toggle its visibility**.
-"""
-
-# ╔═╡ 5e963571-a2bf-4554-9082-1ab5ec48d089
-md" # Title
-## Subtitle 
-
-Text can be put in **bold** or *italic*.
-
-- List element 1
-- List element 2 
-
-`inline quote` 
-
-```julia
-# code block 
-using Plots
-plot(sin)
-```
-
-[Test link](https://epfl.ch)
-"
-
-# ╔═╡ 462e68ff-5c86-4403-bcc5-907dbca15f2e
+# ╔═╡ 57c895c0-e3af-11ef-3901-5907f8a4cfb7
 md"""
-# Exercises
-In the notebooks, there will be many interactive exercises, denoted by a green box such as this:
+# Exercise Session 0: Getting Started with Plotting in Julia
+This notebook is meant to give you an introduction to the `Plots` Julia plotting library.
 
-!!! exercise
-    This is what an exercise looks like!
-
-Many exercises are interactive:
-- The statement is in a green box.
-- There is a cell below where you have to complete the code.
-- There is an immediate feedback box below.
-
-Here is a first exercise to get you started:
-
-!!! exercise
-    Change the following line to `i_am_ready = true` then run the cell.
+**References**:
+- The reference source of information is the [official Plots documentation](https://docs.juliaplots.org/stable/).
+- An alternative introduction is found in the [Plots basics](https://docs.juliaplots.org/dev/basics/) and [Plots tutorial](https://docs.juliaplots.org/dev/tutorial/).
+- Fancy examples are available on the [official gallery](https://docs.juliaplots.org/dev/gallery/gr/).
 """
 
-# ╔═╡ 6424fb26-3b04-48d9-9c6f-0a1db75ef35f
-i_am_ready = false
-
-# ╔═╡ a249a972-8911-4c74-884d-5e30fd43dbec
-if i_am_ready
-	correct(text=md"""Good job! Now that you understand interactive exercises, let's continue.""")
-else
-	almost(md"""This is an interactive feedback cell.
-	
-	**You have not completed this exercise yet.** Change the line above to `i_am_ready = true` then run the cell.""")
-end
-
-# ╔═╡ 3b038ee0-edeb-11ea-0977-97cc30d1c6ff
-md"# Julia Tutorial
-**Now on to the Julia language itself.** The rest of this notebook demonstrates all the basic Julia functionalities we will need for the lecture. It is written in an interactive and conversational way, the goal being that by the time you have read and run the provided commands you will have a basic working understanding of how to use Julia.
-
-
-**Please read and run all the cells below. Feel free to experiment by modifying the content of the cells.**
-"
-
-# ╔═╡ 6af9c3a0-2534-4bf1-9eb8-f5e34a091c64
+# ╔═╡ cce2bd48-e279-422e-b6a7-8cbf2fff327f
 md"""
-## Expressions
-Julia supports common math operations:
+## Line plots
+To plot a line, pass lists of `x` coordinates and `y` coordinates to `plot`:
 """
 
-# ╔═╡ 28c2ac78-2462-452e-bdc5-8319576fb33a
-2 + 3
-
-# ╔═╡ 0c8d79af-d762-4165-9992-688532185d48
-2 - 3
-
-# ╔═╡ 48ebe8f9-7ee1-478a-8ea3-f12f8b8b25e6
-2 * 3
-
-# ╔═╡ 9195da81-4465-4fc1-9831-b9aea1697bbe
-2 / 3
-
-# ╔═╡ 76f3caa3-4541-4268-aac6-6fb4d7aa6436
-2 ^ 3
-
-# ╔═╡ 5e062a24-edeb-11ea-256a-d938f77d7815
-md"By default Julia displays the output of the last operation. (You can suppress the output by adding `;` (a semicolon) at the end.)
-"
-
-# ╔═╡ 166e8c0c-73d7-4a4d-b27f-13f9b4005dd2
-md"""
-Some more complex examples:
-"""
-
-# ╔═╡ 52f0d7e9-5eb2-42e6-b5ce-be8c6dd0ea4f
-2 + 3 * 4
-
-# ╔═╡ 025abeca-9f34-4921-9578-c571234c0616
-(2 + 3) * 4
-
-# ╔═╡ 4f9f0cc7-f6cf-443b-94af-bb31f213503e
-2 + 3 * 10 ^ 2
-
-# ╔═╡ f608bad0-43a6-4796-bfc8-7f30499797ad
-2 + 3 * 10^2
-
-# ╔═╡ b5143875-138b-413b-8073-1dc613555803
-md"""
-## Variables
-
-We can define a variable using `=` (assignment). Then we can use its value in other expressions:
-"""
-
-# ╔═╡ 3e8e0ea0-edeb-11ea-22e0-c58f7c2168ce
-x = 3
-
-# ╔═╡ 59b66862-edeb-11ea-2d62-71dcc79dbfab
-y = 2 * x
-
-# ╔═╡ e938820b-daad-4cc9-9fd0-c8adc84adf46
-md"""Pluto is **reactive**, meaning that when a variable changes, all other variables depending on it are automatically updated. 
-
-!!! exercise "Exercise"
-    Try modifying `z` in the below cell and run it. See how the value of `w` in the cell below is automagically updated.
-"""
-
-# ╔═╡ b6a3144d-eaba-4dff-802f-d20becff06e6
-z = 10
-
-# ╔═╡ 8ad688a5-2831-4017-ad39-2c98e5a0efd9
-w = 2 * z
-
-# ╔═╡ 0d0f4edf-a411-4a51-9c51-24256050b397
-md"""
-## A note on multiple expressions per cell
-In Pluto, multiple expressions per cell are not allowed, as show by the error below:
-"""
-
-# ╔═╡ 2a4ec691-0944-4b3a-8def-a83eb8bf2400
-var1 = 2
-var2 = 3
-
-# ╔═╡ 72e5b9d3-df98-4f6e-b283-52f928e7a80c
-md"""
-One solution is to split the code across multiple cells:
-```julia
-var1 = 2
-```
-```julia
-var2 = 3
-```
-
-Another solution is to put the code inside a `begin`...`end` block:
-```julia
-begin
-    var1 = 2
-    var2 = 3
-end
-# var1 and var2 are available in other cells
-```
-
-Either way, the variables `a` and `b` will be available in future cells.
-
-You might also encounter `let`...`end` blocks, which do not make the variables available to future cells:
-```julia
+# ╔═╡ a4ef07d4-37d3-4d12-9928-c052740ed55c
+# Plot a line going from (-1, 0) to (0, 1) to (1, 3)
 let
-    var1 = 2
-    var2 = 3
-end
-# var1 and var2 are NOT available outside of let...end
-```
-"""
-
-# ╔═╡ 44986e44-3371-477f-967e-9af708d103b3
-md"""
-!!! exercise
-    In the following cell, assign `2` to the `var1` variable and `3` to the `var2` variable
-"""
-
-# ╔═╡ 35887694-5ad2-463a-b4a9-9f115542c9e2
-# Set var1 to 2 and var2 to 3
-
-# ╔═╡ 5e381128-b6f6-4594-8baa-f585d1e44061
-if !isdefined(@__MODULE__, :var1)
-	var_not_defined("var1")
-elseif !isdefined(@__MODULE__, :var2)
-	var_not_defined("var2")
-elseif var1 == 2 && var2 == 3
-	correct()
-else
-	almost(md"The variables exist but their values are not correct.")
+	xs = [-1, 0, 1]
+	ys = [0, 1, 3]
+	plot(xs, ys)
 end
 
-# ╔═╡ 1b2086c1-9b29-4b7d-8e88-7e8fbd86bde3
+# ╔═╡ 1665cbba-c865-4bbd-8389-56ca9e53abf6
 md"""
-## Types
+To plot a continuous function, we use the following principle:
+- Generate many `x` coordinates with `range(a, b, length=N)`.
+- Compute the corresponding `y` coordinates by calling the function.
+Here is a plot of the `sin` function between $0$ and $\pi$:
 """
 
-# ╔═╡ 7e46f0e8-edeb-11ea-1092-4b5e8acd9ee0
-md"""
-In Julia, every value has a type that determines what can be done with it.
-We can find the type of values using `typeof`:
-"""
-
-# ╔═╡ 5111713e-8c05-4161-b55a-814d72d32bc9
-typeof(10)
-
-# ╔═╡ 799938f0-8a4d-4505-bdcf-d5de7f70dcbb
-typeof(10.0)
-
-# ╔═╡ 57165a23-204d-4e68-8943-10bee7d68fa5
-typeof(2.5)
-
-# ╔═╡ 89336d7d-ebb8-46cc-92b2-dea09e3282c0
-md"""
-We can also ask for the type of a variable:
-"""
-
-# ╔═╡ 8a695b86-edeb-11ea-08cc-17263bec09df
-typeof(y)
-
-# ╔═╡ 769ed521-7faa-459a-b77e-15d5fbeef046
-md"""
-`Int64` means that this variable contains a signed 64-bit [integer](https://en.wikipedia.org/wiki/Integer_(computer_science)). In practice, this means that it is number without any decimal part.
-
-`Float64` means that this variable contains a 64-bit [floating point number](https://en.wikipedia.org/wiki/Floating-point_arithmetic). In practice, this means a number that can have a decimal part. 
-"""
-
-# ╔═╡ 9072a34d-862f-4d6a-bbc4-7fce7a55c575
-md"""
-Another common type is `String`, which is used for text:
-"""
-
-# ╔═╡ 19c956cb-776b-4628-911d-a119f51c62d8
-typeof("Some text")
-
-# ╔═╡ 685174e3-21ca-46f7-bd6d-467718a6850e
-md"""
-As you learn Julia, you will discover more and more types. Sometimes, it can get quite complicated:
-"""
-
-# ╔═╡ 71bcb101-8715-4754-82ce-1d24fea8a512
-typeof((; x=[[[[[1]]]]]))
-
-# ╔═╡ 8e2dd3be-edeb-11ea-0703-354fb31c12f5
-md"## Functions"
-
-# ╔═╡ 82a0aae9-3937-4f60-9f75-532feb59e3f7
-md"""
-Julia comes with many built-in functions, for example `exp(x)` to compute $e^x$, `cos(x)` to compute $\cos(x)$, and many others...
-
-Typing the function's name gives some basic information about the function:
-"""
-
-# ╔═╡ 80074898-5414-445b-8831-4c94fd8c9d52
-exp
-
-# ╔═╡ 1d945be1-3664-462c-ba4a-29e5e72724ea
-cos
-
-# ╔═╡ 9f28c628-dc42-4d4d-bf5d-d85a39cc1271
-md"""
-To call a function we must use parentheses:
-"""
-
-# ╔═╡ b8acc676-3e5b-4048-8120-ad6a182d2315
-exp(0)
-
-# ╔═╡ 2a3f7d44-0fb6-4929-9248-5265d0680619
-exp(1)
-
-# ╔═╡ dc29fcf1-ed6c-44a4-9e89-57d3f635a542
-cos(0)
-
-# ╔═╡ 7db7d2fd-4004-41bd-bfe9-b1ead83bdfea
-cos(π)
-
-# ╔═╡ 13a0268c-d815-4844-8b90-b2a475e9a4fa
-md"""
-### Creating new functions
-"""
-
-# ╔═╡ 96b5a28c-edeb-11ea-11c0-597615962f54
-md"Of course, we can also write our own functions. For simple functions, we can use a short-form, one-line function definition:"
-
-# ╔═╡ a7453572-edeb-11ea-1e27-9f710fd856a6
-f(x) = 2 + x
-
-# ╔═╡ b341db4e-edeb-11ea-078b-b71ac00089d7
-md"As before, typing the function's name gives some basic information about the function."
-
-# ╔═╡ 23f9afd4-eded-11ea-202a-9f0f1f91e5ad
-f
-
-# ╔═╡ d50fdb40-62eb-454d-baf3-42d1bb34f082
-md"To call it we must use parentheses:"
-
-# ╔═╡ cc1f6872-edeb-11ea-33e9-6976fd9b107a
-f(10)
-
-# ╔═╡ ce9667c2-edeb-11ea-2665-d789032abd11
-md"For longer functions we use the following syntax with the `function` keyword and `end`:"
-
-# ╔═╡ d73d3400-edeb-11ea-2dea-95e8c4a6563b
-function g(x, y)
-	z = x + y
-	return z^2
-end
-
-# ╔═╡ e04ccf10-edeb-11ea-36d1-d11969e4b2f2
-g(1, 2)
-
-# ╔═╡ 2c446801-df67-4912-942c-aaa664302b28
-md"""
-**Note that the final `return` is not necessary.** In functions, the last expression is automatically returned:
-"""
-
-# ╔═╡ fc0bc6bd-b01c-461d-8cf8-ad3912ab2cbd
-function h(x, y)
-    z = x + y
-	z ^ 2
-end
-
-# ╔═╡ b5e5cee9-dcf2-4e23-afce-72e136cbd988
-h(1, 2)
-
-# ╔═╡ d15f35df-23af-4793-bb4a-5878a4a52b23
-md"""
-!!! exercise
-    Complete the function `line(a, b, x)` below, which should return $ax + b$.
-"""
-
-# ╔═╡ 971be2b7-d1e6-4e16-be24-a6a8d3092772
-function line(a, b, x)
-	nothing
-end
-
-# ╔═╡ 7cfb56d4-b978-4e02-a64e-96431db95b61
-let res = line(0.2885, 0.1026, 0.3452)
-	if isnothing(res)
-		still_nothing()
-	elseif res == 0.2021902
-		correct()
-	else
-		keep_working()
-	end
-end
-
-# ╔═╡ 93a231f4-edec-11ea-3b39-299b3be2da78
-md"## Conditionals: `if`, `elseif`, `else`"
-
-# ╔═╡ 82e63a24-eded-11ea-3887-15d6bfabea4b
-md"""
-We can evaluate whether a condition is true or not by using comparison operators:
-- `<`: smaller than
-- `<=`: smaller or equal
-- `>`: greater than
-- `>=`: greater or equal
-- `==`: equal
-- `!=`: not equal
-"""
-
-# ╔═╡ 9b339b2a-eded-11ea-10d7-8fc9a907c892
-a = 3
-
-# ╔═╡ 9535eb40-eded-11ea-1651-e33c9c23dbfb
-a < 5
-
-# ╔═╡ 73f81dc2-1138-4f44-be8c-fc0ee55aa2e2
-a != 5
-
-# ╔═╡ 58053efc-8656-4b9c-abfc-a15c29cb10b3
-a >= 10
-
-# ╔═╡ 530f923d-c820-4a45-8215-a9a57e375a18
-typeof(a >= 10)
-
-# ╔═╡ a16299a2-eded-11ea-2b56-93eb7a1010a7
-md"We see that conditions have a boolean (`true` or `false`) value. The corresponding Julia type is `Bool`.
-
-We can then use `if` to control what we do based on that value:"
-
-# ╔═╡ bc6b124e-eded-11ea-0290-b3760cb81024
-if a < 5
-	"small"
-else
-	"big"
-end
-
-# ╔═╡ cfb21014-eded-11ea-1261-3bc30952a88e
-md"""Note that the `if` also returns the last value that was evaluated, in this case the string `"small"` or `"big"`. Since Pluto is reactive, changing the definition of `a` above will automatically cause this to be reevaluated!"""
-
-# ╔═╡ ca7089ae-0394-4d52-82cc-b893e2300894
-md"""
-Intermediate checks can be added using `elseif`:
-"""
-
-# ╔═╡ ee0510a9-95b3-4e43-addb-8ffdb724d3ad
-if a < 0
-	"negative"
-elseif a == 0
-	"zero"
-elseif a < 10
-	"1 to 9"
-else
-	"10 or larger"
-end
-
-# ╔═╡ b96761f5-b235-47b0-b3b4-f350feea46ac
-md"""
-## Conditionals: logical operators
-Comparisons can be combined using logical operators:
-- `a && b`: checks that `a` **and** `b` are `true`.
-- `a || b`: checks that at least `a` **or** `b` is `true`.
-- `!a`: checks that `a` is **not** `true`.
-
-For example:
-"""
-
-# ╔═╡ 22bd1bc0-c2fa-489a-a2c9-b1c75b36f7ba
-1 < 2 && 2 < 3
-
-# ╔═╡ f2426c25-32c6-4408-80c3-d234a0fd6a65
-1 < 2 || 2 < 1
-
-# ╔═╡ b8201bdd-585a-4ac2-ae44-bb2c1b378dca
-1 < 2 && 2 < 1
-
-# ╔═╡ 18adab01-e74e-4537-8549-fadad03f30b7
-!(1 == 2)
-
-# ╔═╡ 77d9277c-54bc-4d80-acc7-d8d866753e27
-md"""
-!!! exercise
-    Complete the function `is_leap_year(year)` below. The function should return `true` if `year` is a leap year, and `false` if it is not. Here is a reminder of the algorithm:
-    - Every year divisible by 4 is a leap year, except that:
-    - Every year divisible by 100 **is not** a leap year, except that:
-    - Every year divisible by 400 **is** a leap year.
-
-    To check if the year is divisible by some number `n`, check that `year % n == 0`. (`%` is called the [modulo operator](https://en.wikipedia.org/wiki/Modulo)).
-"""
-
-# ╔═╡ 54a7f75f-9835-497e-a1da-ecc36ac61641
-function is_leap_year(year)
-	nothing
-end
-
-# ╔═╡ 4053a6a7-54a0-4b05-aa44-f6ffaf38cfe7
-if isnothing(is_leap_year(2000))
-	still_nothing()
-elseif is_leap_year(133) != false || is_leap_year(2025) != false
-	keep_working(md"Non-multiples of 4 are not correct yet.")
-elseif is_leap_year(2004) != true || is_leap_year(2008) != true || is_leap_year(64) != true
-	keep_working(md"Multiples of 4 are not correct yet.")
-elseif is_leap_year(2100) != false || is_leap_year(1500) != false
-	keep_working(md"Multiples of 100 are not correct yet.")
-elseif is_leap_year(1600) != true || is_leap_year(2000) != true
-	keep_working(md"Multiples of 400 are not correct yet.")
-else
-	correct()
-end
-
-# ╔═╡ e297c5cc-edeb-11ea-3bdd-090f415685ab
-md"## For loops"
-
-# ╔═╡ ec751446-edeb-11ea-31ba-2372e7c71b42
-md"Use `for` to loop through a pre-determined set of values:"
-
-# ╔═╡ fe3fa290-edeb-11ea-121e-7114e5c573c1
+# ╔═╡ b21e501d-afb3-4612-b46e-b68d360c387a
 let
-    s = 0
-	
-	for i in 1:10
-		s += i    # Equivalent to s = s + i
-	end
-	
-	s
+	# x coordinates, here 100 points between 0 and π
+	xs = range(0, π; length=100)
+	# Compute corresponding y coordinates
+	# Remember: calling a function with .() applies it to all elements of the vector
+	ys = sin.(xs)
+	plot(xs, ys)
 end
 
-# ╔═╡ 394b0ec8-eded-11ea-31fb-27392068ef8f
-md"Here, `1:10` is a **range** representing the numbers from 1 to 10:"
-
-# ╔═╡ 4dc00908-eded-11ea-25c5-0f7b2b7e18f9
-typeof(1:10)
-
-# ╔═╡ 6c44abb4-edec-11ea-16bd-557800b5f9d2
-md"Above we used a `let` block to define a new local variable `s`. 
-But blocks of code like this are usually better inside functions, so that they can be reused. For example, we could rewrite the above as follows:
-"
-
-# ╔═╡ 683af3e2-eded-11ea-25a5-0d90bf099d98
-function mysum(n)
-	s = 0
-	
-	for i in 1:n
-		s += i    
-	end
-	
-	return s
-end
-
-# ╔═╡ 76764ea2-eded-11ea-1aa6-296f3421de1c
-mysum(100)
-
-# ╔═╡ bd39bd6d-152a-48d2-bc7b-43f426eb1165
+# ╔═╡ 3f727175-b670-408b-ada0-2b804d45b59f
 md"""
-`for` loops work over many other things than ranges. Here is an example of looping over a vector (see below). `$element` includes the value of the `element` variable in a string.
+## Scatter plots
+Scatter plots are also common. Each point is represented by a dot, and the points don't get connected together. For example:
 """
 
-# ╔═╡ ddcac2dc-f5b4-47fe-81f2-262b1b4718b2
-for element in [1, 10, 100, 1000]
-	println("Looping over $element")
+# ╔═╡ 022f2355-639d-42e4-91eb-27c8af7e3afa
+# Plot the points (-1, 0), (0, 1), and (1, 3)
+let
+	xs = [-1, 0, 1]
+	ys = [0, 1, 3]
+	scatter(xs, ys)
 end
 
-# ╔═╡ 1b49f71c-a8b4-440b-a46a-17dfb4220fa5
+# ╔═╡ 76dd1c63-b5fd-465b-a8df-9f87cbacf43c
 md"""
-## Exercise: Fibonacci
-Before we move on, let us implement a classic exercise.
+## Multiple plots per figure
+In Julia, functions that perform a modification often end with a `!` by convention. Plots follows this convention:
+- `plot(...)`: Create a new plot then do something to it.
+- `plot!(...)`: Modify an existing plot.
+
+Similarly, `scatter(...)` creates a new plot while `scatter!(...)` modifies an existing plot.
+
+Here is an example of plotting a new line with `plot` then adding some points with `scatter!`:
+"""
+
+# ╔═╡ 5c79aebd-5be4-4c48-830a-a639fd8af90b
+let
+	xs = range(0, 1; length=20)
+	# Plot line with equation y = 10x
+	plot(xs, xs * 10)
+	# Plot points with added (Gaussian) noise
+	scatter!(xs, xs * 10 + randn(20))
+end
+
+# ╔═╡ 597e1741-2c6e-4f7e-b690-af9b4334b574
+md"""
+## Series attributes
+Each dataset added through `plot` or `scatter` is called a _series_. Additional options can be passed, called _attributes_. A full list is available [in the official documentation](https://docs.juliaplots.org/stable/generated/attributes_series/). Here is a selection:
+- `label`: Changes the name of the series in the legend.
+- `color`: Changes the color of the series.
+- `linestyle`: Changes the style of the line. For example `:solid` or `:dot`.
+- `linewidth`: Width of the line in pixels.
+
+These also apply to `scatter` (and other types of plots).
+
+Here is a showcase of all of these options:
+"""
+
+# ╔═╡ 1a24369e-b83d-4ff7-a75f-ff80ffb2e932
+let
+	xs = range(0, π; length=100)
+	# Note how extra options are passed. Multiple options can be combined!
+	plot(xs, sin.(xs); label="my label", color=:pink, linestyle=:dash, linewidth=10)
+end
+
+# ╔═╡ 747fe7d9-1cdd-4a29-b9e1-4faaf0b977b0
+md"""
 !!! exercise
-    Complete the below cell by writing a function `fibonacci` that accepts an integer `` n `` and returns the `` n ``-th term of the [Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_sequence) as an integer,
-    that is the sequence $F_n$ with
-    ```math
-    \begin{aligned}
-    F_0 &= 0 \\
-    F_1 &= 1 \\
-    F_2 &= 1 \\
-    F_3 &= 2 \\
-    \ldots\\
-    F_n &= F_{n-1} + F_{n-2}
-    \end{aligned}
-    ```
+	Find the possible values of `linestyle` [in the official documentation](https://docs.juliaplots.org/stable/generated/attributes_series/), and complete them in the following cell.
 """
 
-# ╔═╡ 0cfc3b0d-c662-4399-9c60-3bc851890338
-function fibonacci(n)
-	nothing
-end
+# ╔═╡ c8baf08d-b7fe-4666-919b-90509a764463
+linestyle_values = [:solid]
 
-# ╔═╡ e3c394dc-b8f7-408a-a129-df42b5e0914d
-if isnothing(fibonacci(0))
-	still_nothing()
-elseif (fibonacci(0) == 0 && fibonacci(2) == 1 && fibonacci(7) == 13)
+# ╔═╡ feb14fe5-6294-4eda-9ecf-798f55221db5
+# Don't copy from the solution, that would be too easy. :P
+if linestyle_values == [:solid]
+	still_missing(md"Replace `[:solid]` by the list of allowed values for `linestyle`.")
+elseif !isa(linestyle_values, Vector)
+	keep_working(md"`linestyle_values` should be a vector.")
+elseif !isa(linestyle_values, Vector{Symbol})
+	keep_working(md"`linestyle_values` should be a vector of symbols. Symbols start with `:`.")
+elseif Set(linestyle_values) == Set([:auto, :solid, :dash, :dot, :dashdot, :dashdotdot])
 	correct()
-elseif (fibonacci(0) == 0 && fibonacci(1) == 1)
-	almost(md"Good start `fibonacci(0)` and `fibonacci(1)` are correct. Keep going!")
-elseif !type_eq(fibonacci(1), Int)
-	almost(md"Return type is not integer. Make sure all numbers in your implementation are integers. E.g. use integers like `1` and not floats like `1.0`.")
 else
 	keep_working()
 end
 
-# ╔═╡ ffee7d80-eded-11ea-26b1-1331df204c67
-md"## Arrays"
-
-# ╔═╡ 903b52a1-47dd-4924-bd10-4d4573f7e7a8
+# ╔═╡ 20af8a7d-e3e4-4f8c-8835-e6aae878b938
 md"""
-An array is a collection of elements. They can be one-dimensional, corresponding to a list or vector. They can be two-dimensional, corresponding to a grid of numbers or matrix. They can have more dimensions.
+## Plot attributes
+Some attributes can be used to modify the entire plot.
 
-Arrays have the type `Array{T, N}` where:
-- `T` is the type of element inside the array.
-- `N` is the number of dimensions in the array: `1` for a vector, `2` for a matrix, etc...
+A plot can contain multiple subplots, but we won't cover that in this tutorial. However this means that the official documentation has a [page for plot attributes](https://docs.juliaplots.org/stable/generated/attributes_plot/) and a [page for subplot attributes](https://docs.juliaplots.org/stable/generated/attributes_subplot/).
 
-`Vector{T}` is an alias for `Array{T, 1}` and `Matrix{T}` is an alias for `Array{T, 1}`.
+Here is a selection:
+- `title`: Change the title displayed at the top of the plot.
+- `legend`: Position of the legend. `false` can be used to disable the legend.
+- `dpi`: "Dots Per Inch" of the output figure. Can be used to increase the quality of figures saved as an image. (See below). Default is `100`.
 
-!!! tip
-    If you are already familiar with Python or Matlab, you should check out this comparative cheatsheet already linked in the introduction, which covers a lot of Julia's array syntax: [Comparative cheatsheet Python <-> Julia <-> Matlab](https://cheatsheets.quantecon.org/).
+Plot attributes are also passed to `plot` / `plot!`. They can be passed at the same time as a series, or separately such as
+```jl
+plot!(; title="My title")
+```
+
+As usual, here is an example:
 """
 
-# ╔═╡ cae4137e-edee-11ea-14af-59a32227de1b
-md"### 1D arrays (`Vector`s)"
-
-# ╔═╡ 714f4fca-edee-11ea-3410-c9ab8825d836
-md"We can make a `Vector` (1-dimensional, or 1D array) using square brackets:"
-
-# ╔═╡ 82cc2a0e-edee-11ea-11b7-fbaa5ad7b556
-v = [1, 2, 3]
-
-# ╔═╡ 85916c18-edee-11ea-0738-5f5d78875b86
-typeof(v)
-
-# ╔═╡ 881b7d0c-edee-11ea-0b4a-4bd7d5be2c77
-md"""
-The type tells us that this is a 1D array of integers.
-**Don't forget the commas (`,`)** between the elements, or you will create a matrix instead:
-"""
-
-# ╔═╡ 3384d534-9871-484d-aa7f-c07ecb8b0c49
-[1 2 3]
-
-# ╔═╡ 839463f9-0fbd-456e-bca5-7d844048fd78
-md"""
-We access elements using square brackets:
-"""
-
-# ╔═╡ 547120f6-0b1d-4a17-8eea-ddbb5e2e1999
-v[1]
-
-# ╔═╡ a298e8ae-edee-11ea-3613-0dd4bae70c26
-v[2]
-
-# ╔═╡ 8e28a294-df42-4f85-a262-8333272a9510
-md"""
-The special syntax **`end`** can be used to refer to the end of the array. For example, `v[end]` will access the last element, and `v[end-1]` the one before.
-"""
-
-# ╔═╡ ae0c73b7-3148-4137-ad4f-163ad66d36a6
-v[end-1]
-
-# ╔═╡ 50d57c04-57a3-40bd-bd54-4bfefdf26e8b
-md"""
-**In Julia, arrays start at `1`. Accessing an array at index `0` will cause an error:**
-"""
-
-# ╔═╡ ffa187da-5e70-4317-b88f-922ea31cc8c7
-v[0]
-
-# ╔═╡ 17998b62-91df-4122-b4fa-a50e4bf6aaef
-md"""
-Arrays can be modified:
-"""
-
-# ╔═╡ a5ebddd6-edee-11ea-2234-55453ea59c5a
-v[2] = 10
-
-# ╔═╡ 1cec47b2-d37b-4f04-bc80-c5a06a925083
-md"""
-However types matter! We cannot store a decimal number in an array of `Int64`:
-"""
-
-# ╔═╡ 9ef18d2c-8f3d-4e47-97bf-50ff096d7f74
-v[2] = 2.5
-
-# ╔═╡ a9b48e54-edee-11ea-1333-a96181de0185
-md"Note that Pluto does not automatically update cells when you modify elements of an array, but the value does change."
-
-# ╔═╡ 68c4ead2-edef-11ea-124a-03c2d7dd6a1b
-md"A nice way to create `Vector`s following a certain pattern is to use an **array comprehension**:"
-
-# ╔═╡ 84129294-edef-11ea-0c77-ffa2b9592a26
-v2 = [i^2 for i in 1:10]
-
-# ╔═╡ 872cbae6-7dd6-4567-b582-2ce55109f46d
-md"""
-## Element-wise array operations
-Arrays can be added together, or subtracted, using the regular `+` and `-` operators.
-"""
-
-# ╔═╡ 15e4b26d-6d7e-45bf-939a-a498c11bf741
-vec1 = [1, 2, 3]
-
-# ╔═╡ cfa2a8d5-467e-4084-aea3-40275a2e9470
-vec2 = [1, 4, 9]
-
-# ╔═╡ a8401aa0-34d7-449c-8877-a96cc7875393
-vec1 + vec2
-
-# ╔═╡ aeb60671-3d68-47fb-b6d6-4aa846024558
-vec1 - vec2
-
-# ╔═╡ 114e304e-8642-4b00-a566-7c014b7cf326
-md"""
-This adds and substracts corresponding elements of each array. We call this an **element-wise** operation.
-
-In general, other mathematical operator or functions will not work on arrays. To apply operators or functions to an array **element-wise**, we use special syntax:
-- Adding `.` before an operator will apply the operator element-wise. For example, `.*` and `./` will perform element-wise multiplication.
-- Adding `.` after a function will apply the function element-wise. For example, `cos.` will compute the cosine element-wise.
-"""
-
-# ╔═╡ ec85d0a2-7f82-4a36-b2a8-429ec7015140
-vec1 .* vec2
-
-# ╔═╡ e84ad8a0-853c-4886-8133-87c9c1fe6fa3
-vec1 ./ vec2
-
-# ╔═╡ 5ccc054f-7f31-4ca3-8769-6d4aa28ce8d0
-vec1 .^ 2
-
-# ╔═╡ 612aee5c-648d-469f-9ec9-c37300005b11
-vec1.^2 == vec2
-
-# ╔═╡ 0cbf039b-bb06-44af-a349-55b614c94e5b
-exp.(vec1)
-
-# ╔═╡ 9632c36a-8fe2-4e11-b949-8213a6ac4bdb
-cos.([0, π, 2π])
-
-# ╔═╡ 39bc95f9-74e8-468d-b7e4-700438675bf0
-md"""
-Let's put this into practice with the Fibonacci function you wrote above:
-
-!!! exercise
-    Complete the following function that will compute multiple Fibonacci numbers at once. It will receive a vector of integers, and should return a vector with the corresponding Fibonacci numbers.
-    For example, `many_fibonacci([1, 2, 4])` should return `[1, 1, 3]`.
-
-    Your answer should be very short and use the `fibonacci` function that you wrote above.
-"""
-
-# ╔═╡ f538c5f7-f5c3-4c47-9db3-b785d8b7b9ca
-many_fibonacci(ns) = fibonacci(0)
-
-# ╔═╡ 8f51ebf4-7dc7-4441-a0b6-9225acbbbfb0
-if isnothing(many_fibonacci([0]))
-	still_nothing(text=md"First, implement the `fibonacci` function in the exercise a few sections above.")
-elseif many_fibonacci([10]) == 0
-	still_nothing(md"Replace `fibonacci(0)` in the cell above.")
-elseif many_fibonacci([1, 2, 4]) != [1, 1, 3]
-	keep_working(md"The example `many_fibonacci([1, 2, 4])` is not correct yet.")
-elseif many_fibonacci([1, 2, 4, 7, 10]) != [1, 1, 3, 13, 55]
-	keep_working()
-else
-	correct()
+# ╔═╡ 088bd044-5a6b-49b6-bf1c-0244db475f84
+let
+	xs = range(0, π; length=100)
+	plot(xs, sin.(xs))
+	# Change the title and move the legend to the bottom
+	plot!(; title="sin function between 0 and π", legend=:bottom)
 end
 
-# ╔═╡ d364fa16-edee-11ea-2050-0f6cb70e1bcf
-md"## 2D arrays (matrices)"
-
-# ╔═╡ db99ae9a-edee-11ea-393e-9de420a545a1
-md"We can make small matrices (2D arrays) with square brackets too:"
-
-# ╔═╡ 04f175f2-edef-11ea-0882-712548ebb7a3
-M = [1 2
-	 3 4]
-
-# ╔═╡ 0a8ac112-edef-11ea-1e99-cf7c7808c4f5
-typeof(M)
-
-# ╔═╡ 1295f48a-edef-11ea-22a5-61e8a2e1d005
-md"The `2` in the type confirms that this is a 2D array."
-
-# ╔═╡ 3e1fdaa8-edef-11ea-2f03-eb41b2b9ea0f
-md"This won't work so easily for larger matrices, though. For that we can use e.g."
-
-# ╔═╡ 48f3deca-edef-11ea-2c18-e7419c9030a0
-zeros(5, 5)
-
-# ╔═╡ a8f26af8-edef-11ea-2fc7-2b776f515aea
-md"Note that `zeros` gives `Float64`s by default. We can also specify a type for the elements:"
-
-# ╔═╡ b595373e-edef-11ea-03e2-6599ef14af20
-zeros(Int, 4, 5)
-
-# ╔═╡ c6676b63-aa1d-4698-ad33-e8a354534164
-md"Same as the arrays themselves. E.g. contrast"
-
-# ╔═╡ b1d27139-6a41-414a-8bc2-6b54373f5404
-Float64[1, 2, 3]
-
-# ╔═╡ f85a45d7-2467-470b-b688-5d9f0f69b133
-md"which creates a `Float64` array versus"
-
-# ╔═╡ 9449e4ad-bef7-4342-9623-5583308f4d28
-Int[1, 2, 3]  # or just [1, 2, 3]
-
-# ╔═╡ 4cb33c04-edef-11ea-2b35-1139c246c331
-md"which creates an integer array. We can then fill in the values we want by manipulating the elements, e.g. with a `for` loop."
-
-# ╔═╡ 54e47e9e-edef-11ea-2d75-b5f550902528
-md"A nice alternative syntax to create matrices following a certain pattern is an array comprehension with a *double* `for` loop:"
-
-# ╔═╡ 6348edce-edef-11ea-1ab4-019514eb414f
-[i + j for i in 1:5, j in 1:6]
-
-# ╔═╡ 2f4d9a36-d93d-4cf3-aa73-23442fad0bac
+# ╔═╡ 42e8bbcd-cfe8-4310-957c-6114af395401
 md"""
-To access matrix elements directly, we need to use two indices:
+## Axis attributes
+Some attributes can also apply to the `x` axis (horizontal) or the `y` axis (vertical). Here is a selection:
+- `xscale` and `yscale`: Scale of the axis. Most importantly, `:log10` can be passed to make the axis logarithmic.
+- `xlabel` and `ylabel`: Name of the axis.
+- `xlims` and `ylims`: Range of the axis. For example, `[5, 10]` to make the axis range from 5 to 10.
+
+The full list is available in [the official documentation](https://docs.juliaplots.org/stable/generated/attributes_axis/), without the `x` or `y` prefix.
+
+Here is an example:
 """
 
-# ╔═╡ 237bc17e-ae95-4d7f-b6e3-fa54ad49234f
-M[1, 2]
+# ╔═╡ 8aee946d-6134-413d-9ff5-cb56f26c5e0c
+let
+	xs = range(0, 10; length=100)
+	plot(xs, exp.(xs))
+	plot!(; xlabel="Label for x axis")
+	plot!(; yscale=:log10, ylabel="Label for y axis. Notice the logarithmic scale.")
+end
 
-# ╔═╡ 75341b42-172a-4a18-8bd6-1d68859a0380
-M[2, 2]
-
-# ╔═╡ 953a86dc-0013-4e80-9810-ffcae96444e9
+# ╔═╡ 9a3981f3-1479-4694-8e2c-0a5ad86271d7
 md"""
-## Element-wise vs matrix operations
-Element-wise operations also work on matrices, using the `.` syntax explained above:
+## Practice Time
+Here is a plot:
+$(RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/c339ce1f64933b4edab2bd7a6fbf1df972d2b9b1/src/exercises/img/ex0_plots_exercise.png", "img/ex0_plots_exercise.png"))
+
+!!! exercise
+    Complete the cell below to produce a similar plot. The data for the line and the scatter plot is provided, and you have to plot it. Pay attention to the axes, the legend, the title, and so on.
 """
 
-# ╔═╡ 75825042-cc74-40f9-8b36-9493b6dbeb45
-exp.(M)
+# ╔═╡ f92a25a4-6cc5-4705-956a-8da3af041636
+let
+	# The data points are given to you.
+	xs = range(0, 10; length=11)
+	ys_points = [3.264219326544821, 3.4489309156347425, 12.975323123905081, 3.8904467103807927, 128.650270688119, 23.524783240700987, 175.52405606163614, 1173.8330021528288, 8755.08696752278, 11573.569080380066, 8807.211902252335]
+	ys_line = exp.(xs)
+	# Fill in the plotting code here:
+	plot()
+end
 
-# ╔═╡ 3e9b1407-f4ca-47b8-be67-0b1b402cf6a3
-md"""
-**Many functions can be applied to the whole square matrix, giving a different result than applying the function element-wise.**
-"""
-
-# ╔═╡ 3acae1a9-562f-4d09-b4e0-dd973478d095
-exp(M)
-
-# ╔═╡ 09855245-b441-4af9-a1fe-f399d9e24b1c
-md"""
-Oops, we computed the [matrix exponential](https://en.wikipedia.org/wiki/Matrix_exponential) instead of the element-wise exponential.
-"""
-
-# ╔═╡ 768b7bdd-0348-4cdf-bd0b-159638449f7f
-md"""
-As another example, **matrix multiplication** is performed with `*` whereas element-wise multiplication is performed with `.*`:
-"""
-
-# ╔═╡ 91d34d35-0b1d-4331-9622-8b3619b0b20c
-M * M
-
-# ╔═╡ 2e0aecbc-8368-42ff-abc7-62e96bbb44a2
-M .* M
-
-# ╔═╡ f3cd579b-dd2a-4677-b410-bd9824f815f6
-md"""
-As a final example, let's revisit two variations of the famous $\cos(x)^2 + \sin(x)^2 = 1$ equation:
-"""
-
-# ╔═╡ 6f952243-5b13-45d5-9d78-b0e9fca84c25
-cos(M)^2 + sin(M)^2
-
-# ╔═╡ 2b9177e4-49cf-4687-9677-fb3939d39b83
-cos.(M).^2 + sin.(M).^2
-
-# ╔═╡ 8b14d642-c0a6-430e-9050-3d31544e8703
-md"""
-Element-wise, we indeed get `1` for every entry. For the whole matrix, we get an identity matrix which is indeed the `1` of 2x2 matrices.
-
-Note: `-1.66533e-16` means $-1.66533 \times 10^{-16}$ which is a very small number. It happens due to the imprecision of floating-point arithmetic. It would be `0` if computer math were exact.
-"""
-
-# ╔═╡ e7958456-9f46-4273-96ef-014ee631efe3
+# ╔═╡ 95c50a2e-5c64-4403-8c54-babb99951e28
 md"""
 # The End
-This concludes the tutorial section of this first notebook.
+This concludes the tutorial on plots in Julia.
 
-Feel free to keep reading for a look at a more advanced example, or skip the following section and come back to it later.
-In any case, a second notebook awaits you on Moodle with an introduction to plotting in Julia.
+The next section explains how to save plots, for example to include them in your reports. Feel free to skip that section if you are not interested, you won't need it in this class!
+
+In any case, the third and last notebook for this week awaits you on Moodle.
 """
 
-# ╔═╡ ff2060d7-017f-43f4-af6f-ca3c921fe975
+# ╔═╡ 38004ae9-7f5b-4c4d-8d1a-0962c3def007
 md"""
-# Supplemental: Step-by-step replication of the Arrhenius fit from the lecture
-_(This part is intented as a deeper dive into Julia's capabilities.)_
+# Optional: Saving plots
+_(This is not needed for this course, but could be useful to you in the future.)_
 
+The `plot` / `plot!` function returns the current plot, which Pluto renders. This is how we have been rendering plots so far. To save a plot, for example to include it in a report, we use the `savefig` function.
 
-We here reproduce in full detail the Arrhenius fit example from the lecture.
-
-- We were given the data:
+We have to pass the name of the file to `savefig`.
+- Pass a file name ending with `.pdf` to save the plot as a PDF document. This will save the plot as [vector graphics](https://en.wikipedia.org/wiki/Vector_graphics), which means that the plot will not be blurry even when zooming in a lot.
+- Pass a file name ending with an image extension such as `.png` to save the plot as an image. Images can be easier to work with, but can look blurry when zoomed in.
+In reports, prefer vector graphics... they look better. 😉
 """
 
-# ╔═╡ d0501dcf-8cc0-4e80-bab9-7a8421e082cb
-data = """
-# Temperature(K)  Rate(1/s)
-  250.0           1.65657
-  260.0           1.70327
-  270.0           1.74472
-  280.0           1.78110
-  290.0           1.81259
-  300.0           1.83940
-  310.0           1.86171
-  320.0           1.87971
-  330.0           1.89358
-  340.0           1.90352
-  350.0           1.90968
-""";
-
-
-# ╔═╡ ff49ef7e-ec35-42b9-b267-a4dfc4380a2e
+# ╔═╡ f70510e2-4f93-44a6-a883-0ca438f86fe0
 md"""
-This data is in plain text form, so we need to preprocess it a little in order to be able to plot it graphically.
-
-First we split the data into lines:
+### PDF
+An example of saving a figure to PDF:
 """
 
-# ╔═╡ 4543612a-7a80-456c-810e-0a1b344941c9
-lines = split(data, "\n")
-
-# ╔═╡ 821a8995-2a94-41fb-89e1-f305b37074f4
-md"""
-The head line
-"""
-
-# ╔═╡ 791e8815-45ba-469c-8849-66a63f455687
-lines[1]
-
-# ╔═╡ c669ca4a-06c6-4f0f-8324-929ebe95c228
-md"""
-is not needed, and similarly the last line
-"""
-
-# ╔═╡ f0afcf68-9796-47d5-8616-d6e4b90310b9
-lines[end]
-
-# ╔═╡ 1c18d499-5cb2-4afa-9fb8-056cfe538c40
-md"""
-is empty, so we strip them using Julia's array masks:
-"""
-
-# ╔═╡ 09b9eb1c-eb18-4c05-8dd6-ae4686da32f0
-lines_relevant = lines[2:end-1]
-
-# ╔═╡ cb18cacb-3d77-4822-b211-cdcba564ede7
-md"""Repeating the spliting on the lines, we can obtain the temperature and rate data in separate arrays:"""
-
-# ╔═╡ 021021b6-87db-4ea6-9d0c-dcff04d8a9f8
-temperature_string = [split(line)[1] for line in lines_relevant]
-
-# ╔═╡ ba4ed27b-d910-4994-b885-6e1d1aadcbb2
-rate_string = [split(line)[2] for line in lines_relevant]
-
-# ╔═╡ 42dc5569-00db-490b-91de-e6ad2cf892ec
-md"""To get floating-point numbers out of these strings, we `parse` them:"""
-
-# ╔═╡ ba1b06f9-2bac-4270-885a-3ab7b617f6fa
-[parse(Float64, string) for string in temperature_string]
-
-# ╔═╡ f952e9e3-3bd6-4ea3-a717-e330ccbc9234
-md"""More compactly we could have written this as"""
-
-# ╔═╡ d6296330-0f76-4a74-9fc9-a5ffa0b370f1
-begin
-	temperature = [parse(Float64, split(line)[1]) for line in lines[2:end-1]]
-	rate        = [parse(Float64, split(line)[2]) for line in lines[2:end-1]]
+# ╔═╡ dc34fd9a-aa31-4196-9c9b-7e0d1dd90b33
+let
+	xs = range(0, π; length=100)
+	plot(xs, sin.(xs))
+	savefig("sin_plot.pdf")
 end;
 
-# ╔═╡ bf1b8bc6-651e-4aaa-9449-8ecbe9dcac86
-md"""where `begin ... end` allows to combine multiple statements in one cell.
-
-Finally we plot:"""
-
-# ╔═╡ 2eece0f2-ffec-4f55-be39-86178519f8cf
-scatter(temperature, rate)
-
-# ╔═╡ 6b82c743-7be1-4980-9c1b-ef2f86eb474f
+# ╔═╡ 7b3e63d5-1276-4bef-85d8-7da9504b7db6
 md"""
-The best fit Arrhenius equation is given by the function
+### Image
+An example of saving a figure to PNG:
 """
 
-# ╔═╡ 67c63a8e-88c2-4d17-9225-30819f0886a3
-function arrhenius(T)
-	5exp(-300 / T)
-end
-
-# ╔═╡ cfb8897a-4312-450b-920a-e5ec90e88565
-md"""
-Let's first investigate which values this function would take at these points
-and plot it in the same graph:
-"""
-
-# ╔═╡ 69432575-0503-4331-8ac1-2b1f90f1f202
-begin
-	predicted_rates = [arrhenius(t) for t in temperature]
-
-	plt1 = scatter(temperature, rate, label="Measured data")
-	scatter!(plt1, temperature, predicted_rates, label="Predicted rate (Arrhenius)")
-	plt1
-end
-
-# ╔═╡ d009e504-dca9-43e0-8668-273a303edd79
-md"Note that here the first `scatter` call returns an object, which represents the plotting canvas. Using a second `scatter!` call we can add other entities for plotting to it.
-
-If we want to plot a continuous graph instead of data points, we can use `plot` or `plot!`, e.g.:"
-
-# ╔═╡ 71d64b5a-4e0c-4dea-bc87-479e8e6aa7e0
-begin
-	# Note: predicted_rates already defined above
-	
-	plt2 = scatter(temperature, rate, label="Measured data")
-	plot!(plt2, temperature, predicted_rates, label="Predicted rate (Arrhenius)",
-	      linewidth=2)
-	plt2
-end
-
-# ╔═╡ ca2ea37d-21cd-404e-bcb0-11b12c6af9b7
-md"For convenience, functions like `arrhenius` can also be plotted directly, without evaluating them explicitly:"
-
-# ╔═╡ f23a8a39-0cd1-4c18-b598-41fc3c0581ad
-begin
-	plt3 = scatter(temperature, rate, label="Measured data")
-	plot!(plt3, arrhenius, label="Predicted rate (Arrhenius)",
-	      linewidth=2)
-	plt3
-end
-
-# ╔═╡ 8ff0d83c-9a5a-419d-9a0d-efe9f0034fc2
-md"""
-Note, that also a similar `let ... end` block exists to combine multiple statements.
-The point of `let` is to *hide* variable names and content from the outside the cell.
-This is needed because in Pluto notebooks each variable name may only be used a single time in the public context, e.g. defining `a` twice leads to a warning
-and the disabling of one cell.
-"""
-
-# ╔═╡ ab70be10-5821-44ac-8a5b-aeb32f24d1cf
-md"""
-This is a safety feature to avoid overwriting computational results.
-
-Sometimes (especially for setting up plots), we have no interest in using the data outside of the cell anyway. In this case using `let` ... `end` is usually better:
-"""
-
-# ╔═╡ 562622cc-d910-4cc5-a7f5-f5b919923a47
+# ╔═╡ 1c0985d7-d63e-40de-9732-9fd31d3e97a0
 let
-	p = scatter(temperature, rate, label="Measured data")
-	plot!(p, arrhenius, label="Predicted rate (Arrhenius)",
-	      linewidth=2)
-	p
-end
+	xs = range(0, π; length=100)
+	plot(xs, sin.(xs))
+	savefig("sin_plot.png")
+end;
 
-# ╔═╡ 34c12be4-e036-4a1b-a3f8-72530073c6d4
-# ╠═╡ disabled = true
-#=╠═╡
-variable = 4
-  ╠═╡ =#
+# ╔═╡ 04583aa3-4f05-431a-9fa1-e37e77f95b56
+md"""
+If you open the above image, you will notice that it looks blurry. For example it might look like this:
+$(RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/c339ce1f64933b4edab2bd7a6fbf1df972d2b9b1/src/exercises/img/ex0_plots_sin_plot.png", "img/ex0_plots_sin_plot.png"))
 
-# ╔═╡ 7c3a5972-a0b8-44ba-8525-ade8c0bc4135
-#=╠═╡
-variable = 5
-  ╠═╡ =#
+The number of pixels used by the image can be increased with the `dpi` attribute:
+"""
+
+# ╔═╡ 26e79728-14f5-4cda-bcd1-7839afae8f5c
+let
+	xs = range(0, π; length=100)
+	plot(xs, sin.(xs); dpi=400)
+	savefig("sin_plot_high_dpi.png")
+end;
+
+# ╔═╡ 893020b2-0984-4149-8893-bbfe73e0b821
+md"""
+Here is an example of the high DPI version:
+$(RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/c339ce1f64933b4edab2bd7a6fbf1df972d2b9b1/src/exercises/img/ex0_plots_sin_plot_high_dpi.png", "img/ex0_plots_sin_plot_high_dpi.png"))
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
-PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
-Plots = "~1.40.0"
-PlutoTeachingTools = "~0.2.14"
-PlutoUI = "~0.7.55"
+Plots = "~1.40.9"
+PlutoTeachingTools = "~0.3.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1078,7 +288,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.3"
 manifest_format = "2.0"
-project_hash = "89730529162ab46df08960c2558313e74d0f9085"
+project_hash = "ce8354791b3cc321ed3d52e760f3abef4195a343"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1129,9 +339,9 @@ version = "1.3.6"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
-git-tree-sha1 = "bce6804e5e6044c6daab27bb533d1295e4a2e759"
+git-tree-sha1 = "545a177179195e442472a1c4dc86982aa7a1bef0"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.7.6"
+version = "0.7.7"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
@@ -1398,9 +608,9 @@ version = "3.1.1+0"
 
 [[deps.JuliaInterpreter]]
 deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "a729439c18f7112cbbd9fcdc1771ecc7f071df6a"
+git-tree-sha1 = "4bf4b400a8234cff0f177da4a160a90296159ce9"
 uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.9.39"
+version = "0.9.41"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1433,9 +643,9 @@ version = "1.4.0"
 
 [[deps.Latexify]]
 deps = ["Format", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
-git-tree-sha1 = "ce5f5621cac23a86011836badfedf664a612cee4"
+git-tree-sha1 = "cd714447457c660382fe634710fb56eb255ee42e"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.16.5"
+version = "0.16.6"
 
     [deps.Latexify.extensions]
     DataFramesExt = "DataFrames"
@@ -1737,10 +947,10 @@ uuid = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 version = "0.1.6"
 
 [[deps.PlutoTeachingTools]]
-deps = ["Downloads", "HypertextLiteral", "LaTeXStrings", "Latexify", "Markdown", "PlutoLinks", "PlutoUI", "Random"]
-git-tree-sha1 = "5d9ab1a4faf25a62bb9d07ef0003396ac258ef1c"
+deps = ["Downloads", "HypertextLiteral", "Latexify", "Markdown", "PlutoLinks", "PlutoUI"]
+git-tree-sha1 = "8252b5de1f81dc103eb0293523ddf917695adea1"
 uuid = "661c6b06-c737-4d37-b85c-46df65de6f69"
-version = "0.2.15"
+version = "0.3.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -2296,208 +1506,35 @@ version = "1.4.1+2"
 """
 
 # ╔═╡ Cell order:
-# ╠═33490d1f-ef11-4159-823f-0040c096539c
-# ╟─0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
-# ╟─4dbd5dd5-02d9-4243-a0fc-ac7089fc588a
-# ╠═5e963571-a2bf-4554-9082-1ab5ec48d089
-# ╟─462e68ff-5c86-4403-bcc5-907dbca15f2e
-# ╠═6424fb26-3b04-48d9-9c6f-0a1db75ef35f
-# ╟─a249a972-8911-4c74-884d-5e30fd43dbec
-# ╟─3b038ee0-edeb-11ea-0977-97cc30d1c6ff
-# ╟─6af9c3a0-2534-4bf1-9eb8-f5e34a091c64
-# ╠═28c2ac78-2462-452e-bdc5-8319576fb33a
-# ╠═0c8d79af-d762-4165-9992-688532185d48
-# ╠═48ebe8f9-7ee1-478a-8ea3-f12f8b8b25e6
-# ╠═9195da81-4465-4fc1-9831-b9aea1697bbe
-# ╠═76f3caa3-4541-4268-aac6-6fb4d7aa6436
-# ╟─5e062a24-edeb-11ea-256a-d938f77d7815
-# ╟─166e8c0c-73d7-4a4d-b27f-13f9b4005dd2
-# ╠═52f0d7e9-5eb2-42e6-b5ce-be8c6dd0ea4f
-# ╠═025abeca-9f34-4921-9578-c571234c0616
-# ╠═4f9f0cc7-f6cf-443b-94af-bb31f213503e
-# ╠═f608bad0-43a6-4796-bfc8-7f30499797ad
-# ╟─b5143875-138b-413b-8073-1dc613555803
-# ╠═3e8e0ea0-edeb-11ea-22e0-c58f7c2168ce
-# ╠═59b66862-edeb-11ea-2d62-71dcc79dbfab
-# ╟─e938820b-daad-4cc9-9fd0-c8adc84adf46
-# ╠═b6a3144d-eaba-4dff-802f-d20becff06e6
-# ╠═8ad688a5-2831-4017-ad39-2c98e5a0efd9
-# ╟─0d0f4edf-a411-4a51-9c51-24256050b397
-# ╠═2a4ec691-0944-4b3a-8def-a83eb8bf2400
-# ╟─72e5b9d3-df98-4f6e-b283-52f928e7a80c
-# ╟─44986e44-3371-477f-967e-9af708d103b3
-# ╠═35887694-5ad2-463a-b4a9-9f115542c9e2
-# ╟─5e381128-b6f6-4594-8baa-f585d1e44061
-# ╟─1b2086c1-9b29-4b7d-8e88-7e8fbd86bde3
-# ╟─7e46f0e8-edeb-11ea-1092-4b5e8acd9ee0
-# ╠═5111713e-8c05-4161-b55a-814d72d32bc9
-# ╠═799938f0-8a4d-4505-bdcf-d5de7f70dcbb
-# ╠═57165a23-204d-4e68-8943-10bee7d68fa5
-# ╟─89336d7d-ebb8-46cc-92b2-dea09e3282c0
-# ╠═8a695b86-edeb-11ea-08cc-17263bec09df
-# ╟─769ed521-7faa-459a-b77e-15d5fbeef046
-# ╟─9072a34d-862f-4d6a-bbc4-7fce7a55c575
-# ╠═19c956cb-776b-4628-911d-a119f51c62d8
-# ╟─685174e3-21ca-46f7-bd6d-467718a6850e
-# ╠═71bcb101-8715-4754-82ce-1d24fea8a512
-# ╟─8e2dd3be-edeb-11ea-0703-354fb31c12f5
-# ╟─82a0aae9-3937-4f60-9f75-532feb59e3f7
-# ╠═80074898-5414-445b-8831-4c94fd8c9d52
-# ╠═1d945be1-3664-462c-ba4a-29e5e72724ea
-# ╟─9f28c628-dc42-4d4d-bf5d-d85a39cc1271
-# ╠═b8acc676-3e5b-4048-8120-ad6a182d2315
-# ╠═2a3f7d44-0fb6-4929-9248-5265d0680619
-# ╠═dc29fcf1-ed6c-44a4-9e89-57d3f635a542
-# ╠═7db7d2fd-4004-41bd-bfe9-b1ead83bdfea
-# ╟─13a0268c-d815-4844-8b90-b2a475e9a4fa
-# ╟─96b5a28c-edeb-11ea-11c0-597615962f54
-# ╠═a7453572-edeb-11ea-1e27-9f710fd856a6
-# ╟─b341db4e-edeb-11ea-078b-b71ac00089d7
-# ╠═23f9afd4-eded-11ea-202a-9f0f1f91e5ad
-# ╟─d50fdb40-62eb-454d-baf3-42d1bb34f082
-# ╠═cc1f6872-edeb-11ea-33e9-6976fd9b107a
-# ╟─ce9667c2-edeb-11ea-2665-d789032abd11
-# ╠═d73d3400-edeb-11ea-2dea-95e8c4a6563b
-# ╠═e04ccf10-edeb-11ea-36d1-d11969e4b2f2
-# ╟─2c446801-df67-4912-942c-aaa664302b28
-# ╠═fc0bc6bd-b01c-461d-8cf8-ad3912ab2cbd
-# ╠═b5e5cee9-dcf2-4e23-afce-72e136cbd988
-# ╟─d15f35df-23af-4793-bb4a-5878a4a52b23
-# ╠═971be2b7-d1e6-4e16-be24-a6a8d3092772
-# ╟─7cfb56d4-b978-4e02-a64e-96431db95b61
-# ╟─93a231f4-edec-11ea-3b39-299b3be2da78
-# ╟─82e63a24-eded-11ea-3887-15d6bfabea4b
-# ╠═9b339b2a-eded-11ea-10d7-8fc9a907c892
-# ╠═9535eb40-eded-11ea-1651-e33c9c23dbfb
-# ╠═73f81dc2-1138-4f44-be8c-fc0ee55aa2e2
-# ╠═58053efc-8656-4b9c-abfc-a15c29cb10b3
-# ╠═530f923d-c820-4a45-8215-a9a57e375a18
-# ╟─a16299a2-eded-11ea-2b56-93eb7a1010a7
-# ╠═bc6b124e-eded-11ea-0290-b3760cb81024
-# ╟─cfb21014-eded-11ea-1261-3bc30952a88e
-# ╟─ca7089ae-0394-4d52-82cc-b893e2300894
-# ╠═ee0510a9-95b3-4e43-addb-8ffdb724d3ad
-# ╟─b96761f5-b235-47b0-b3b4-f350feea46ac
-# ╠═22bd1bc0-c2fa-489a-a2c9-b1c75b36f7ba
-# ╠═f2426c25-32c6-4408-80c3-d234a0fd6a65
-# ╠═b8201bdd-585a-4ac2-ae44-bb2c1b378dca
-# ╠═18adab01-e74e-4537-8549-fadad03f30b7
-# ╟─77d9277c-54bc-4d80-acc7-d8d866753e27
-# ╠═54a7f75f-9835-497e-a1da-ecc36ac61641
-# ╟─4053a6a7-54a0-4b05-aa44-f6ffaf38cfe7
-# ╟─e297c5cc-edeb-11ea-3bdd-090f415685ab
-# ╟─ec751446-edeb-11ea-31ba-2372e7c71b42
-# ╠═fe3fa290-edeb-11ea-121e-7114e5c573c1
-# ╟─394b0ec8-eded-11ea-31fb-27392068ef8f
-# ╠═4dc00908-eded-11ea-25c5-0f7b2b7e18f9
-# ╟─6c44abb4-edec-11ea-16bd-557800b5f9d2
-# ╠═683af3e2-eded-11ea-25a5-0d90bf099d98
-# ╠═76764ea2-eded-11ea-1aa6-296f3421de1c
-# ╟─bd39bd6d-152a-48d2-bc7b-43f426eb1165
-# ╠═ddcac2dc-f5b4-47fe-81f2-262b1b4718b2
-# ╟─1b49f71c-a8b4-440b-a46a-17dfb4220fa5
-# ╠═0cfc3b0d-c662-4399-9c60-3bc851890338
-# ╟─e3c394dc-b8f7-408a-a129-df42b5e0914d
-# ╟─ffee7d80-eded-11ea-26b1-1331df204c67
-# ╟─903b52a1-47dd-4924-bd10-4d4573f7e7a8
-# ╟─cae4137e-edee-11ea-14af-59a32227de1b
-# ╟─714f4fca-edee-11ea-3410-c9ab8825d836
-# ╠═82cc2a0e-edee-11ea-11b7-fbaa5ad7b556
-# ╠═85916c18-edee-11ea-0738-5f5d78875b86
-# ╟─881b7d0c-edee-11ea-0b4a-4bd7d5be2c77
-# ╠═3384d534-9871-484d-aa7f-c07ecb8b0c49
-# ╟─839463f9-0fbd-456e-bca5-7d844048fd78
-# ╠═547120f6-0b1d-4a17-8eea-ddbb5e2e1999
-# ╠═a298e8ae-edee-11ea-3613-0dd4bae70c26
-# ╟─8e28a294-df42-4f85-a262-8333272a9510
-# ╠═ae0c73b7-3148-4137-ad4f-163ad66d36a6
-# ╟─50d57c04-57a3-40bd-bd54-4bfefdf26e8b
-# ╠═ffa187da-5e70-4317-b88f-922ea31cc8c7
-# ╟─17998b62-91df-4122-b4fa-a50e4bf6aaef
-# ╠═a5ebddd6-edee-11ea-2234-55453ea59c5a
-# ╟─1cec47b2-d37b-4f04-bc80-c5a06a925083
-# ╠═9ef18d2c-8f3d-4e47-97bf-50ff096d7f74
-# ╟─a9b48e54-edee-11ea-1333-a96181de0185
-# ╟─68c4ead2-edef-11ea-124a-03c2d7dd6a1b
-# ╠═84129294-edef-11ea-0c77-ffa2b9592a26
-# ╟─872cbae6-7dd6-4567-b582-2ce55109f46d
-# ╠═15e4b26d-6d7e-45bf-939a-a498c11bf741
-# ╠═cfa2a8d5-467e-4084-aea3-40275a2e9470
-# ╠═a8401aa0-34d7-449c-8877-a96cc7875393
-# ╠═aeb60671-3d68-47fb-b6d6-4aa846024558
-# ╟─114e304e-8642-4b00-a566-7c014b7cf326
-# ╠═ec85d0a2-7f82-4a36-b2a8-429ec7015140
-# ╠═e84ad8a0-853c-4886-8133-87c9c1fe6fa3
-# ╠═5ccc054f-7f31-4ca3-8769-6d4aa28ce8d0
-# ╠═612aee5c-648d-469f-9ec9-c37300005b11
-# ╠═0cbf039b-bb06-44af-a349-55b614c94e5b
-# ╠═9632c36a-8fe2-4e11-b949-8213a6ac4bdb
-# ╟─39bc95f9-74e8-468d-b7e4-700438675bf0
-# ╠═f538c5f7-f5c3-4c47-9db3-b785d8b7b9ca
-# ╟─8f51ebf4-7dc7-4441-a0b6-9225acbbbfb0
-# ╟─d364fa16-edee-11ea-2050-0f6cb70e1bcf
-# ╟─db99ae9a-edee-11ea-393e-9de420a545a1
-# ╠═04f175f2-edef-11ea-0882-712548ebb7a3
-# ╠═0a8ac112-edef-11ea-1e99-cf7c7808c4f5
-# ╟─1295f48a-edef-11ea-22a5-61e8a2e1d005
-# ╟─3e1fdaa8-edef-11ea-2f03-eb41b2b9ea0f
-# ╠═48f3deca-edef-11ea-2c18-e7419c9030a0
-# ╟─a8f26af8-edef-11ea-2fc7-2b776f515aea
-# ╠═b595373e-edef-11ea-03e2-6599ef14af20
-# ╟─c6676b63-aa1d-4698-ad33-e8a354534164
-# ╠═b1d27139-6a41-414a-8bc2-6b54373f5404
-# ╟─f85a45d7-2467-470b-b688-5d9f0f69b133
-# ╠═9449e4ad-bef7-4342-9623-5583308f4d28
-# ╟─4cb33c04-edef-11ea-2b35-1139c246c331
-# ╟─54e47e9e-edef-11ea-2d75-b5f550902528
-# ╠═6348edce-edef-11ea-1ab4-019514eb414f
-# ╟─2f4d9a36-d93d-4cf3-aa73-23442fad0bac
-# ╠═237bc17e-ae95-4d7f-b6e3-fa54ad49234f
-# ╠═75341b42-172a-4a18-8bd6-1d68859a0380
-# ╟─953a86dc-0013-4e80-9810-ffcae96444e9
-# ╠═75825042-cc74-40f9-8b36-9493b6dbeb45
-# ╟─3e9b1407-f4ca-47b8-be67-0b1b402cf6a3
-# ╠═3acae1a9-562f-4d09-b4e0-dd973478d095
-# ╟─09855245-b441-4af9-a1fe-f399d9e24b1c
-# ╟─768b7bdd-0348-4cdf-bd0b-159638449f7f
-# ╠═91d34d35-0b1d-4331-9622-8b3619b0b20c
-# ╠═2e0aecbc-8368-42ff-abc7-62e96bbb44a2
-# ╟─f3cd579b-dd2a-4677-b410-bd9824f815f6
-# ╠═6f952243-5b13-45d5-9d78-b0e9fca84c25
-# ╠═2b9177e4-49cf-4687-9677-fb3939d39b83
-# ╟─8b14d642-c0a6-430e-9050-3d31544e8703
-# ╟─e7958456-9f46-4273-96ef-014ee631efe3
-# ╟─ff2060d7-017f-43f4-af6f-ca3c921fe975
-# ╠═d0501dcf-8cc0-4e80-bab9-7a8421e082cb
-# ╟─ff49ef7e-ec35-42b9-b267-a4dfc4380a2e
-# ╠═4543612a-7a80-456c-810e-0a1b344941c9
-# ╟─821a8995-2a94-41fb-89e1-f305b37074f4
-# ╠═791e8815-45ba-469c-8849-66a63f455687
-# ╟─c669ca4a-06c6-4f0f-8324-929ebe95c228
-# ╠═f0afcf68-9796-47d5-8616-d6e4b90310b9
-# ╟─1c18d499-5cb2-4afa-9fb8-056cfe538c40
-# ╠═09b9eb1c-eb18-4c05-8dd6-ae4686da32f0
-# ╟─cb18cacb-3d77-4822-b211-cdcba564ede7
-# ╠═021021b6-87db-4ea6-9d0c-dcff04d8a9f8
-# ╠═ba4ed27b-d910-4994-b885-6e1d1aadcbb2
-# ╟─42dc5569-00db-490b-91de-e6ad2cf892ec
-# ╠═ba1b06f9-2bac-4270-885a-3ab7b617f6fa
-# ╟─f952e9e3-3bd6-4ea3-a717-e330ccbc9234
-# ╠═d6296330-0f76-4a74-9fc9-a5ffa0b370f1
-# ╟─bf1b8bc6-651e-4aaa-9449-8ecbe9dcac86
-# ╠═2eece0f2-ffec-4f55-be39-86178519f8cf
-# ╟─6b82c743-7be1-4980-9c1b-ef2f86eb474f
-# ╠═67c63a8e-88c2-4d17-9225-30819f0886a3
-# ╟─cfb8897a-4312-450b-920a-e5ec90e88565
-# ╠═69432575-0503-4331-8ac1-2b1f90f1f202
-# ╟─d009e504-dca9-43e0-8668-273a303edd79
-# ╠═71d64b5a-4e0c-4dea-bc87-479e8e6aa7e0
-# ╟─ca2ea37d-21cd-404e-bcb0-11b12c6af9b7
-# ╠═f23a8a39-0cd1-4c18-b598-41fc3c0581ad
-# ╟─8ff0d83c-9a5a-419d-9a0d-efe9f0034fc2
-# ╠═34c12be4-e036-4a1b-a3f8-72530073c6d4
-# ╠═7c3a5972-a0b8-44ba-8525-ade8c0bc4135
-# ╟─ab70be10-5821-44ac-8a5b-aeb32f24d1cf
-# ╠═562622cc-d910-4cc5-a7f5-f5b919923a47
+# ╠═37bb4168-cbe8-4382-8ffb-89684d59ed57
+# ╟─57c895c0-e3af-11ef-3901-5907f8a4cfb7
+# ╟─cce2bd48-e279-422e-b6a7-8cbf2fff327f
+# ╠═a4ef07d4-37d3-4d12-9928-c052740ed55c
+# ╟─1665cbba-c865-4bbd-8389-56ca9e53abf6
+# ╠═b21e501d-afb3-4612-b46e-b68d360c387a
+# ╟─3f727175-b670-408b-ada0-2b804d45b59f
+# ╠═022f2355-639d-42e4-91eb-27c8af7e3afa
+# ╟─76dd1c63-b5fd-465b-a8df-9f87cbacf43c
+# ╠═5c79aebd-5be4-4c48-830a-a639fd8af90b
+# ╟─597e1741-2c6e-4f7e-b690-af9b4334b574
+# ╠═1a24369e-b83d-4ff7-a75f-ff80ffb2e932
+# ╟─747fe7d9-1cdd-4a29-b9e1-4faaf0b977b0
+# ╠═c8baf08d-b7fe-4666-919b-90509a764463
+# ╟─feb14fe5-6294-4eda-9ecf-798f55221db5
+# ╟─20af8a7d-e3e4-4f8c-8835-e6aae878b938
+# ╠═088bd044-5a6b-49b6-bf1c-0244db475f84
+# ╟─42e8bbcd-cfe8-4310-957c-6114af395401
+# ╠═8aee946d-6134-413d-9ff5-cb56f26c5e0c
+# ╟─9a3981f3-1479-4694-8e2c-0a5ad86271d7
+# ╠═f92a25a4-6cc5-4705-956a-8da3af041636
+# ╟─95c50a2e-5c64-4403-8c54-babb99951e28
+# ╟─38004ae9-7f5b-4c4d-8d1a-0962c3def007
+# ╟─f70510e2-4f93-44a6-a883-0ca438f86fe0
+# ╠═dc34fd9a-aa31-4196-9c9b-7e0d1dd90b33
+# ╟─7b3e63d5-1276-4bef-85d8-7da9504b7db6
+# ╠═1c0985d7-d63e-40de-9732-9fd31d3e97a0
+# ╟─04583aa3-4f05-431a-9fa1-e37e77f95b56
+# ╠═26e79728-14f5-4cda-bcd1-7839afae8f5c
+# ╟─893020b2-0984-4149-8893-bbfe73e0b821
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
