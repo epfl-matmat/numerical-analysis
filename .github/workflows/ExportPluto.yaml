@@ -32,16 +32,9 @@ jobs:
             - name: Cache Julia artifacts & such
               uses: julia-actions/cache@v2
               with:
-                # Contains the node .env for PlutoPDF.
-                # Since it needs to be in sync with the puppeteer cache, we cache it separately.
+                # Contains the node env for PlutoPDF.
+                # Disable so it installs Chromium every time.
                 cache-scratchspaces: false
-            - name: Set up PlutoPDF caches
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.julia/scratchspaces
-                      ~/.cache/puppeteer
-                  key: ${{ runner.os }}-plutopdf_cache-${{ hashFiles('**/Project.toml', '**/Manifest.toml', '.github/workflows/*' ) }}
 
             # We set up a folder that Pluto can use to cache exported
             # notebooks. If the notebook file did not change, then Pluto can
