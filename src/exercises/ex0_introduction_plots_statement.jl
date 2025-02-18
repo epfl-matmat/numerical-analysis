@@ -7,8 +7,12 @@ using InteractiveUtils
 # ╔═╡ 37bb4168-cbe8-4382-8ffb-89684d59ed57
 begin
 	using Plots
+	using PlutoUI
 	using PlutoTeachingTools
 end
+
+# ╔═╡ 7622a718-4720-4033-8589-49b36493f4ca
+TableOfContents()
 
 # ╔═╡ 57c895c0-e3af-11ef-3901-5907f8a4cfb7
 md"""
@@ -276,10 +280,12 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 Plots = "~1.40.9"
 PlutoTeachingTools = "~0.3.1"
+PlutoUI = "~0.7.61"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -288,7 +294,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.3"
 manifest_format = "2.0"
-project_hash = "ce8354791b3cc321ed3d52e760f3abef4195a343"
+project_hash = "f873aeebd383c3406fe5e16ca64c4c8e2568281c"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1507,6 +1513,7 @@ version = "1.4.1+2"
 
 # ╔═╡ Cell order:
 # ╠═37bb4168-cbe8-4382-8ffb-89684d59ed57
+# ╟─7622a718-4720-4033-8589-49b36493f4ca
 # ╟─57c895c0-e3af-11ef-3901-5907f8a4cfb7
 # ╟─cce2bd48-e279-422e-b6a7-8cbf2fff327f
 # ╠═a4ef07d4-37d3-4d12-9928-c052740ed55c

@@ -29,6 +29,12 @@ md"""
 
 # ╔═╡ d448115a-6857-4082-893b-37549fe83b8b
 md"""
+**Accompanying Excercise sheets**
+- [Sheet 0: Getting Started with Julia](https://teaching.matmat.org/numerical-analysis/exercises/ex0_introduction_julia_pluto_statement.html)
+- [Sheet 0: Basic Plotting in Julia](https://teaching.matmat.org/numerical-analysis/exercises/ex0_introduction_plots_statement.html)
+
+### Improving these notes
+
 If you **spot an error** feel free to make a pull request to the
 [**github repository**](https://github.com/epfl-matmat/numerical-analysis)
 generating this website.
@@ -101,7 +107,7 @@ begin
 	toc = Markdown.parse(read("sidebar.md", String))
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(toc, 290)
+	Sidebar(toc, 335)
 end
 
 # ╔═╡ fefc5308-7caf-465a-afc0-b1a6f2e68ba2

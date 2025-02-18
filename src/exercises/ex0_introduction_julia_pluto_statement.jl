@@ -13,6 +13,9 @@ begin
 	using Plots
 end
 
+# ╔═╡ b64e51a7-28a7-4fe0-af26-2ed233c9a2af
+TableOfContents()
+
 # ╔═╡ 0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
 md"# Exercice Session 0: Getting Started with Julia
 
@@ -25,6 +28,7 @@ By reading and running this notebook, you should be able to get a decent overvie
 - When in doubt about syntax, have a look at the [Julia Cheatsheet](https://cheatsheet.juliadocs.org/)
 - This introduction is inspired by the MIT lecture [Introduction to Computational Thinking](https://computationalthinking.mit.edu) where you can find more examples of Julia code and Pluto notebooks.
 - Perhaps you also find the [Comparative cheatsheet Python <-> Julia <-> Matlab](https://cheatsheets.quantecon.org/) useful.
+- Some more tips are also available [in the lecture notes](https://teaching.matmat.org/numerical-analysis/02_Julia.html)
 "
 
 
@@ -2336,6 +2340,7 @@ version = "1.4.1+2"
 
 # ╔═╡ Cell order:
 # ╠═33490d1f-ef11-4159-823f-0040c096539c
+# ╟─b64e51a7-28a7-4fe0-af26-2ed233c9a2af
 # ╟─0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
 # ╟─4dbd5dd5-02d9-4243-a0fc-ac7089fc588a
 # ╠═5e963571-a2bf-4554-9082-1ab5ec48d089
