@@ -30,6 +30,7 @@ md"""
 
 !!! exercise "Related exercise sheets"
 	- [Sheet 0: Getting Started with Julia](https://teaching.matmat.org/numerical-analysis/exercises/ex0_introduction_julia_pluto_statement.html)
+	- [Sheet 0: Basic Plotting in Julia](https://teaching.matmat.org/numerical-analysis/exercises/ex0_introduction_plots_statement.html)
 
 In this class we employ the [Julia programming language](https://julialang.org/) for code examples and programming exercises. In this notebook you will learn a little about why this choice has been made and some details on how set it up and get started.
 """

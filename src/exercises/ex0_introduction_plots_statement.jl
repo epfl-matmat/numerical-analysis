@@ -12,7 +12,7 @@ end
 
 # ╔═╡ 57c895c0-e3af-11ef-3901-5907f8a4cfb7
 md"""
-# Exercise Session 0: Getting Started with Plotting in Julia
+# Exercise Session 0: Basic Plotting in Julia
 This notebook is meant to give you an introduction to the `Plots` Julia plotting library.
 
 **References**:
