@@ -3,13 +3,17 @@ name: Export Pluto notebooks
 # Only trigger, once macros are dealt with
 on:
   push:
+    # Only on branches, not tags/releases
     branches:
-      - master
+      - '*'
+  pull_request:
+    branches:
+      - '*'
 
 # When two jobs run in parallel, cancel the older ones, to make sure that the
 # website is generated from the most recent commit.
 concurrency:
-    group: pluto-export
+    group: pluto-export-${{ github.ref }}
     cancel-in-progress: true
 
 # This action needs permission to write the exported HTML file to the gh-pages branch.
@@ -19,6 +23,9 @@ permissions:
 
 jobs:
     build-and-deploy:
+        # Only run the pull-request build if the pull-request was opened from another repository,
+        # since we already run this workflow for the branch the pull request was made from.
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
         runs-on: ubuntu-latest
         steps:
             - name: Checkout this repository
@@ -78,6 +85,7 @@ jobs:
 
 
             - name: Deploy to gh-pages
+              if: github.event_name == 'push' && github.ref == 'refs/heads/master'
               uses: JamesIves/github-pages-deploy-action@releases/v4
               with:
                   token: ${{ secrets.GITHUB_TOKEN }}
