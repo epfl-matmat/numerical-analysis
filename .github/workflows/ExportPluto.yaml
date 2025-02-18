@@ -3,18 +3,15 @@ name: Export Pluto notebooks
 # Only trigger, once macros are dealt with
 on:
   push:
-    # Only on branches, not tags/releases
     branches:
-      - '*'
+      - master
   pull_request:
-    branches:
-      - '*'
 
 # When two jobs run in parallel, cancel the older ones, to make sure that the
 # website is generated from the most recent commit.
 concurrency:
     group: pluto-export-${{ github.ref }}
-    cancel-in-progress: true
+    cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
 # This action needs permission to write the exported HTML file to the gh-pages branch.
 permissions:
@@ -82,7 +79,6 @@ jobs:
                       PlutoPDF.pluto_to_pdf(file; open=false)
                   end
                   '
-
 
             - name: Deploy to gh-pages
               if: github.event_name == 'push' && github.ref == 'refs/heads/master'
