@@ -406,7 +406,7 @@ Their distinctive feature becomes clear when we also show the gradient of $g$ at
 Convergence occurrs when the slope is between $-1$ and $1$, i.e. the graph sits between the regions spanned by the orange lines of slope $1$ and $-1$ through the fixed point.
 """
 
-# ╔═╡ 49c6c848-dbc1-4da7-8c0a-fe90ab07ef93
+# ╔═╡ 6e698174-7239-4b4d-9555-280b685e1b91
 md"""
 ### Convergence analysis
 
@@ -440,7 +440,11 @@ The notation $O(|x - x_\ast|^2)$ is thus a
 mathematically precise way of saying
 that there are more terms that we don't show
 but their order is at most $|x - x_\ast|^2$.
+See also the discussion in [Revision and preliminaries](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.html) on Taylor approximations.
+"""
 
+# ╔═╡ e9370cc5-671a-4461-ba5d-745ef8c0f5a8
+md"""
 Using (5) and the key fixed-point iterations equation, $x^{(k+1)} = g(x^{(k)})$
 we obtain
 ```math
@@ -476,7 +480,10 @@ In other words as $k \to \infty$, i.e. the iteration progresses,
 $|e^{(k+1)}|$ approaches zero
 if $|g'(x_\ast)| < 1$, exactly as we concluded from the plot.
 Our argument proves the following
+"""
 
+# ╔═╡ fe6a0ff6-f70d-404a-8fd5-8a9185da2ee7
+md"""
 !!! note "Theorem 1"
     Let $g : [a, b] \to \mathbb{R}$ be a function of class $C^1$[^1]
     and $x_\ast \in [a, b]$ be a fixed point of $g$.
@@ -1435,6 +1442,9 @@ is the collection of all partial derivatives of $\textbf{f}$, i.e.
 \frac{\partial f_n}{\partial x_n}
 \end{array}\right).
 ```
+See also the discussion on multi-dimensional Talyor approximations in [Revision and preliminaries](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.html).
+
+
 The Jacobian very much plays the role of a generalised derivative
 of a multidimensional function $\textbf{f}$.
 Also not that (just like any derivative) it is a function of the independent
@@ -2960,7 +2970,9 @@ version = "1.4.1+2"
 # ╟─424bb138-36b5-46a2-8af3-1eb8afc1c2cb
 # ╟─ed74f330-28f0-4550-bc3d-dbf73f220bf6
 # ╟─b4100dc2-8e77-4455-a5d8-0714145b1979
-# ╟─49c6c848-dbc1-4da7-8c0a-fe90ab07ef93
+# ╟─6e698174-7239-4b4d-9555-280b685e1b91
+# ╟─e9370cc5-671a-4461-ba5d-745ef8c0f5a8
+# ╟─fe6a0ff6-f70d-404a-8fd5-8a9185da2ee7
 # ╟─5949bb96-3f2c-4d31-a7df-b5cc681914e1
 # ╟─5d7b3d35-3456-48df-ad22-0ffccaa2f529
 # ╟─284f3fa4-ce24-4b99-8bb7-6f74a4589550
