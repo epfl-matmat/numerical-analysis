@@ -318,13 +318,24 @@ of fixed point problems:
     In other words we want to find a point $(x, y)$ such that
     $y = g(x)$ and at the same time $x = y$.
 
-The following plot uses this observation to visualise fixed-point iterations. Use the slider and the drop-down menu to switch between the fixed-point functions and the starting point.
+The following plot uses this observation to visualise fixed-point iterations.
+The idea is to think of the fixed-point iterations in the following way:
+- We start at some $x_1 = $ `xstart`. Then we use the condition $y = g(x)$
+  to arrive at the first, grey point, that is $(x_1, y_1) = (x_1, g(x_1))$.
+- From there we use the condition $x = y$, i.e. $x_2 = y_1$ to arrive
+  at the point $(x_2, y_1) = (y_1, y_1)$ (green arrow)
+- Next, we again use $y = g(x)$ and obtain $y_2 = g(x_2)$, thus the point $(x_2, g(x_2))$ (purple arrow).
+- From there we continue setting $x_3 = y_2$ to get $(x_3, y_2)$
+- And we continue analogously until we hopefully converge.
+
+Use the slider and the drop-down menu to switch between the fixed-point functions and the starting point to see if this works.
 """
 
 # ╔═╡ 424bb138-36b5-46a2-8af3-1eb8afc1c2cb
 md"""
 - `xstart = ` $(@bind xstart Slider(0.0:0.1:5.0; default=4.0, show_value=true))
 - `g = ` $(@bind g Select([g₁, g₂, g₃, g₄]))
+- Show labels: $(@bind show_labels CheckBox(default=true))
 - Show gradient: $(@bind show_gradient CheckBox())
 """
 
@@ -333,7 +344,7 @@ let
 	# Plot function g and identity
 	p = plot(g, label=L"y = g(x)";
 	         aspect_ratio=1, lw=2, xlims=(0, 5),
-	         ylims=(0, 5), xlabel=L"x", ylabel=L"y", color=1)
+	         ylims=(0, 5), xlabel=L"x", ylabel=L"y", color=1, size=(600, 600))
 	plot!(p, x -> x, label=L"y = x", lw=2, color=2)
 
 	# Iteration 1
@@ -342,20 +353,29 @@ let
 	vline!(p, [xstart], label="xstart", color=:grey, lw=2, ls=:dash)
 	y = g(x)
 	scatter!(p, [xstart], [y], label="", color=:grey, mark=:o, ms=5)
+	show_labels && annotate!(xstart + 0.1, y - 0.1, text(L"(x_1, g(x_1))", 10, :left))
 	
 	# Iteration 2
 	# Using the requirement x = y, we will next update x to be y.
 	# This moves the point *horizontally*
 	plot!(p, [x, y], [y, y]; arrow=true, color=3, label="", lw=2)
 	x = y
+	show_labels && annotate!(x-0.2, y + 0.2, text(L"(x_2, y_1)", 10, :top))
+
+	
 	# Next we re-evaluate y = g(x) at the *new* x, this updates y
 	# therefore we move *vertically*
 	y = g(x)
 	plot!(p, [x, x], [x, y]; arrow=true, color=4, label="", lw=2)
+	show_labels && annotate!(x+0.2, y-0.2, text(L"(x_2, g(x_2))", 10, :bottom))
 
 	# Now just repeat until 5 iterations are reached.
 	for k = 3:5
 		plot!([x, y], [y, y]; color=3, label="", lw=2)
+
+		if k == 3 && show_labels
+			annotate!(y - 0.1, y + 0.1, text(L"(x_3, y_2)", 10, :bottom))
+		end
 		x = y
 		y = g(x)
 		plot!(p, [x, x], [x, y]; color=4, label="", lw=2)
@@ -383,7 +403,7 @@ We notice that that $g_1$ and $g_2$ converge, while $g_3$ and $g_4$ do not.
 
 Their distinctive feature becomes clear when we also show the gradient of $g$ at the fixed point (click the checkbox above).
 
-Convergen occurrs when the slope is between $-1$ and $1$, i.e. the graph sits between the regions spanned by the orange lines of slope $1$ and $-1$ through the fixed point.
+Convergence occurrs when the slope is between $-1$ and $1$, i.e. the graph sits between the regions spanned by the orange lines of slope $1$ and $-1$ through the fixed point.
 """
 
 # ╔═╡ 49c6c848-dbc1-4da7-8c0a-fe90ab07ef93
@@ -2938,7 +2958,7 @@ version = "1.4.1+2"
 # ╟─4715b982-6ba9-415d-b33b-6a2f145904d9
 # ╟─e4e37eb1-9013-4dc2-887f-fcafb51aac41
 # ╟─424bb138-36b5-46a2-8af3-1eb8afc1c2cb
-# ╠═ed74f330-28f0-4550-bc3d-dbf73f220bf6
+# ╟─ed74f330-28f0-4550-bc3d-dbf73f220bf6
 # ╟─b4100dc2-8e77-4455-a5d8-0714145b1979
 # ╟─49c6c848-dbc1-4da7-8c0a-fe90ab07ef93
 # ╟─5949bb96-3f2c-4d31-a7df-b5cc681914e1
