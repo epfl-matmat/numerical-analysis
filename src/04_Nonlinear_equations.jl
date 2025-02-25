@@ -1113,9 +1113,8 @@ the **residual-based stopping criterion** of `fixed_point_iterations` is actuall
 """
 
 # ╔═╡ 0d61a532-e185-49bc-baf9-c22b8443a979
-md"""
-More conventionally one "inlines" the function $g_\text{Newton}$ into the fixed point iterations and expresses the problem as
-
+begin
+	text_algo2_newton = md"""
 !!! info "Algorithm 2: Newton's method (conventional)"
 	Given a once differentiable function $f : \mathbb{R} \to \mathbb{R}$,
 	a starting value $x^{(0)}$ and a convergence tolerance $\epsilon$,
@@ -1123,9 +1122,13 @@ More conventionally one "inlines" the function $g_\text{Newton}$ into the fixed 
     1. Compute the residual $r^{(k)} = - \frac{f(x^{(k)})}{f'(x^{(k)})}$
     2. Update ${x}^{(k+1)} = {x}^{(k)} + {r}^{(k)}$
     Loop 1. to 3. until $|{r}^{(k)}| < \epsilon$.
-
-A corresponding implementation of Algorithm 2 is:
 """
+	
+md"""
+	More conventionally one "inlines" the function $g_\text{Newton}$ into the fixed point iterations and expresses the problem as $text_algo2_newton
+	A corresponding implementation of Algorithm 2 is:
+	"""
+end
 
 # ╔═╡ d8091ef9-7350-45e9-8381-55c9297429cd
 function newton(f, df, xstart; maxiter=40, tol=1e-6)
@@ -1523,18 +1526,20 @@ We will discuss these methods in
 """
 
 # ╔═╡ 702ffb33-7fbe-4673-aed7-d985a76b455a
-Foldable("Remark: Connection to 1D Newton algorithm (Algorithm 1)",
+Foldable("Remark: Connection to conventional 1D Newton algorithm (Algorithm 2)",
 md"""
-Even though Algorithm 2 (Multidimensional Newton) and Algorithm 1 (1D Newton's method) are presented in different formalisms, Algoritm 2 is just a multi-dimensional generalisation of Algorithm 1.
+Algorithm 3 (Multidimensional Newton) is just a multi-dimensional generalisation of Algorithm 2 (conventional 1D Newton's method). 
 
-This can be easily seen by simplifying Algorithm 2 for the special case of a 1D problem, that is a function $f : \mathbb{R} \to \mathbb{R} : x_1 \mapsto f(x_1) $. In that case we can identify the Jacobian
+This can be easily seen by simplifying Algorithm 3 for the special case of a 1D problem, that is a function $f : \mathbb{R} \to \mathbb{R} : x_1 \mapsto f(x_1) $. In that case we can identify the Jacobian
 (which formally is a $1 \times 1$ matrix) by the single element
-$\frac{\partial f}{\partial x_1} = f'(x_1)$. With this in mind the three steps of Algorithm 2 become: For $k = 1, 2, 3, \ldots$
+$\frac{\partial f}{\partial x_1} = f'(x_1)$. With this in mind the three steps of Algorithm 3 become: For $k = 1, 2, 3, \ldots$
 1. Compute the right-hand side $y^{(k)} = f(x^{(k)})$ and $A^{(k)} = J_f(x^{(k)}) = f'(x^{(k)})$.
 2. Solve $A^{(k)} r^{(k)} = -y^{(k)}$ for $r^{(k)}$. Since all entities are real numbers this can be done by simple division, i.e. $r^{(k)} = - \frac{y^{(k)}}{A^{(k)}} = -\frac{f(x^{(k)})}{f'(x^{(k)})}$.
 3. Update $x^{(k+1)} = x^{(k)} + r^{(k)} = x^{(k)} - \frac{f(x^{(k)})}{f'(x^{(k)})}$.
 
-Comparing with Algorithm 1 we note that in step 3 we indeed recover $x^{(k+1)} = g_\text{Newton}(x^{(k)})$ with $g_\text{Newton}(x) = x - \frac{f(x)}{f'(x)}$ as before in (10).
+For reference recall Algorithm 2 was $text_algo2_newton
+
+We note that the algorithms are idential, in essence Algorithm 3 only uses two steps for what Algorithm 2 expressed as step "1.".
 """)
 
 # ╔═╡ 6192f3a8-b9ff-4187-9561-00c2638a483a
