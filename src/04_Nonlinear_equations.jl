@@ -344,7 +344,7 @@ let
 	# Plot function g and identity
 	p = plot(g, label=L"y = g(x)";
 	         aspect_ratio=1, lw=2, xlims=(0, 5),
-	         ylims=(0, 5), xlabel=L"x", ylabel=L"y", color=1, size=(600, 600))
+	         ylims=(0, 5), xlabel=L"x", ylabel=L"y", color=1, size=(500, 500))
 	plot!(p, x -> x, label=L"y = x", lw=2, color=2)
 
 	# Iteration 1
@@ -606,9 +606,9 @@ function fixed_point_iterations(g, xstart; tol=1e-6, maxiter=100)
 end
 
 # ╔═╡ 54f314c1-d1cf-41f1-96e5-5aca90d82b95
-fixed_point_iterations(g₁, 4.0; tol=1e-14).fixed_point
+fixed_point_iterations(g₁, 4.0; tol=1e-14)
 
-# ╔═╡ 0adb95c9-d86f-4ad0-b4c6-ebe616587168
+# ╔═╡ 73f0c043-24a6-401f-8695-7ac2ca154a7c
 md"""
 **Additional remarks on the residual**
 - The residual is in general only an **error indicator**.
@@ -616,41 +616,71 @@ md"""
   that $|g(x^{(k)}) - x^{(k)}| < \epsilon$
   **always implies** $|x^{(k)} - x_\ast| < \epsilon$.
 
-- In fact using the [mean value theorem](https://en.wikipedia.org/wiki/Mean_value_theorem) (MVT) we can show
+- In fact we can derive the **residual-error relationship** *(see derivation below)*
   ```math
   \tag{6}
-  \begin{aligned}
-  x^{(k)} - x_\ast
-  &= x^{(k)} - g(x^{(k)}) + g(x^{(k)}) - x_\ast \\
-  &= x^{(k)} - g(x^{(k)}) + g(x^{(k)}) - g(x_\ast) \\
-  &\stackrel{(MVT)}{=} x^{(k)} - g(x^{(k)}) + g'(\xi^{(k)}) (x^{(k)} - x_\ast)
-  \end{aligned}
+  |x^{(k)} - x_\ast| = \frac{1}{|1 - g'(\xi^{(k)})|} |r^{(k)}|.
   ```
-  where $\xi^{(k)} \in [x_\ast, x^{(k)}]$,
-  thus we obtain the **residual-error relationship**
-  ```math
-  |x^{(k)} - x_\ast| = \frac{1}{|1 - g'(\xi^{(k)})|} r^{(k)}.
-  ```
-  In particular if $g'(\xi^{(k)}) \simeq 1$ the **true error
-  can thus be considerably larger than the residual** !
+  for some $\xi^{(k)} \in [x_\ast, x^{(k)}]$.
+  Note, that this is just a **conceptional expression** as determining
+  $\xi^{(k)}$ is in general *as hard* as finding $x_\ast$.
+  But it will be useful in some theoretical arguments.
+- For converging fiterations $x^{(k)} \to x_\ast$ as $k \to \infty$.
+  Therefore the interval $[x_\ast, x^{(k)}]$ gets smaller and smaller,
+  such that necessarily $\xi^{(k)} \to x_\ast$
+  and $g'(\xi^{(k)}) \to g'(x_\ast)$ as $k \to \infty$.
+  We note it is the **gradient at the fixed point**,
+  $g'(x_\ast)$, which determines **how reliable our error indicator** is.
+- In particular if $|g'(x_\ast)|$ **is close to $1$**, then the denominator
+  of the prefactor may blow up and the **residual criterion** $|r^{(k)}| < \epsilon$
+  may well **stop the iterations too early**.
+  That is the **actual error** $|x^{(k)} - x_\ast|$ may still be
+  **way larger than the residual** $|r^{(k)}|$ and thus way larger than our
+  desired accuracy $\epsilon$.
+- In contracst if $|g'(x_\ast)| = 0$ than $|r^{(k)}| < \epsilon$
+  is an excellent stopping criterion as $|x^{(k)} - x_\ast| = |r^{(k)}|$ as $k\to\infty$.
+"""
 
-- Since a convering fixed-point method implies that
-  $g'(\xi^{(k)}) \to g'(x_\ast)$ as $k \to \infty$,
-  we note that it is again the gradient at the fixed point,
-  $g'(x_\ast)$, which determines how reliable our error indicator is.
-  Notably, if $g'(x_\ast) \simeq 1$ we might stop the iterations
-  *well before* achieving $|x^{(k)} - x_\ast| < \epsilon$.
+# ╔═╡ 62ec67d7-10d4-4624-8dd7-d4dd0507d6c2
+Foldable("Derivation of the residual-error relationship",
+md"""
+Employing the [Lagrange form of the reminder](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.html) of a 0-th order Taylor expansion of $g$ around $x_\ast$ we obtain
+```math
+g(x^{(k)}) = g(x_\ast) + g'(\xi^{(k)}) \, (x^{(k)} - x_\ast)
+```
+for some $\xi^{(k)} \in [x_\ast, x^{(k)}]$.
+This expression is also known as the [mean value theorem](https://en.wikipedia.org/wiki/Mean_value_theorem) (MVT).
 
-- Note, that the **residual is a general terminology**,
-  which is not only applied to such an error indicator in the context
-  of fixed-point iterations, but used in general for iterative procedures.
-  The idea is that the **residual provides
-  the discrepancy from having fully solved the problem**
-  and is thus a natural error indicator.
-  The functional form, however, is different for each type of iterative
-  procedure as we will see.
+Using the MVT we can show
+```math
+\begin{aligned}
+x^{(k)} - x_\ast
+&= x^{(k)} \underbrace{- g(x^{(k)}) + g(x^{(k)})}_{=0} - x_\ast \\
+&= x^{(k)} - g(x^{(k)}) + g(x^{(k)}) - g(x_\ast) \\
+&\stackrel{(MVT)}{=} x^{(k)} - g(x^{(k)}) + g'(\xi^{(k)}) (x^{(k)} - x_\ast)
+\end{aligned}
+```
+where $\xi^{(k)} \in [x_\ast, x^{(k)}]$.
+Rearranging and adding moduli we arrive at the cited **residual-error relationship**
+```math
+|x^{(k)} - x_\ast| = \frac{1}{|1 - g'(\xi^{(k)})|} |r^{(k)}|.
+```
+In particular if $g'(\xi^{(k)}) \simeq 1$ the **true error
+can thus be considerably larger than the residual** !
+"""
+)
 
-
+# ╔═╡ a377563c-63da-4a50-886b-002644085eab
+md"""
+!!! note "Residual terminology"
+    Note, that the **residual is a general terminology**,
+    which is not only applied to such an error indicator in the context
+    of fixed-point iterations, but used in general for iterative procedures.
+    The idea is that the **residual provides
+    the discrepancy from having fully solved the problem**
+    and is thus a natural error indicator.
+    The **functional form**, however, is **different for each type of iterative
+    procedure** as we will see.
 """
 
 # ╔═╡ 91060f66-9540-43dd-bffa-3ecc022efbdc
@@ -702,7 +732,7 @@ So let us inspect the convergence of $g_1$ and $g_2$ graphically:
 # ╔═╡ b2e96aa1-69a6-4d07-89b5-15ecc9a41398
 let
 	fp = 1.2079400315693  # Approximate fixed point
-	p = plot(; yaxis=:log)
+	p = plot(; yaxis=:log, xlabel="k", ylabel=L"|x^{(k)} - x_\ast|")
 
 	results_g₁ = fixed_point_iterations(g₁, 4.0; maxiter=15)
 	errors_g₁ = [abs(xn - fp) for xn in results_g₁.history_x]
@@ -711,6 +741,8 @@ let
 	results_g₂ = fixed_point_iterations(g₂, 4.0, maxiter=15)
 	errors_g₂ = [abs(xn - fp) for xn in results_g₂.history_x]
 	plot!(p, errors_g₂, label=L"g_2", mark=:x, lw=2)
+
+	yticks!(p, 10.0 .^ (-6:0))
 end
 
 # ╔═╡ 86f4c162-41bd-4e20-9e3f-681ff36bac75
@@ -734,12 +766,17 @@ and investigate the limit of the **residual ratio**
 \frac{|r^{(k+1)}|}{\big| r^{(k)} \big|^q}
 = \lim_{k\to\infty} \frac{|1 - g'(\xi^{(k+1)})|}{|1 - g'(\xi^{(k)})|^q}
 \frac{|x^{(k+1)} - x_\ast|}{|x^{(k)} - x_\ast|^q}
-\stackrel{(7)}{=} \frac{1}{|1 - g'(x_\ast)|^{q-1}} C
+\stackrel{(7)}{=} \frac{1}{|1 - g'(x_\ast)|^{q-1}} C .
 ```
 In other words if the residual ratios approach a constant for a chosen
 $q$, then we have $q$-th order convergence.
-In particular for **linear order** ($q=1$) we need
-$\frac{|r^{(k+1)}|}{\big| r^{(k)} \big|}$ to approach a constant as $k\to\infty$.
+
+In particular for **linear order** ($q=1$) we have
+```math
+\lim_{k\to\infty} \frac{|r^{(k+1)}|}{\big| r^{(k)} \big|} = C,
+```
+i.e. that the **residual ratio should approach a constant** as $k\to\infty$,
+which is the **convergence rate**.
 
 This is a condition we can check also
 *without* knowing the solution:
@@ -747,7 +784,7 @@ This is a condition we can check also
 
 # ╔═╡ d22a7de4-67ef-4664-951b-8fb46116a7bc
 let
-	p = plot(xlabel="k")
+	p = plot(xlabel="k", ylabel=L"|r^{(k+1)}| / |r^{(k)}|")
 
 	results_g₁   = fixed_point_iterations(g₁, 4.0; maxiter=15)
 	residuals_g₁ = results_g₁.history_r
@@ -1018,18 +1055,22 @@ To develop these methods assume that the fixed-point is $x_\ast$
 and we are given a point $x$, which is close to $x_\ast$.
 We consider a Taylor expansion of $f$ around $x$:
 ```math
-0 = f(x_\ast) = f(x) + f'(x) (x - x_\ast) + O\big( (x - x_\ast)^2 \big)
+0 = f(x_\ast) = f(x) + f'(x) (x_\ast - x) + O\big( (x_\ast - x)^2 \big)
 ```
 Where we made the condition $f(x_\ast) = 0$ has been made explicict.
 Now assume $f'(x) \neq 0$ to rearrange this to
 ```math
-0 = \frac{f(x)}{f'(x)} (x - x_\ast) + O\big( (x - x_\ast)^2 \big).
+0 = \frac{f(x)}{f'(x)} + (x_\ast - x) + O\big( (x - x_\ast)^2 \big).
 ```
 If $x$ is close to $x_\ast$, thus $x - x_\ast$ is small,
 then the last $O \big((x - x_\ast)^2\big)$ term is even smaller.
 Neglecting it we can further develop this to an approximation for $x_\ast$ as
 ```math
-x_\ast \simeq x - \frac{f(x)}{f'(x)}
+0 \simeq \frac{f(x)}{f'(x)} + x_\ast - x
+\qquad
+\Longrightarrow
+\qquad
+x_\ast \simeq x - \frac{f(x)}{f'(x)}.
 ```
 If we denote the RHS by $g_\text{Newton}(x) = x - \frac{f(x)}{f'(x)}$,
 then a root of $f$ is a fixed point of $g_\text{Newton}$
@@ -1148,7 +1189,7 @@ begin
     perform for $k = 1, 2, 3, \ldots$:
     1. Compute the residual $r^{(k)} = - \frac{f(x^{(k)})}{f'(x^{(k)})}$
     2. Update ${x}^{(k+1)} = {x}^{(k)} + {r}^{(k)}$
-    Loop 1. to 3. until $|{r}^{(k)}| < \epsilon$.
+    Loop 1. and 2. until $|{r}^{(k)}| < \epsilon$.
 """
 	
 md"""
@@ -1208,7 +1249,8 @@ let
 	# First get an almost exact root
 	reference = bisection_method(f, -0.5, 0.5; tol=1e-14)
 
-	p = plot(yaxis=:log, xlims=(0, 20), ylims=(1e-12, Inf))
+	p = plot(yaxis=:log, xlims=(0, 20), ylims=(1e-12, Inf),
+	         xlabel="k", ylabel=L"|x^{(k)} - x_\ast|")
 
 	# Run bisection
 	result = bisection_method(f, -0.5, 0.5; tol=1e-12)
@@ -1228,6 +1270,7 @@ let
 	result = newton(f, df, 0.0; tol=1e-12)
 	errors = [abs(xn - reference.root) for xn in result.history_x]
 	plot!(p, errors, label="Newton", mark=:x, lw=2)
+	yticks!(p, 10.0 .^ (-12:-1))
 
 	p
 end
@@ -2986,7 +3029,9 @@ version = "1.4.1+2"
 # ╟─c1b1c4ff-e2c9-49fb-8794-b9ee11c5d543
 # ╠═7cb34ba9-bcfc-4596-8eb3-49f4b99eab58
 # ╠═54f314c1-d1cf-41f1-96e5-5aca90d82b95
-# ╟─0adb95c9-d86f-4ad0-b4c6-ebe616587168
+# ╟─73f0c043-24a6-401f-8695-7ac2ca154a7c
+# ╟─62ec67d7-10d4-4624-8dd7-d4dd0507d6c2
+# ╟─a377563c-63da-4a50-886b-002644085eab
 # ╟─91060f66-9540-43dd-bffa-3ecc022efbdc
 # ╟─deff7837-e80e-4fcc-8eb2-baafc047a992
 # ╟─7f2c43c0-a87e-44bb-ac52-77dc70302cd2

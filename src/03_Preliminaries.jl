@@ -31,7 +31,7 @@ Given an infinitely differentiable function $f$ its **Taylor series** at the poi
 \tag{1}
 \begin{align*}
 f(x) &= f(a) + f'(a) \cdot (x-a) +  \frac{1}{2!} f''(a) \cdot (x-a)^2
-+ \frac{1}{3!} f^{(3)}(a) (x-a)^3 \\
++ \frac{1}{3!} f^{(3)}(a) (x-a)^3 + \cdots \\
 &= \sum_{n=0}^\infty \frac{1}{n!} f^{(n)}(a) (x-a)^n
 \end{align*}
 ```
@@ -60,10 +60,16 @@ f(x) = f(a) + (x-a) \  f'(a) + \frac12 f''(a) \  (x-a)^2 + R(x)
 where $R(x) = \sum_{n=3}^\infty \frac{1}{n!} f^{(n)}(a) (x-a)^n$
 is usually called the **remainder term**.
 
-As $x \to a$ the remainder $R(x)$ vanishes and more precisely
-it becomes small *at least as fast as $(x-a)^3$*, which mathematically one writes as
-follows:
+As $x \to a$ the remainder $R(x)$ vanishes.
+More precisely it becomes small *at least as fast as $(x-a)^3$*.
+The idea is that as $x$ gets closer to $a$ then
+$|x-a|$ < 1, such that $|x-a|^n < |x-a|^3$ for all $n > 3$.
+While some of the derivatives $f^{(n)}(a)$ may be large,
+there still is a point when $x$ is so close to $a$,
+such that $|x-a| \ll 1$ and still
+$f^{(n)}(a) |x-a|^n < |x-a|^3$ for all $n > 3$.
 
+Mathematically one writes as:
 > There exist positive constants $M, δ > 0$ such that
 > ```math
 > |R(x)| ≤ M |x - a|^3 \qquad \forall 0 < |x-a| < δ,
@@ -105,7 +111,7 @@ such that
 ```math
 f(x) = \sum_{k=0}^n \frac{1}{k!} f^{(k)}(a) (x-a)^k + 
 \textcolor{red}{
-\frac{1}{(k+1)!} f^{(k+1)}(ξ) \ (x-a)^{k+1}
+\frac{1}{(n+1)!} f^{(n+1)}(ξ) \ (x-a)^{n+1}
 }
 ```
 holds. This is the so-called **Lagrange form** of the remainder.
