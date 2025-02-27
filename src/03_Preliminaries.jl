@@ -11,6 +11,12 @@ begin
 	using PlutoTeachingTools
 end
 
+# ╔═╡ c805c721-16ca-4f4f-ac76-c6382c1760b7
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.pdf)
+"""
+
 # ╔═╡ 2ff23584-4b35-11ef-0c69-a98bfb3ca906
 md"""
 # Revision and preliminaries
@@ -872,6 +878,7 @@ version = "17.4.0+2"
 """
 
 # ╔═╡ Cell order:
+# ╟─c805c721-16ca-4f4f-ac76-c6382c1760b7
 # ╟─2ff23584-4b35-11ef-0c69-a98bfb3ca906
 # ╟─a8e3750d-62bf-4c1f-8309-3ef8981b5d26
 # ╟─514be580-6ba5-45bc-9a8f-cfcbfaedf9df

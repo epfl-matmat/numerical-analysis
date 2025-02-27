@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -12,6 +12,12 @@ begin
 	using PlutoTeachingTools
 	using HypertextLiteral
 end
+
+# ╔═╡ ca2c949f-a6a0-485f-bd52-5dae3b050612
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.pdf)
+"""
 
 # ╔═╡ 21c9a859-f976-4a93-bae4-616122712a24
 TableOfContents()
@@ -1784,6 +1790,7 @@ version = "17.4.0+2"
 """
 
 # ╔═╡ Cell order:
+# ╟─ca2c949f-a6a0-485f-bd52-5dae3b050612
 # ╠═3295f30c-c1f4-11ee-3901-4fb291e0e4cb
 # ╟─21c9a859-f976-4a93-bae4-616122712a24
 # ╟─8e4312b5-f4ce-440b-a487-689959851098

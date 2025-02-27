@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -13,6 +13,12 @@ begin
 	using LaTeXStrings
 	using HypertextLiteral
 end
+
+# ╔═╡ 4103c9d2-ef89-4c65-be3f-3dab59d1cc47
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/10_Numerical_differentiation.pdf)
+"""
 
 # ╔═╡ e9151d3f-8d28-4e9b-add8-43c713f6f068
 TableOfContents()
@@ -1796,6 +1802,7 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
+# ╟─4103c9d2-ef89-4c65-be3f-3dab59d1cc47
 # ╠═9688d440-d231-11ee-0510-8db284ccd0c9
 # ╟─e9151d3f-8d28-4e9b-add8-43c713f6f068
 # ╟─d4e538c0-5529-4ec3-bc11-ec797bda8cfc
