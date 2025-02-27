@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -14,6 +14,12 @@ begin
 	using Printf
 	using HypertextLiteral
 end
+
+# ╔═╡ d34833b7-f375-40f7-a7a6-ab925d736320
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/09_Numerical_integration.pdf)
+"""
 
 # ╔═╡ 47114a9b-0e74-4e48-bb39-b49f526f1e9b
 TableOfContents()
@@ -2160,6 +2166,7 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
+# ╟─d34833b7-f375-40f7-a7a6-ab925d736320
 # ╠═dc68915e-d230-11ee-09c8-4fce8a858118
 # ╟─47114a9b-0e74-4e48-bb39-b49f526f1e9b
 # ╟─85c29f83-4617-41b7-90e4-f863c3f09b1d

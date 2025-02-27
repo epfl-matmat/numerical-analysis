@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
@@ -13,6 +13,12 @@ begin
 	using LaTeXStrings
 	using HypertextLiteral
 end
+
+# ╔═╡ 63bb7fe9-750f-4d2f-9d18-8374b113373e
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.pdf)
+"""
 
 # ╔═╡ 7d9c9392-3aec-4efd-a9ba-d8965687b163
 TableOfContents()
@@ -2082,6 +2088,7 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
+# ╟─63bb7fe9-750f-4d2f-9d18-8374b113373e
 # ╠═0501f270-c39c-11ee-2077-7f7f409b6c66
 # ╟─7d9c9392-3aec-4efd-a9ba-d8965687b163
 # ╟─4e0e5311-3428-44f5-a616-68cf7634214f

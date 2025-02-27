@@ -28,6 +28,12 @@ begin
 	using HypertextLiteral
 end
 
+# ╔═╡ 0441b7ed-b62f-417c-a4f6-33051faac08e
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.pdf)
+"""
+
 # ╔═╡ b258697b-4c4f-4e47-8472-73b72178c108
 TableOfContents()
 
@@ -2987,6 +2993,7 @@ version = "1.4.1+2"
 """
 
 # ╔═╡ Cell order:
+# ╟─0441b7ed-b62f-417c-a4f6-33051faac08e
 # ╠═62ff56f9-caec-4352-b547-973ce2bfcb8f
 # ╟─b258697b-4c4f-4e47-8472-73b72178c108
 # ╟─74f7ec18-1aa1-4de7-b19f-a95ad11c8cf6

@@ -24,6 +24,12 @@ begin
 	using HypertextLiteral
 end
 
+# ╔═╡ ae6caf8d-0f9d-478f-98d4-198c2a41e16c
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/02_Julia.pdf)
+"""
+
 # ╔═╡ 3677e0ff-dc19-467a-93e9-297cbeed9895
 md"""
 # The Julia programming language
@@ -1473,6 +1479,7 @@ version = "1.4.1+2"
 """
 
 # ╔═╡ Cell order:
+# ╟─ae6caf8d-0f9d-478f-98d4-198c2a41e16c
 # ╟─3677e0ff-dc19-467a-93e9-297cbeed9895
 # ╟─b65f6939-d6b2-43e5-8e32-730fe4a9cba1
 # ╟─9f8734c4-75d8-4875-bf0e-103277b3db41
