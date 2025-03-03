@@ -672,7 +672,7 @@ can thus be considerably larger than the residual** !
 
 # ╔═╡ a377563c-63da-4a50-886b-002644085eab
 md"""
-!!! note "Residual terminology"
+!!! note "General principle: Residual"
     Note, that the **residual is a general terminology**,
     which is not only applied to such an error indicator in the context
     of fixed-point iterations, but used in general for iterative procedures.

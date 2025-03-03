@@ -169,10 +169,11 @@ p_n(x) = \sum_{j=0}^n c_j x^j,
 which is an interpolating function,
 i.e. satisfies $p_n(x_i) = y_i$
 for all $i = 1, \ldots, n + 1$.
-A result from algebra ensures that such a polynomial of degree $n$,
+The fundamential theorem of algebra
+ensures that such a polynomial of degree $n$,
 which goes through all $n+1$ data points can always be found.
-Moreover this polynomical (thus its coefficients $c_j$)
-is uniquely defined by the data. 
+Moreover this polynomial (thus its coefficients $c_j$)
+is uniquely defined by the data.
 
 To find this polynomial a
 natural idea is thus to employ the monomials $1, x, x^2, \ldots x^n$
@@ -274,7 +275,7 @@ interpolating polynomial is *uniquely* determined by the $n+1$ data points
 allows us to use *any polynomial basis* to find it.
 
 Both a more practical as well as a numerically more stable way to find
-**the** interpolating polynomial is the approach using Lagrange ploynomials.
+**the** interpolating polynomial is the approach using Lagrange polynomials.
 
 !!! info "Definition: Lagrange basis"
     The Lagrange polynomials associated to the **nodes**
@@ -497,7 +498,7 @@ md"""
 To understand this behaviour the following error estimate is useful:
 
 !!! info "Theorem 2"
-    For a $C^{n+1}$ function $f : [a, b] \to \mathbb{R}$
+    For a $(n+1)$-times differentiable function $f : [a, b] \to \mathbb{R}$
     and $a = x_1 < x_2 < \cdots < x_{n+1} = b$ *equally distributed*
     nodes in $[a, b]$ the $n$-th degree polynomial interpolant $p_n$
     of the data $(x_i, f(x_i))$ with $i = 1, 2, \ldots, n+1$
@@ -508,7 +509,7 @@ To understand this behaviour the following error estimate is useful:
     \leq \frac{1}{4(n+1)}\left(\frac{b-a}{n}\right)^{n+1}
     \left\| f^{(n+1)} \right\|_\infty
     ```
-    where the infinity norm $\| \phi \|_\infty$ for a function $\phi : D \to \mathbb{R}$
+    where the **infinity norm** $\| \phi \|_\infty$ for a function $\phi : D \to \mathbb{R}$
     mapping from a domain $D$ is the expression
     ```math
     \| \phi \|_\infty = \max_{x \in D} |\phi(x)|,
@@ -588,8 +589,8 @@ This visual result is also confirmed by a more detailed analysis,
 which reveals, that the origin is our choice of a *regular* spacing between the sampling points, an effect known as Runge's phaenomenon.
 
 !!! info "Observation: Runge's phaenomenon"
-    Polynomial interpolation employing equally spaced nodal points
-    to construct the interpolant $p_n$ may lead to a non-convergence
+    Polynomial interpolation employing *equally spaced* nodal points
+    to construct the interpolant $p_n$ *may* lead to a non-convergence
     as $n \to \infty$. Moreover while for small $n$ the error in the
     infinity norm $\|\,\cdot\,\|_\infty$ still
     decreases, for large $n$ this behaviour can change, such that
@@ -749,11 +750,6 @@ md"""
 Notably, if $\Lambda_n$ is small, then small measurement errors $ε$ can only lead to small perturbations in the interpolating polynomial. In that case our polynomial interpolation procedure would be called **stable** or **well-conditioned**. By contrast, if $\Lambda_n$ is very high, then already a small measurement error $ε$ allows for notably deviations in the resulting interpolant
 --- we are faced with a **badly conditioned** problem.
 
-In general for numerical problems, we call the factor relating the error in the output quantity (here $\left| \tilde{p}_n(x) - p_n(x) \right|$)
-to the error in the input quantity
-(here $ε = \max_i |\tilde{x}_i - x_i|$) the **condition number**
-of the problem. For polynomial interpolation the condition number is exactly Lebesgue's constant $\Lambda_n$.
-
 Considering the two polynomial interpolation schemes we discussed, one can show
 - Equally distributed nodes: $\Lambda_n \sim \frac{2^{n+1}}{e\, n \log n}$ as $n\to \infty$
 - Chebyshev nodes: $\frac{2}{\pi} \log(n+1)+a < \Lambda_n < \frac{2}{\pi} \log(n+1) + 1, \qquad a = 0.9625\ldots$
@@ -770,14 +766,27 @@ begin
 	plot!(ns, L_Chebyshev.(ns), lw=2, mark=:o, label=L"$Λ_n$ for Chebyshev nodes")
 end
 
-# ╔═╡ 64ef7e43-c07b-42de-9f71-89302433c178
+# ╔═╡ 9c8b168d-494b-40ae-bc04-5dff7b535459
 md"""
 Therefore for **Chebyshev nodes** the **condition number** grows only **logarithmically** with $n$, while for **equally spaced nodes** it grows **exponentially** !
 
 Thus **Chebyshev nodes** do **not only** lead to **faster-converging polynomial interpolations**,
 but also to notably **more stable answers**. As a result they are one of the standard ingredients in many numerical algorithms.
+"""
 
-Let us verify this result visually. We consider again our function $f_\text{sin}(x) = \sin(5x)$ in the interval $[-1, 1]$, which we evaluate at the
+# ╔═╡ ebe08f78-d331-4563-9ef8-f99355ff672e
+md"""
+!!! note "General principle: Condition number"
+	For numerical problems the factor relating the error in the output quantity --- here  $\left| \tilde{p}_n(x) - p_n(x) \right|$ --- to the error in the input quantity --- here $ε = \max_i |\tilde{x}_i - x_i|$ --- the **condition number** of the problem. For polynomial interpolation the condition number is exactly Lebesgue's constant $\Lambda_n$.
+
+	Since for Chebyshev nodes $\Lambda_n$ stays relatitvely small, we would call Chebyshev interpolation **well-conditioned**. In contrast interpolation using equally spaced nodes is **ill-conditioned** as the condition number $\Lambda_n$ can get very large, thus **even small input errors can amplify** and **drastically reduce the accuracy** of the obtained polynomial.
+
+	We will meet other condition numbers later in the lecture, e.g. in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.html).
+"""
+
+# ╔═╡ 5e19f1a7-985e-4fb7-87c4-5113b5615521
+md"""
+Let us **illustrate this result grapically**. We consider again our function $f_\text{sin}(x) = \sin(5x)$ in the interval $[-1, 1]$, which we evaluate at the
 distinct nodes $\{x_i\}_{i=1}^{\texttt{n\_nodes\_poly}}$
 --- either equally spaced (left plot) or using Chebyshev nodes (right plot). Additional for both cases we consider an exact evaluation, i.e. points $(x_i, y_i) = (x_i, f(x_i))$ as well as noisy evaluations $(x_i, \tilde{y}_i)$ with
 ```math
@@ -3226,7 +3235,9 @@ version = "1.4.1+2"
 # ╟─1d61d925-1ceb-439b-aff6-c5e8483fdc31
 # ╟─eaaf2227-1a19-4fbc-a5b4-45503e832280
 # ╟─d9e318e7-5ffc-4433-9b0c-f393948c10ef
-# ╟─64ef7e43-c07b-42de-9f71-89302433c178
+# ╟─9c8b168d-494b-40ae-bc04-5dff7b535459
+# ╟─ebe08f78-d331-4563-9ef8-f99355ff672e
+# ╟─5e19f1a7-985e-4fb7-87c4-5113b5615521
 # ╟─d5de3b11-7781-4100-8a63-d26426685bbc
 # ╟─4a4540a3-b4cf-47fd-a615-a5280505333f
 # ╟─50a3face-5831-4ef5-b6a5-225b8b7c46a0
