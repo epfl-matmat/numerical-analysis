@@ -155,7 +155,7 @@ end;
 # ╔═╡ 8be732e2-927b-4c56-8cab-9079c7598e86
 scatter(temperature, rate; label="data", xlabel="temperature", ylabel="rate")
 
-# ╔═╡ b73ea6d2-5751-4926-a28d-418deb60da2a
+# ╔═╡ b37a4828-c65e-44be-a20c-787a7309fb21
 md"""
 ### Monomial basis
 
@@ -164,17 +164,28 @@ given $n+1$ data points $(x_1, y_1)$ up to $(x_{n+1}, y_{n+1})$
 we want to find a $n$-th degree polynomial
 ```math
 \tag{3}
-p_n(x) = \sum_{j=0}^n c_j x^j,
+p_n(x) = \sum_{\textcolor{red}{j=0}}^n c_j x^j,
 ```
 which is an interpolating function,
 i.e. satisfies $p_n(x_i) = y_i$
 for all $i = 1, \ldots, n + 1$.
-The fundamential theorem of algebra
-ensures that such a polynomial of degree $n$,
+Fundamental results from algebra
+ensure that such a polynomial of degree $n$,
 which goes through all $n+1$ data points can always be found.
 Moreover this polynomial (thus its coefficients $c_j$)
 is uniquely defined by the data.
+"""
 
+# ╔═╡ 20a76496-f1a0-4690-8522-a13cf4656e6d
+md"""
+!!! danger "Indexing conventions: Starting at $0$ or $1$"
+	Note that in the definition of the polynomial (Equation (3)) the sum starts now from $j=0$ whereas in equation (1) it started from $j=1$.
+	
+	When discussing numerical methods (such as here interpolations) it is sometimes more convenient to start indexing from $0$ and sometimes to start from $1$. Please be aware of this and read sums in this notebook carefully. Occasionally we use color to highlight the start of a sum explicitly.
+"""
+
+# ╔═╡ 17e97fad-6290-4ef6-9124-c9a816346564
+md"""
 To find this polynomial a
 natural idea is thus to employ the monomials $1, x, x^2, \ldots x^n$
 directly as the basis for our interpolation:
@@ -192,15 +203,15 @@ leads to the linear system in the $n+1$ unknowns $c_0, c_1, \ldots, c_n$
 1 & x_1 & \ldots & x_1^n \\
 1 & x_2 & \ldots & x_2^n \\
 \vdots \\
-1 &x_n & \ldots & x_n^n \\
+1 &x_{n+1} & \ldots & x_{n+1}^n \\
 \end{array}\right)}_{= \mathbf{V}}
 \,
 \underbrace{
-\left(\begin{array}{c} c_1\\c_2\\\vdots\\c_n\end{array}\right)
+\left(\begin{array}{c} c_0\\c_1\\\vdots\\c_n\end{array}\right)
 }_\textbf{c}
 = 
 \underbrace{
-\left(\begin{array}{c} y_1\\y_2\\\vdots\\y_n\end{array}\right)
+\left(\begin{array}{c} y_1\\y_2\\\vdots\\y_{n+1}\end{array}\right)
 }_\textbf{y},
 ```
 where the $(n+1)\times(n+1)$ matrix $\mathbf{V}$ is called the **Vandermonde matrix**. Assuming the data points $(x_i, y_i)$ to be distinct, we know that only one interpolating polynomial exists. The linear system (4) has therefore exactly one solution and the matrix $V$ is thus always invertible, $\det(\textbf{V}) \neq 0$.
@@ -232,6 +243,9 @@ thus a polynomial degree of $(n_data_monomial - 1)
 
 # ╔═╡ ac94e6f2-ebf0-4ee8-b21f-d9d20c656dd5
 begin
+	# We wish to find an interpolating polynomial for the mapping
+	# temperature to reaction rate.
+
 	x = temperature[1:n_data_monomial]
 	y = rate[1:n_data_monomial]
 
@@ -356,7 +370,7 @@ In particular the nodal property (6) makes it extremely convenient to use a Lagr
     is given by
     ```math
     \tag{7}
-    p_n(x) = \sum_{i=1}^{n+1} y_i L_i(x)
+    p_n(x) = \sum_{\textcolor{red}{i=1}}^{n+1} y_i L_i(x)
     ```
 
 > **Proof:**
@@ -1069,7 +1083,7 @@ therefore
 ```
 """
 
-# ╔═╡ 2c4256d0-bcd7-42b4-ad85-aedea7063aae
+# ╔═╡ 34ce3c0d-0769-44a6-a80f-155581f129a7
 md"""
 We summarise in a Theorem:
 
@@ -1092,7 +1106,10 @@ However, we obtain that the interpolation error
 goes as $O(h^2)$ as $n\to \infty$.
 This is an example of **quadratic convergence**.
 More generally we define
+"""
 
+# ╔═╡ a30c9fe0-1467-4ba9-86b3-3ea044798851
+md"""
 !!! info "Definition: Algebraic convergence"
     If an approximation has an error with asymptotic
     behaviour $O(h^m)$ as $h\to0$ with $m$ integer
@@ -3198,7 +3215,9 @@ version = "1.4.1+2"
 # ╠═9e933ebe-1805-46fa-9e0a-a64c03a71c5c
 # ╠═f9f4ddec-fd3d-4624-ace4-f316b9cfa1e4
 # ╠═8be732e2-927b-4c56-8cab-9079c7598e86
-# ╟─b73ea6d2-5751-4926-a28d-418deb60da2a
+# ╟─b37a4828-c65e-44be-a20c-787a7309fb21
+# ╟─20a76496-f1a0-4690-8522-a13cf4656e6d
+# ╟─17e97fad-6290-4ef6-9124-c9a816346564
 # ╟─2dfef7e4-23ca-49fa-bb95-f9c7219cdf22
 # ╟─2a088353-0b78-45a8-b354-6ced35b1c7f9
 # ╠═ac94e6f2-ebf0-4ee8-b21f-d9d20c656dd5
@@ -3252,7 +3271,8 @@ version = "1.4.1+2"
 # ╠═f6055e59-1ddd-4148-8a85-95f4501e3f9f
 # ╟─193131ad-e016-4f2a-b1cb-a544bc497c95
 # ╟─d0a8b733-af40-41f7-a900-bf0ec6b17ed3
-# ╟─2c4256d0-bcd7-42b4-ad85-aedea7063aae
+# ╟─34ce3c0d-0769-44a6-a80f-155581f129a7
+# ╟─a30c9fe0-1467-4ba9-86b3-3ea044798851
 # ╟─7e317807-d3ee-4197-91fb-9fc03f7297e8
 # ╠═eb96f944-74ac-4cc0-9322-825df83f34f2
 # ╟─9d175a21-71e0-4df8-bbd5-f4eedbeb1384
