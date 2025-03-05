@@ -311,7 +311,7 @@ Both a more practical as well as a numerically more stable way to find
 	(\textcolor{red}{x_i} - x_{i-1})
 	(\textcolor{red}{x_i} - x_{i+1})
 	\cdots
-	(\textcolor{red}{x_i} - x_{n})
+	(\textcolor{red}{x_i} - x_{n+1})
 		   }
     \end{aligned}
     ```
