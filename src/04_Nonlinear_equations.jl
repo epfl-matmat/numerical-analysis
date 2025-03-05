@@ -678,7 +678,7 @@ can thus be considerably larger than the residual** !
 
 # ╔═╡ a377563c-63da-4a50-886b-002644085eab
 md"""
-!!! note "Residual terminology"
+!!! note "General principle: Residual"
     Note, that the **residual is a general terminology**,
     which is not only applied to such an error indicator in the context
     of fixed-point iterations, but used in general for iterative procedures.
@@ -1141,7 +1141,7 @@ where we used $f(x_\ast) = 0$.
 We summarise
 
 !!! info "Theorem 4: Convergence of Newton's method" 
-    Let $f$ be a $C^2$ function and $x_\ast$ a root of $f$.
+    Let $f$ be a twice differentiable ($C^2$) function and $x_\ast$ a root of $f$.
     If $f'(x_\ast) \neq 0$ and $f''(x_\ast) \neq 0$, then
     Newton's method converges quadratically for every $x^{(0)}$
     sufficiently close to $x_\ast$. The rate is

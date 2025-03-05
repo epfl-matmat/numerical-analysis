@@ -161,7 +161,7 @@ end;
 # ╔═╡ 8be732e2-927b-4c56-8cab-9079c7598e86
 scatter(temperature, rate; label="data", xlabel="temperature", ylabel="rate")
 
-# ╔═╡ b73ea6d2-5751-4926-a28d-418deb60da2a
+# ╔═╡ b37a4828-c65e-44be-a20c-787a7309fb21
 md"""
 ### Monomial basis
 
@@ -170,16 +170,28 @@ given $n+1$ data points $(x_1, y_1)$ up to $(x_{n+1}, y_{n+1})$
 we want to find a $n$-th degree polynomial
 ```math
 \tag{3}
-p_n(x) = \sum_{j=0}^n c_j x^j,
+p_n(x) = \sum_{\textcolor{red}{j=0}}^n c_j x^j,
 ```
 which is an interpolating function,
 i.e. satisfies $p_n(x_i) = y_i$
 for all $i = 1, \ldots, n + 1$.
-A result from algebra ensures that such a polynomial of degree $n$,
+Fundamental results from algebra
+ensure that such a polynomial of degree $n$,
 which goes through all $n+1$ data points can always be found.
-Moreover this polynomical (thus its coefficients $c_j$)
-is uniquely defined by the data. 
+Moreover this polynomial (thus its coefficients $c_j$)
+is uniquely defined by the data.
+"""
 
+# ╔═╡ 20a76496-f1a0-4690-8522-a13cf4656e6d
+md"""
+!!! danger "Indexing conventions: Starting at $0$ or $1$"
+	Note that in the definition of the polynomial (Equation (3)) the sum starts now from $j=0$ whereas in equation (1) it started from $j=1$.
+	
+	When discussing numerical methods (such as here interpolations) it is sometimes more convenient to start indexing from $0$ and sometimes to start from $1$. Please be aware of this and read sums in this notebook carefully. Occasionally we use color to highlight the start of a sum explicitly.
+"""
+
+# ╔═╡ 17e97fad-6290-4ef6-9124-c9a816346564
+md"""
 To find this polynomial a
 natural idea is thus to employ the monomials $1, x, x^2, \ldots x^n$
 directly as the basis for our interpolation:
@@ -197,15 +209,15 @@ leads to the linear system in the $n+1$ unknowns $c_0, c_1, \ldots, c_n$
 1 & x_1 & \ldots & x_1^n \\
 1 & x_2 & \ldots & x_2^n \\
 \vdots \\
-1 &x_n & \ldots & x_n^n \\
+1 &x_{n+1} & \ldots & x_{n+1}^n \\
 \end{array}\right)}_{= \mathbf{V}}
 \,
 \underbrace{
-\left(\begin{array}{c} c_1\\c_2\\\vdots\\c_n\end{array}\right)
+\left(\begin{array}{c} c_0\\c_1\\\vdots\\c_n\end{array}\right)
 }_\textbf{c}
 = 
 \underbrace{
-\left(\begin{array}{c} y_1\\y_2\\\vdots\\y_n\end{array}\right)
+\left(\begin{array}{c} y_1\\y_2\\\vdots\\y_{n+1}\end{array}\right)
 }_\textbf{y},
 ```
 where the $(n+1)\times(n+1)$ matrix $\mathbf{V}$ is called the **Vandermonde matrix**. Assuming the data points $(x_i, y_i)$ to be distinct, we know that only one interpolating polynomial exists. The linear system (4) has therefore exactly one solution and the matrix $V$ is thus always invertible, $\det(\textbf{V}) \neq 0$.
@@ -237,6 +249,9 @@ thus a polynomial degree of $(n_data_monomial - 1)
 
 # ╔═╡ ac94e6f2-ebf0-4ee8-b21f-d9d20c656dd5
 begin
+	# We wish to find an interpolating polynomial for the mapping
+	# temperature to reaction rate.
+
 	x = temperature[1:n_data_monomial]
 	y = rate[1:n_data_monomial]
 
@@ -280,7 +295,7 @@ interpolating polynomial is *uniquely* determined by the $n+1$ data points
 allows us to use *any polynomial basis* to find it.
 
 Both a more practical as well as a numerically more stable way to find
-**the** interpolating polynomial is the approach using Lagrange ploynomials.
+**the** interpolating polynomial is the approach using Lagrange polynomials.
 
 !!! info "Definition: Lagrange basis"
     The Lagrange polynomials associated to the **nodes**
@@ -361,7 +376,7 @@ In particular the nodal property (6) makes it extremely convenient to use a Lagr
     is given by
     ```math
     \tag{7}
-    p_n(x) = \sum_{i=1}^{n+1} y_i L_i(x)
+    p_n(x) = \sum_{\textcolor{red}{i=1}}^{n+1} y_i L_i(x)
     ```
 
 > **Proof:**
@@ -503,7 +518,7 @@ md"""
 To understand this behaviour the following error estimate is useful:
 
 !!! info "Theorem 2"
-    For a $C^{n+1}$ function $f : [a, b] \to \mathbb{R}$
+    For a $(n+1)$-times differentiable function $f : [a, b] \to \mathbb{R}$
     and $a = x_1 < x_2 < \cdots < x_{n+1} = b$ *equally distributed*
     nodes in $[a, b]$ the $n$-th degree polynomial interpolant $p_n$
     of the data $(x_i, f(x_i))$ with $i = 1, 2, \ldots, n+1$
@@ -514,7 +529,7 @@ To understand this behaviour the following error estimate is useful:
     \leq \frac{1}{4(n+1)}\left(\frac{b-a}{n}\right)^{n+1}
     \left\| f^{(n+1)} \right\|_\infty
     ```
-    where the infinity norm $\| \phi \|_\infty$ for a function $\phi : D \to \mathbb{R}$
+    where the **infinity norm** $\| \phi \|_\infty$ for a function $\phi : D \to \mathbb{R}$
     mapping from a domain $D$ is the expression
     ```math
     \| \phi \|_\infty = \max_{x \in D} |\phi(x)|,
@@ -594,8 +609,8 @@ This visual result is also confirmed by a more detailed analysis,
 which reveals, that the origin is our choice of a *regular* spacing between the sampling points, an effect known as Runge's phaenomenon.
 
 !!! info "Observation: Runge's phaenomenon"
-    Polynomial interpolation employing equally spaced nodal points
-    to construct the interpolant $p_n$ may lead to a non-convergence
+    Polynomial interpolation employing *equally spaced* nodal points
+    to construct the interpolant $p_n$ *may* lead to a non-convergence
     as $n \to \infty$. Moreover while for small $n$ the error in the
     infinity norm $\|\,\cdot\,\|_\infty$ still
     decreases, for large $n$ this behaviour can change, such that
@@ -755,11 +770,6 @@ md"""
 Notably, if $\Lambda_n$ is small, then small measurement errors $ε$ can only lead to small perturbations in the interpolating polynomial. In that case our polynomial interpolation procedure would be called **stable** or **well-conditioned**. By contrast, if $\Lambda_n$ is very high, then already a small measurement error $ε$ allows for notably deviations in the resulting interpolant
 --- we are faced with a **badly conditioned** problem.
 
-In general for numerical problems, we call the factor relating the error in the output quantity (here $\left| \tilde{p}_n(x) - p_n(x) \right|$)
-to the error in the input quantity
-(here $ε = \max_i |\tilde{x}_i - x_i|$) the **condition number**
-of the problem. For polynomial interpolation the condition number is exactly Lebesgue's constant $\Lambda_n$.
-
 Considering the two polynomial interpolation schemes we discussed, one can show
 - Equally distributed nodes: $\Lambda_n \sim \frac{2^{n+1}}{e\, n \log n}$ as $n\to \infty$
 - Chebyshev nodes: $\frac{2}{\pi} \log(n+1)+a < \Lambda_n < \frac{2}{\pi} \log(n+1) + 1, \qquad a = 0.9625\ldots$
@@ -776,14 +786,27 @@ begin
 	plot!(ns, L_Chebyshev.(ns), lw=2, mark=:o, label=L"$Λ_n$ for Chebyshev nodes")
 end
 
-# ╔═╡ 64ef7e43-c07b-42de-9f71-89302433c178
+# ╔═╡ 9c8b168d-494b-40ae-bc04-5dff7b535459
 md"""
 Therefore for **Chebyshev nodes** the **condition number** grows only **logarithmically** with $n$, while for **equally spaced nodes** it grows **exponentially** !
 
 Thus **Chebyshev nodes** do **not only** lead to **faster-converging polynomial interpolations**,
 but also to notably **more stable answers**. As a result they are one of the standard ingredients in many numerical algorithms.
+"""
 
-Let us verify this result visually. We consider again our function $f_\text{sin}(x) = \sin(5x)$ in the interval $[-1, 1]$, which we evaluate at the
+# ╔═╡ ebe08f78-d331-4563-9ef8-f99355ff672e
+md"""
+!!! note "General principle: Condition number"
+	For numerical problems the factor relating the error in the output quantity --- here  $\left| \tilde{p}_n(x) - p_n(x) \right|$ --- to the error in the input quantity --- here $ε = \max_i |\tilde{x}_i - x_i|$ --- the **condition number** of the problem. For polynomial interpolation the condition number is exactly Lebesgue's constant $\Lambda_n$.
+
+	Since for Chebyshev nodes $\Lambda_n$ stays relatitvely small, we would call Chebyshev interpolation **well-conditioned**. In contrast interpolation using equally spaced nodes is **ill-conditioned** as the condition number $\Lambda_n$ can get very large, thus **even small input errors can amplify** and **drastically reduce the accuracy** of the obtained polynomial.
+
+	We will meet other condition numbers later in the lecture, e.g. in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.html).
+"""
+
+# ╔═╡ 5e19f1a7-985e-4fb7-87c4-5113b5615521
+md"""
+Let us **illustrate this result grapically**. We consider again our function $f_\text{sin}(x) = \sin(5x)$ in the interval $[-1, 1]$, which we evaluate at the
 distinct nodes $\{x_i\}_{i=1}^{\texttt{n\_nodes\_poly}}$
 --- either equally spaced (left plot) or using Chebyshev nodes (right plot). Additional for both cases we consider an exact evaluation, i.e. points $(x_i, y_i) = (x_i, f(x_i))$ as well as noisy evaluations $(x_i, \tilde{y}_i)$ with
 ```math
@@ -1066,7 +1089,7 @@ therefore
 ```
 """
 
-# ╔═╡ 2c4256d0-bcd7-42b4-ad85-aedea7063aae
+# ╔═╡ 34ce3c0d-0769-44a6-a80f-155581f129a7
 md"""
 We summarise in a Theorem:
 
@@ -1089,7 +1112,10 @@ However, we obtain that the interpolation error
 goes as $O(h^2)$ as $n\to \infty$.
 This is an example of **quadratic convergence**.
 More generally we define
+"""
 
+# ╔═╡ a30c9fe0-1467-4ba9-86b3-3ea044798851
+md"""
 !!! info "Definition: Algebraic convergence"
     If an approximation has an error with asymptotic
     behaviour $O(h^m)$ as $h\to0$ with $m$ integer
@@ -3196,7 +3222,9 @@ version = "1.4.1+2"
 # ╠═9e933ebe-1805-46fa-9e0a-a64c03a71c5c
 # ╠═f9f4ddec-fd3d-4624-ace4-f316b9cfa1e4
 # ╠═8be732e2-927b-4c56-8cab-9079c7598e86
-# ╟─b73ea6d2-5751-4926-a28d-418deb60da2a
+# ╟─b37a4828-c65e-44be-a20c-787a7309fb21
+# ╟─20a76496-f1a0-4690-8522-a13cf4656e6d
+# ╟─17e97fad-6290-4ef6-9124-c9a816346564
 # ╟─2dfef7e4-23ca-49fa-bb95-f9c7219cdf22
 # ╟─2a088353-0b78-45a8-b354-6ced35b1c7f9
 # ╠═ac94e6f2-ebf0-4ee8-b21f-d9d20c656dd5
@@ -3233,7 +3261,9 @@ version = "1.4.1+2"
 # ╟─1d61d925-1ceb-439b-aff6-c5e8483fdc31
 # ╟─eaaf2227-1a19-4fbc-a5b4-45503e832280
 # ╟─d9e318e7-5ffc-4433-9b0c-f393948c10ef
-# ╟─64ef7e43-c07b-42de-9f71-89302433c178
+# ╟─9c8b168d-494b-40ae-bc04-5dff7b535459
+# ╟─ebe08f78-d331-4563-9ef8-f99355ff672e
+# ╟─5e19f1a7-985e-4fb7-87c4-5113b5615521
 # ╟─d5de3b11-7781-4100-8a63-d26426685bbc
 # ╟─4a4540a3-b4cf-47fd-a615-a5280505333f
 # ╟─50a3face-5831-4ef5-b6a5-225b8b7c46a0
@@ -3248,7 +3278,8 @@ version = "1.4.1+2"
 # ╠═f6055e59-1ddd-4148-8a85-95f4501e3f9f
 # ╟─193131ad-e016-4f2a-b1cb-a544bc497c95
 # ╟─d0a8b733-af40-41f7-a900-bf0ec6b17ed3
-# ╟─2c4256d0-bcd7-42b4-ad85-aedea7063aae
+# ╟─34ce3c0d-0769-44a6-a80f-155581f129a7
+# ╟─a30c9fe0-1467-4ba9-86b3-3ea044798851
 # ╟─7e317807-d3ee-4197-91fb-9fc03f7297e8
 # ╠═eb96f944-74ac-4cc0-9322-825df83f34f2
 # ╟─9d175a21-71e0-4df8-bbd5-f4eedbeb1384
