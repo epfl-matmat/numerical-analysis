@@ -1,17 +1,19 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.20.4
 
 using Markdown
 using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
+    #! format: off
     quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
 
 # ╔═╡ 2cff355a-0339-11ef-085c-a5f9a6f5549e
@@ -23,6 +25,12 @@ begin
 	using LinearAlgebra
 	using HypertextLiteral
 end
+
+# ╔═╡ b72b45ad-6191-40cb-9e9f-950bf1bfe212
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/12_Boundary_value_problems.pdf)
+"""
 
 # ╔═╡ 206ae56c-fcfa-4d6f-93e4-30f03dee8f90
 TableOfContents()
@@ -2237,6 +2245,7 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
+# ╟─b72b45ad-6191-40cb-9e9f-950bf1bfe212
 # ╠═2cff355a-0339-11ef-085c-a5f9a6f5549e
 # ╟─206ae56c-fcfa-4d6f-93e4-30f03dee8f90
 # ╟─8c818dad-6789-4771-9eab-4e4ba78f5612

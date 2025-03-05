@@ -27,6 +27,12 @@ begin
 	using HypertextLiteral
 end
 
+# ╔═╡ 46b46b8e-b388-44e1-b2d8-8d7cfdc3b475
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/05_Interpolation.pdf)
+"""
+
 # ╔═╡ 61e5ef66-a213-4b23-9406-9cc63a58104c
 TableOfContents()
 
@@ -3202,6 +3208,7 @@ version = "1.4.1+2"
 """
 
 # ╔═╡ Cell order:
+# ╟─46b46b8e-b388-44e1-b2d8-8d7cfdc3b475
 # ╠═679517fb-6090-4259-9b93-571ded17ab88
 # ╟─61e5ef66-a213-4b23-9406-9cc63a58104c
 # ╟─345043c8-2e69-4a38-a3e9-c7a95f755f4c

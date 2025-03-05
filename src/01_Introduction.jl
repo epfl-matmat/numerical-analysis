@@ -28,6 +28,12 @@ begin
 	using HypertextLiteral
 end
 
+# ╔═╡ 67e61788-2000-4fe4-8a14-48faa2df5bbd
+md"""
+!!! info ""
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/01_Introduction.pdf)
+"""
+
 # ╔═╡ 71c91579-a894-44b5-b4d7-f8d98667b977
 TableOfContents()
 
@@ -2322,6 +2328,7 @@ version = "1.4.1+2"
 """
 
 # ╔═╡ Cell order:
+# ╟─67e61788-2000-4fe4-8a14-48faa2df5bbd
 # ╠═c9aac823-6556-4a98-92e4-7e8631e7b71e
 # ╟─71c91579-a894-44b5-b4d7-f8d98667b977
 # ╟─a089a707-ff05-4bdb-bd31-1422617388fc
