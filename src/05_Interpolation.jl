@@ -184,7 +184,7 @@ is uniquely defined by the data.
 
 # ╔═╡ 20a76496-f1a0-4690-8522-a13cf4656e6d
 md"""
-!!! danger "Indexing conventions: Starting at $0$ or $1$"
+!!! danger "Indexing conventions: Starting at 0 or 1"
 	Note that in the definition of the polynomial (Equation (3)) the sum starts now from $j=0$ whereas in equation (1) it started from $j=1$.
 	
 	When discussing numerical methods (such as here interpolations) it is sometimes more convenient to start indexing from $0$ and sometimes to start from $1$. Please be aware of this and read sums in this notebook carefully. Occasionally we use color to highlight the start of a sum explicitly.
@@ -453,9 +453,29 @@ to obtain an **accurate reconstruction** of the original $f$.
 
 """
 
+# ╔═╡ 669f818c-8f7c-4e6d-9d89-ea979e69ce66
+md"""
+A standard metric to measure how good the approximation of $p_n$ to $f$ is,
+is to check the largest deviation between the differences of function vaules
+on the domain of our data. Assuming we want to approximate $f$ on the interval
+$[a, b]$ we thus compute
+```math
+\max_{x \in [a, b]} | f(x) - p_n(x) | = \|f - p_n\|_\infty,
+```
+which is the so-called **infinity norm** of the difference $f - p_n$.
+More generally the **infinity norm** $\| \phi \|_\infty$ for a function $\phi : D \to \mathbb{R}$ is the expression
+```math
+\| \phi \|_\infty = \max_{x \in D} |\phi(x)|,
+```
+i.e. the maximal absolute value the function takes over its input domain $D$.
+
+Note that the error $\|f - p_n\|_\infty$ effectively **measures** how well our **polynomial interpolation model** $p_n$ **generalises to unseen datapoints** $(x_{n+1}, f(x_{n+1}))$ with $x \in D$: If this error $\|f - p_n\|_\infty$ is small, $p_n$ is a very good model for $f$. If this error is large, it is a rather inaccurate model.
+"""
+
 # ╔═╡ 5f1abde6-f4fc-4c5e-9a19-abf28ca3584d
 md"""
-For illustration we contrast two cases, namely the construction of a polynomial interpolation of the functions
+We **return to the interpolation problem**.
+For illustration in this section we contrast two cases, namely the construction of a polynomial interpolation of the functions
 """
 
 # ╔═╡ b1773d1c-4d3c-4f4b-805d-f188623c9571
@@ -490,6 +510,7 @@ let
 	         titlefontsize=12)
 	plot!(p, fine, fsin.(fine), label="fsin", lw=2, ls=:dash)
 	scatter!(p, samples, values_fsin, label="samples")
+	plot!(p, [-1, 1, 1, -1, -1], [-2, -2, 2, 2, -2]; fill=(0, :grey, 0.1), c=:grey, label="Data domain")
 
 	q = plot(fine, poly_fratio.(fine);
 	         label="Polynomial fit", xlims=(-1.3, 1.3), lw=2, ylims=(-0.5, 2),
@@ -497,6 +518,8 @@ let
 	         titlefontsize=12)
 	plot!(q, fratio, label="fratio", lw=2,ls=:dash)
 	scatter!(q, samples, values_fratio, label="samples")
+	plot!(q, [-1, 1, 1, -1, -1], [-2, -2, 2, 2, -2]; fill=(0, :grey, 0.1), c=:grey, label="Data domain")
+
 	
 	plot(p, q)
 end
@@ -535,15 +558,16 @@ To understand this behaviour the following error estimate is useful:
     \| \phi \|_\infty = \max_{x \in D} |\phi(x)|,
     ```
     i.e. the maximal absolute value the function takes.
-
-Note that in this theorem the error $\|f - p_n\|_\infty$ effectively measures how badly our polynomial interpolation model $p_n$ generalises for unseen datapoints $(x_{n+1}, f(x_{n+1}))$ with $x \in D$: If this error $\|f - p_n\|_\infty$ is small, $p_n$ is a very good statistical model for $f$. If this error is large, it is a rather inaccurate model.
 """
 
 # ╔═╡ 5f63abce-f843-4c33-9db6-0770323b55ac
 md"""
 The **key conclusion of the previous theorem** is that
-the error $\|f - p_n\|_\infty$ only decreases as $n$ increases
-when the right-hand side (RHS) of (8) is bounded by a constant. So let's check this for our functions.
+if the right-hand side (RHS) of (8) goes to zero,
+than the the error $\|f - p_n\|_\infty$ neccessirly vanishes
+as $n$ increases. 
+
+So let's check this for our functions.
 - For $f_\text{sin}(x) = \sin(5x)$ we can easily verify
   $|f_\text{sin}^{(n+1)}(x)| = 5 |f_\text{sin}^{(n)}(x)|$ as well as $\max_{[-1,1]} |f_\text{sin}(x)| = \max_{x\in[-1,1]} |\sin(5x)| = 1$, such that
   ```math
@@ -609,12 +633,12 @@ This visual result is also confirmed by a more detailed analysis,
 which reveals, that the origin is our choice of a *regular* spacing between the sampling points, an effect known as Runge's phaenomenon.
 
 !!! info "Observation: Runge's phaenomenon"
-    Polynomial interpolation employing *equally spaced* nodal points
-    to construct the interpolant $p_n$ *may* lead to a non-convergence
+    Polynomial interpolation employing **equally spaced nodal points**
+    to construct the interpolant $p_n$ **may lead to a non-convergence**
     as $n \to \infty$. Moreover while for small $n$ the error in the
     infinity norm $\|\,\cdot\,\|_\infty$ still
     decreases, for large $n$ this behaviour can change, such that
-    for large $n$ the error *keeps increasing* as $n$ increases.
+    **for large $n$ the error can keep increasing** as $n$ increases.
 """
 
 # ╔═╡ 25b82572-b27d-4f0b-9be9-323cd4e3ce7a
@@ -704,10 +728,9 @@ is one of the **desired properties**.
 	  * If the error scales as $C K^{-n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to the last chapter.)
     - **Approximation schemes:** Exponential convergence
 	  * If the error scales as $C K^{-n}$ where $n$ is some accuracy parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
-      * For approximation schemes it is often more convenient to instead formulate the method using an approximation parameter $h = O(1/n)$, i.e. which scales inversely to $n$. In this case *smaller* $h$ give more accurate results. In this case exponential convergence is characterised by an error scaling as $C K^h$.
 """
 
-# ╔═╡ 1d61d925-1ceb-439b-aff6-c5e8483fdc31
+# ╔═╡ a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
 md"""
 ### Stability of polynomial interpolation
 
@@ -730,7 +753,10 @@ Instead of producing an interpolating polynomial $p_n$
 using the exact data $(x_i, y_i)$,
 our procedure only has access to the noisy data  $(x_i, \tilde{y}_i)$,
 thus producing the polynomial $\tilde{p}_n$.
+"""
 
+# ╔═╡ 7f855423-72ac-4e6f-92bc-73c12e5007eb
+md"""
 In **stabilty analysis** we now ask the question:
 How different are $p_n$ and $\tilde{p}_n$ given a measurement noise
 of order $\varepsilon$.
@@ -833,16 +859,16 @@ let
 	for (i, values) in enumerate((values_equispaced, values_chebyshev))
 		noise = [10^η_log_poly * (-1 + 2rand()) for _ in values]
 		
-		fsin_accurate = fsin.(values) #  = [fsin(x) for x in values]
+		# fsin_accurate = fsin.(values) #  = [fsin(x) for x in values]
 		fsin_noise    = fsin.(values) + noise
 		
-		poly_accurate = Polynomials.fit(values, fsin_accurate)
+		# poly_accurate = Polynomials.fit(values, fsin_accurate)
 		poly_noise    = Polynomials.fit(values, fsin_noise)
 
 		plot!(p, fine, fsin.(fine);
 		      label=L"function $f$", subplot=i, lw=2, ls=:dash,
 		      ylim=(-2.75, 2), legend=:bottomright)
-		plot!(p, fine, poly_accurate.(fine); label=L"accurate $p_n$", subplot=i, lw=2)
+		# plot!(p, fine, poly_accurate.(fine); label=L"accurate $p_n$", subplot=i, lw=2)
 		plot!(p, fine, poly_noise.(fine); label=L"noisy $\tilde{p}_n$", subplot=i, lw=2)
 		scatter!(p, values, fsin_noise; subplot=i, label="noisy data")
 
@@ -3242,6 +3268,7 @@ version = "1.4.1+2"
 # ╠═f40c7c2e-339c-4b6e-91d3-ef5d031091f3
 # ╟─944fa679-77d2-4fe5-9a79-ef63248105c7
 # ╟─055cb883-a140-4078-bedb-666f7e6259d0
+# ╟─669f818c-8f7c-4e6d-9d89-ea979e69ce66
 # ╟─5f1abde6-f4fc-4c5e-9a19-abf28ca3584d
 # ╠═b1773d1c-4d3c-4f4b-805d-f188623c9571
 # ╟─e567287b-9244-4b55-9f5b-2e3bf583e46a
@@ -3258,7 +3285,8 @@ version = "1.4.1+2"
 # ╟─479a234e-1ce6-456d-903a-048bbb3de65a
 # ╟─d4cf71ef-576d-4900-9608-475dbd4d933a
 # ╟─56685887-7866-446c-acdb-2c20bd11d4cd
-# ╟─1d61d925-1ceb-439b-aff6-c5e8483fdc31
+# ╟─a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
+# ╟─7f855423-72ac-4e6f-92bc-73c12e5007eb
 # ╟─eaaf2227-1a19-4fbc-a5b4-45503e832280
 # ╟─d9e318e7-5ffc-4433-9b0c-f393948c10ef
 # ╟─9c8b168d-494b-40ae-bc04-5dff7b535459
