@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 3295f30c-c1f4-11ee-3901-4fb291e0e4cb
 begin
 	using LinearAlgebra
@@ -22,7 +34,7 @@ md"""
 # ╔═╡ 21c9a859-f976-4a93-bae4-616122712a24
 TableOfContents()
 
-# ╔═╡ 8e4312b5-f4ce-440b-a487-689959851098
+# ╔═╡ b3cb31aa-c982-4454-8882-5b840c68df9b
 md"""
 # Direct methods for linear systems
 
@@ -36,8 +48,13 @@ of equations of the form
 where we are given a matrix $\mathbf{A} \in \mathbb{R}^{n\times n}$
 as well as a right-hand side $\mathbf{b} \in \mathbb{R}^n$.
 As the solution we seek the unknown $\mathbf{x} \in \mathbb{R}^n$.
+"""
 
-Solving such equations is a standard exercise in linear algbra
+# ╔═╡ be5d3f98-4c96-4e69-af91-fa2ae5f74af5
+md"""
+## A difficult example
+
+Solving linear equations is a standard exercise in linear algbra
 and you probably have already done it in previous courses.
 However, you might also know that solving such linear systems is
 not always equally easy.
@@ -84,7 +101,7 @@ This is what we want to explore in this part of the course.
 
 # ╔═╡ 0b8bccd7-28ad-4ebc-8bcc-71e6adda71e3
 md"""
-## What Julia's `\` does under the hood
+## Motivation: The \ (backslash) operator
 
 For solving linear systems, we so far employed Julia's backslash `\` operator.
 So let's find out what it actually does under the hood. We take the problem
@@ -106,7 +123,7 @@ methods(\, (Matrix, Vector))
 
 # ╔═╡ 0d040c4e-f306-4a84-93ac-9c35bc924130
 md"""
-Ok, so this calls into Julia's linear algebra library. The code is [located here](https://github.com/JuliaLang/julia/blob/f2e168a0a8bbd6be82b4a0dfa205bc8080a48824/stdlib/LinearAlgebra/src/generic.jl#L1132). Essentially it performs
+Ok, so this calls into Julia's linear algebra library. The code is [located here](https://github.com/JuliaLang/julia/blob/8561cc3d68d3551a5728b40f782c244834fd3348/stdlib/LinearAlgebra/src/generic.jl#L1118). Essentially it performs
 an **LU factorisation**:
 """
 
@@ -142,7 +159,7 @@ md"""
 Now we are a step closer to what happens, but why is this useful ?
 """
 
-# ╔═╡ 06716c35-b551-40a6-bb14-906bc7569434
+# ╔═╡ a4aab2c0-b254-4e24-a833-95a47abd0b25
 md"""
 ## Solving triangular systems
 
@@ -161,20 +178,24 @@ the matrix is triangular. For example consider the *lower* triangular system
     8 \\ 5 \\ 0 \\ 1
   \end{pmatrix}.
 ```
-The first row of this system simply states $4 x_1 = 8$,
-which is very easy to solve, namely $x_1 = 8 / 4 = 2$.
-The second row states $3x_1-x_2=5$.
-However, $x_1$ is already known and can be inserted
-to find $x_2 = -(5-3\cdot 2)=1$.
-Following the same idea the third row gives
-$x_3=(0+1\cdot 2)/3 = 2/3$ and the last row
-$x_4=(1-1\cdot 2 + 1\cdot 1 + 1\cdot 2/3)/2 = 1/3$.
-In total we found
-```math
+- The first row of this system simply states $4 x_1 = 8$,
+  which is very easy to solve, namely $x_1 = 8 / 4 = 2$.
+- The second row states $3x_1-x_2=5$.
+  However, $x_1$ is already known and can be inserted
+  to find $x_2 = -(5-3\cdot 2)=1$.
+- Following the same idea the third row gives
+  $x_3=(0+1\cdot 2)/3 = 2/3$ and the last row
+  $x_4=(1-1\cdot 2 + 1\cdot 1 + 1\cdot 2/3)/2 = 1/3$.
+- In total we found
+  ```math
   \mathbf{x} =
   \begin{pmatrix} 2 \\ 1 \\ 2/3 \\ 1/3
   \end{pmatrix}.
-```
+  ```
+"""
+
+# ╔═╡ 4396fbdd-12d7-4d73-bb98-948d20303292
+md"""
 Generalising to an arbitrary 4x4 lower-rectangular matrix
 ```math
   \begin{pmatrix}
@@ -216,8 +237,12 @@ function forward_substitution(L, b)
     x = zeros(n)
     x[1] = b[1] / L[1, 1]
     for i in 2:n
-        row_sum = sum(L[i, j] * x[j] for j in 1:i-1)
-        x[i] = (b[i] - row_sum) / L[i, i]
+        row_sum = 0.0
+		for j in 1:i-1
+			row_sum += L[i, j] * x[j]
+		end
+		
+        x[i] = 1 / L[i, i] * (b[i] - row_sum)
     end
     x
 end
@@ -260,7 +285,22 @@ More formally this algorithm is called
 or in code
 """
 
-# ╔═╡ 8e31aaec-2512-4ad9-88a4-3130734d6e15
+# ╔═╡ d6a1c5e7-0921-4c4e-bc4a-fb2ebc94e45c
+function backward_substitution(U, b)
+	n = size(U, 1)
+    x = zeros(n)
+    x[n] = b[n] / U[n, n]
+    for i in n-1:-1:1  # Note that this loop goes *backwards* n-1, n-2, ..., 1
+        row_sum = 0.0
+		for j in i+1:n
+			row_sum += U[i, j] * x[j]
+		end
+        x[i] = (b[i] - row_sum) / U[i, i]
+    end
+    x
+end
+
+# ╔═╡ 7c66ecc0-f194-489a-bdbf-7b537f2d8567
 md"""
 Based on our discussion we now understand why it is advantageous to
 perform an LU factorisation when solving a linear system:
@@ -275,28 +315,31 @@ In summary we thus obtain
     to $\mathbf{A} \mathbf x = \mathbf b$:
     1. Factorise $\mathbf{A} = \mathbf{L} \mathbf{U}$.
     2. Solve $\mathbf{L} \mathbf{z} = \mathbf b$ for $\mathbf z$
-       using *forward* substitution.
+       using **forward substitution** (Algorithm 1).
     3. Solve $\mathbf U \mathbf x = \mathbf z$ for $\mathbf x$
-       using *backward* substitution.
+       using **backward substitution** (Algorithm 2).
+"""
 
+# ╔═╡ 4f017115-fd86-4087-8ce4-8ef896fa4959
+md"""
 A few remarks are in order:
 - We have so far not discussed how to even compute the LU factorisation.
   As we will see in the next section this step will actually be accomplished
-  by the Gaussian elimination algorithm, which probably already know
+  by the **Gaussian elimination algorithm**, which probably already know
   from your linear algebra lectures.
-- A severe drawback of this naive algorithm is immediately apparent from
+- A severe **drawback of this naive algorithm** is immediately apparent from
   our 4x4 example problem, where (3) and (4) provide explicit solution
-  expressions. If by any chance an element $L_{ii}$ or $U_{ii}$ happens
-  to be zero, the algorithm cannot work. This already points to a problem
-  we will discuss in the section on *pivoting*.
-- Note, that steps 2. and 3. of the algorithm do *not depend* on the
-  original matrix $\mathbf A$, but only on the right hand side $\mathbf b$.
-  In other words as soon as the factorisation $\mathbf{A} = \mathbf{L} \mathbf{U}$
-  has been computed, solving $\mathbf A \mathbf x = \mathbf b$ for many
+  expressions. If by any chance an **element $L_{ii}$ or $U_{ii}$ happens
+  to be zero**, the **algorithm cannot work**. So one needs to come up with
+  ways around this. We will mention a few ideas in the section on **pivoting**.
+- Note, that **steps 2. and 3.** of the algorithm **do not depend on the
+  original matrix $\mathbf A$**, but only on the right hand side $\mathbf b$.
+  In other words once the factorisation $\mathbf{A} = \mathbf{L} \mathbf{U}$
+  has been computed, solving $\mathbf A \mathbf x = \mathbf b$ for different
   right hand sides $\mathbf b$ only requires the execution of steps 2. and 3.
   As we will see later, step 1. is the most expensive step. Therefore
-  once $\mathbf{A}$ has been factorised, the cost for solving an
-  *arbitrary* linear systems involving $\mathbf{A}$ is reduced as its
+  **once $\mathbf{A}$ has been factorised**, the **cost for solving an
+  *arbitrary* linear system** involving $\mathbf{A}$ **is reduced** as its
   factorised form $\mathbf{L} \mathbf{U}$ can be used in its place.
 """
 
@@ -304,7 +347,7 @@ A few remarks are in order:
 md"""
 ## Gaussian elimination and LU factorisation
 
-Final question and the missing puzzle piece is how to compute LU factorization.
+We will now discuss how to compute an LU factorization.
 As it turns out the Gaussian elimination algorithm you already learned in previous
 linear algebra classes provides exactly this missing ingredient.
 
@@ -385,88 +428,138 @@ So effectively Gaussian elimination provides us with an approach to compute the 
 """
 
 # ╔═╡ 1bcd8f38-5ae9-459e-8f91-8c9ad7cde407
-md"""
+begin
+	alg_LU = md"""
 !!! info "Algorithm 4: LU factorisation"
     **Input:** $\textbf A \in \mathbb{R}^{n\times n}$ 
 
     **Output:** $\mathbf U \in \mathbb{R}^{n\times n}$, $\mathbf L \in \mathbb{R}^{n\times n}$
     -  $\textbf A^{(1)} = \textbf A$
-    - for $k = 1, \ldots, n-1$ *(algorithm steps)*
+    - for $k = 1, \ldots, n-1$ $\quad$  *(algorithm steps)*
       *  $L_{kk} = 1$
-      * for $i = k+1, \ldots, n$  *(Loop over rows)*
+      * for $i = k+1, \ldots, n$ $\quad$   *(Loop over rows)*
         -   $L_{ik} = \frac{A_{ik}^{(k)}}{A^{(k)}_{kk}}$
-        - for $j = k+1, \ldots n$  *(Loop over columns)*
+        - for $j = k+1, \ldots n$ $\quad$   *(Loop over columns)*
           *   $A_{ij}^{(k+1)} = A_{ij}^{(k)} - L_{ik} A_{kj}^{(k)}$
+	-  $L_{nn} = 1$  $\quad$ *(the loop above only runs until $n-1$)*
     -  $\textbf U = \textbf A^{(n)}$ 
+	"""
 
-
-An implementation of LU factorisation could be realised as such:
-"""
+	md"""$(alg_LU) An implementation of LU factorisation could be realised as such:"""
+end
 
 # ╔═╡ 9692c144-531a-4995-9057-60af2b91ecfa
 function factorise_lu(A)
     n = size(A, 1)
-    L = diagm(ones(n))   # Initialise L by ones on diagonal, zeros elsewhere
-	U = zeros(n, n)
+    L = zeros(n, n)     # Initialise L and U by zeros
     Aᵏ = float(copy(A))  # Make a copy of A and ensure that all entries
 	                     # are converted to floating-point numbers
 
     for k in 1:n-1          # Algorithm steps
-		U[k, :] = Aᵏ[k, :]  # Copy k-th row to U, since this row is in its final form.
-		                    # From now on in the algorithm use U[k, :] instead of Aᵏ,
-		                    # since Aᵏ is updated in-place to become Aᵏ⁺¹
+		L[k, k] = 1.0
 		for i in k+1:n      # Loop over rows
-			L[i, k] = Aᵏ[i, k] / U[k, k]
-			for j = k+1:n   # Loop over columns
-				Aᵏ[i, j] = Aᵏ[i, j] - L[i, k] * U[k, j]	 # Update Aᵏ in-place
+			L[i, k] = Aᵏ[i, k] / Aᵏ[k, k]
+			for j in k:n    # Loop over columns
+				# Update Aᵏ in-place to give Aᵏ⁺¹
+				Aᵏ[i, j] = Aᵏ[i, j] - L[i, k] * Aᵏ[k, j]
 			end
 		end
     end
-	U[n, n] = Aᵏ[n, n]
-
+	L[n, n] = 1.0           # Since the loop only runs until n-1
+	U = Aᵏ
+		
 	# Return L and U using Julia datastructures to indicate
 	# their special lower-triangular and upper-triangular form.
     return LowerTriangular(L), UpperTriangular(U)
 end
 
+# ╔═╡ ee45b963-fd91-4a7f-94b9-062bf45d5d7e
+md"""We stay with the example where we performed manual Gaussian elimination:"""
+
+# ╔═╡ cd1bbd16-ce88-49a4-bf1f-a9f42bc8920b
+A_manual = Float64[ 2  1  0;
+	               -4  3 -1;
+                    4 -3  4]
+
+# ╔═╡ 039b93ac-0a0e-45c3-acf9-70ec49b077c3
+md"""With this slider you can stop `factorise_lu` after 1, 2 or 3 steps, checking that agrees with the steps we computed manually:
+
+- `nstep_lu_A = ` $(@bind nstep_lu_A Slider(1:3; default=1, show_value=true))
+"""
+
+# ╔═╡ c918c14f-1532-4f40-9857-127554aaaf42
+let
+	function factorise_lu_steps(A; nstep=size(A, 1))
+	    n = size(A, 1)
+	    L = zeros(n, n)     # Initialise L and U by zeros
+	    Aᵏ = float(copy(A))  # Make a copy of A and ensure that all entries
+		                     # are converted to floating-point numbers
+	
+	    for k in 1:n-1          # Algorithm steps
+			if k > nstep
+				break
+			end
+			
+			L[k, k] = 1.0
+			for i in k+1:n      # Loop over rows
+				L[i, k] = Aᵏ[i, k] / Aᵏ[k, k]
+				for j in k:n   # Loop over columns
+					# Update Aᵏ in-place to give Aᵏ⁺¹
+					Aᵏ[i, j] = Aᵏ[i, j] - L[i, k] * Aᵏ[k, j]
+				end
+			end
+	    end
+		if nstep ≥ n
+			L[n, n] = 1.0      # Since the loop only runs until n-1
+		end
+			
+	    return (; Aᵏ, L)
+	end
+
+	(; Aᵏ, L) = factorise_lu_steps(A_manual; nstep=nstep_lu_A)
+end
+
 # ╔═╡ 4da6a534-6a8f-464d-bbd4-9a6eec942688
 md"""
-Let us test our algorithms `factorise_lu`, `forward_substitution` and `backward_substitution` on our earlier example problem $\mathbf A \mathbf x = \mathbf b$ with
+### Running Algorithm 3
+
+With this we have the missing ingredient to run Algorithm 3 and
+numerically solve a linear system.
+
+We stay with the problem
+```math
+\underbrace{\begin{pmatrix}
+2 & 1 & 0 \\ -4 & 3 & -1 \\ 4 & -3 & 4
+\end{pmatrix}}_{=\textbf A_\text{manuel}}
+\underbrace{\begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix}}_{=\textbf x}
+= \underbrace{\begin{pmatrix}
+4 \\ 2 \\ -2
+\end{pmatrix}}_{= \textbf b_\text{manuel}}
+```
+which we solved manually beforehand:
 """
 
 # ╔═╡ 995a73db-6289-423b-8b5c-0fca4240472e
-A
+A_manual
 
 # ╔═╡ fa46c270-9eff-4fe4-9716-cf4cbc86d9c0
-b
+b_manual = [4, 2, -2]
 
 # ╔═╡ 5b6d6431-3b77-4b2e-ae19-69000602935b
 md"""
-We follow Algorithm 3. First we need to find the LU factorisation:
+We follow **Algorithm 3**. First we need to find the LU factorisation:
 """
 
 # ╔═╡ 8f92f95a-9596-4226-8167-7db772b01ff4
-L, U = factorise_lu(A)
-
-# ╔═╡ d6a1c5e7-0921-4c4e-bc4a-fb2ebc94e45c
-function backward_substitution(U, b)
-	n = size(L, 1)
-    x = zeros(n)
-    x[n] = b[n] / U[n, n]
-    for i in n-1:-1:1
-        row_sum = sum(U[i, j] * x[j] for j in i+1:n)
-        x[i] = (b[i] - row_sum) / U[i, i]
-    end
-    x
-end
+L, U = factorise_lu(A_manual)
 
 # ╔═╡ e66acbf7-a93b-491f-8b2a-9554abd33a6c
 md"""
-Next we forward substitute:
+which agrees what we obtained manually. Next we forward substitute:
 """
 
 # ╔═╡ 2e1043ec-f822-4c68-b173-fdaac26502db
-z = forward_substitution(L, b)
+z = forward_substitution(L, b_manual)
 
 # ╔═╡ 097763de-9f4b-4fa1-a64d-3938c46607c7
 md"""
@@ -482,60 +575,295 @@ md""" and check the result:"""
 # ╔═╡ f84cedc8-07b2-4744-81c1-a7b98a86a664
 A * x - b
 
-# ╔═╡ 50d0ccfb-78e4-432d-8f0a-abc18ccddacc
+# ╔═╡ fa504b66-4b10-4ba8-a535-895aa0b0c658
 md"""
-Hooray ! This suceeded. But does it always work ?
-The answer to this is unfortunately now as we will see in the next section.
+Hooray ! This suceeded!
+
+Unfortunately **this simple algorithm does not always work**.
+
+Consider the matrix:
 """
 
-# ╔═╡ 2baa3355-f51b-464e-a55a-3471fb7e0100
-md"""
-## Gaussian eliminitation with pivoting
+# ╔═╡ 87473cf7-68f6-4e34-b3b3-6780dc355506
+D = [1 2 3;
+     2 4 5;
+	 7 8 9]
 
-Consider the matrix
+# ╔═╡ 75d4b513-4260-48dd-aa10-089ada83c093
+md"""
+If we apply our `factorise_lu` to this matrix we obtain:
 """
 
-# ╔═╡ 036177c4-08dd-4c22-b3fb-ca0ee807b307
-AA = [1 2 3;
-      2 4 5;
-	  7 8 9]
-
-# ╔═╡ e35fe3ba-ae7d-407c-b034-5430449d414b
-md"""the LU factorisation gives strange results"""
-
-# ╔═╡ a5e8f3d1-246e-4b33-bceb-c682f3bb4fbc
+# ╔═╡ c1bb18ef-b58d-40a3-9d84-f16d6ccf6930
 let
-	L, U = factorise_lu(AA)
+	L, U = factorise_lu(D)
 	L
 end
 
-# ╔═╡ c9a3dffd-c418-48a0-ade1-4c6ac3df9a40
-md"""The source of the problem is easily found. After the first step of the algorithm
- we get the matrices
+# ╔═╡ 8c0d6843-6bde-4c14-8a98-6cf7cb9f244a
+md"""This `-Inf` is suspicious and points to a problem in the algorithm,
+which we will investigate in the next section."""
+
+# ╔═╡ 2baa3355-f51b-464e-a55a-3471fb7e0100
+md"""
+## LU factorisation with pivoting
+
+We stay with the problem we identified at the end of the previous section. That is factorising the matrix
+
+```math
+\mathbf{D} = \begin{pmatrix} 1 & 2 & 3\\\textcolor{blue}{2} & \textcolor{blue}{4} & \textcolor{blue}{5}\\ \textcolor{orange}{7} &\textcolor{orange}{8} &\textcolor{orange}{9}\end{pmatrix}
+```
+"""
+
+# ╔═╡ 7bece62a-5da4-4a4c-9da8-dfcb797fb27a
+md"""
+Applying **Algorithm 4** the first step ($k=1$) will zero out the first column in the second and third row by subtracting the 2 times (7 times) the first row from the second (third) row. This results in the matrices:
 ```math
   \textbf A^{(2)} = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{0} & -1\\ 0 &-6 &-12\end{pmatrix}, \qquad
   \textbf L^{(1)} = \begin{pmatrix} 1 & & \\ 2 &\phantom{1} & \\ 7 & &\phantom{1} \end{pmatrix}.
 ```
-As a result the element `Aᵏ[k, k]` is zero and if we blindly continue
-in step `k = 2` a division
-by zero is encountered in the computation of `L[k, k]`
+As a result the element `Aᵏ[k, k]` (for $k = 2$) is zero as marked \textcolor{red}{in red}. Continuing **Algorithm 4** for `k = 2` we would thus divide by zero 
+in the statement $L_{ik} = \frac{A_{ik}^{(k)}}{A^{(k)}_{kk}}$ 
 --- which reflects above in the introduction of a `-Inf`
-in the matrix. From this point our computations are numerical garbage.
+in the matrix `L` that is returned by the algorithm:
+"""
+
+# ╔═╡ 0e403214-ddd3-4d3a-ae60-7b81951ab1b1
+let
+	L, U = factorise_lu(D)
+	L
+end
+
+# ╔═╡ 8e3d0734-bf9f-459d-87e4-07c50685bab1
+md"""
+From this point our computations are numerical garbage.
 Due their central role in the Gaussian elimination algorithm
 the elements $\left(A^{(k)}\right)_{kk}$
 --- respectively `Aᵏ[k, k]` in the implementation ---
 are usually referred to as **pivots**.
 
-To overcome the encountered problem we will consider
-a strategy called **row pivoting**, i.e. where we allow ourselves
-some flexibility by selecting the pivot amongst the $n-k$ lowermost
-columns in the $k$-th step of Gaussian elimination.
-This is usually performed by *permuting* (swapping the order)
-of the $n-k$ lowermost columns.
+Notice that if instead of considering the matrix $A$ we consider the **permuted matrix**
+```math
+\mathbf{P}\mathbf{D} = \begin{pmatrix} 1 & 2 & 3\\
+\textcolor{orange}{7} &\textcolor{orange}{8} &\textcolor{orange}{9}\\
+\textcolor{blue}{2} & \textcolor{blue}{4} & \textcolor{blue}{5}
+\end{pmatrix}
+```
+which is the matrix `D` multiplied by the permutation matrix
+"""
+
+# ╔═╡ 6f59c78d-7966-45ab-8b79-8443b82ba1df
+P = [1 0 0;
+	 0 0 1;
+	 0 1 0]
+
+# ╔═╡ a85a3ad2-a89d-4e7c-8275-a2f3cd2921b0
+P * D
+
+# ╔═╡ 5bdda18b-cd8d-49f6-a107-ad58697eab52
+md"""
+the algorithm goes through and works as expected:
+"""
+
+# ╔═╡ 0ea63086-f090-4b5b-a7d5-d6a1b21b1fd8
+let
+	L, U = factorise_lu(P*D)
+	@show L
+	@show L * U
+	@show L * U - P * D   # show that L * U = P * D
+end;
+
+# ╔═╡ c42c3c63-b96c-4af0-a276-72ebd96fe23c
+md"""
+That is we obtain a factorisation $\mathbf{L} \mathbf{U} = \mathbf{P} \mathbf{D}$ into lower-triangular $\mathbf L$ and upper-triangular $\mathbf U$,
+just not of the original matrix $\mathbf D$, but a permuted form.
+
+This result is in fact rather general:
+
+!!! info "Theorem 1"
+    Every non-singular matrix $\textbf A \in \mathbb{R}^{n\times n}$ admits a factorisation
+    ```math
+    \textbf P \textbf A = \textbf L \textbf U
+    ```
+    where $\textbf L$ is lower-triangular, $\textbf U$ upper-triangular
+    and $\textbf P$ is a permutation matrix.
+"""
+
+# ╔═╡ d85ab4d1-730b-4a6e-bd4d-46e450261f64
+md"""
+That is to say, that while in general **factorising a matrix $\mathbf A$ can fail**,
+it always suceeds for non-singular matrices if we give ourselves the freedom to permute the rows of $\mathbf A$.
+
+Finding a suitable $\mathbf P$ can be achieved by a small
+modification of **Algorithm 4**.
+Essentially this modification boils down to *selecting* a permutation
+of rows of the factorised matrix on the fly,
+such that the pivots of the permuted matrix $\left(\mathbf{P} \mathbf{A}^{(k)}\right)_{kk}$ are always nonzero.
+The precise way how this is achieved is called **pivoting strategy**
+and the details are beyond the scope of this course.
+The interested reader can find some discussion in the optional
+subsection below.
+
+Note, that Julia's implementation of LU factorisation
+(the `lu` Julia function) does indeed implement one such
+pivoting strategies, such that it works flawlessly on the problematic matrix `D`:
+"""
+
+# ╔═╡ 0de87398-22d4-4ba6-8831-bcf30e67a6db
+facD = lu(D);
+
+# ╔═╡ d46ee923-0912-4e85-bc33-0ddc6abe2fa5
+md"Notably beyond the factors $\mathbf L$ and $\mathbf U$"
+
+# ╔═╡ 12a63b8a-360b-421b-bf4c-03f923f46cc4
+facD.L
+
+# ╔═╡ edc42947-af9f-48f9-817c-037d9244f07a
+facD.U
+
+# ╔═╡ 7681fb06-703a-4b30-8973-20d45ca50732
+md"this factorisation object also contains the employed permutation matrix $\mathbf P$:"
+
+# ╔═╡ 9cf9c710-c76a-48b2-8799-efaaf7f1a82b
+facD.P
+
+# ╔═╡ dbf95d60-0333-407c-bc89-97914fb08437
+md"Such that as expected $\mathbf L * \mathbf U = \mathbf P * \mathbf D$:"
+
+# ╔═╡ ff388011-a9ed-4d1c-9f13-0b70c72187ae
+facD.L * facD.U - facD.P * D
+
+# ╔═╡ 169ee211-c734-44d8-a034-b342aa5393d3
+md"""
+## Solving linear systems based on LU factorisation
+
+The result of Theorem 1 is clearly that a factorisation
+$\textbf P \textbf A = \textbf L \textbf U$
+can always be achieved if the linear system $\mathbf A \mathbf x = \mathbf b$
+has a unique solution, that is that $\mathbf A$ is non-singular.
+To employ pivoted LU factorisation to solve this linear system we note that
+we can always multiply both left and right hand sides by $\mathbf P$,
+therefore:
+
+```math
+\textbf A \textbf x = \textbf b
+\quad \Longleftrightarrow \quad
+\textbf P \textbf A \textbf x = \textbf P  \textbf b
+\quad \Longleftrightarrow \quad
+\textbf L \textbf U \textbf x = \textbf P  \textbf b
+```
+
+which leads to the following algorithm:
+
+!!! note "Algorithm 5: Solving linear systems with pivoted LU factorisation"
+    Given a matrix $\mathbf{A} \in \mathbb{R}^{n\times n}$,
+    a right-hand side $\mathbf b \in \mathbb{R}^{n}$
+    the linear system $\mathbf{A} \mathbf x = \mathbf b$
+    can be solved for  $\mathbf x \in \mathbb{R}^{n}$ as follows:
+    1. Factorise $\textbf P \mathbf{A} = \mathbf{L} \mathbf{U}$ $\qquad$ (The `lu` Julia function).
+    2. Solve $\mathbf{L} \mathbf{z} = \textbf P \mathbf b$ for $\mathbf z$
+       using *forward* substitution.
+    3. Solve $\mathbf U \mathbf x = \mathbf z$ for $\mathbf x$
+       using *backward* substitution.
+
+
+"""
+
+# ╔═╡ 40f6f4c5-dc86-4834-a6c2-51852d87a3bb
+md"""Let us understand this algorithm by executing the steps manually for solving the problem
+
+```math
+\mathbf D \, \mathbf x_D = \mathbf b
+\qquad \text{with} \quad \mathbf{D} = \begin{pmatrix} 1 & 2 & 3\\\textcolor{blue}{2} & \textcolor{blue}{4} & \textcolor{blue}{5}\\ \textcolor{orange}{7} &\textcolor{orange}{8} &\textcolor{orange}{9}\end{pmatrix}
+ \quad \text{and}\quad \mathbf b = \begin{pmatrix} 2 \\ 4 \\ -2 \end{pmatrix}
+```
+We already defined defined $\mathbf{D}$ and $\mathbf{b}$ before:
+"""
+
+# ╔═╡ 24b7c334-28d4-41d1-b8f2-23fbc80ec2f3
+D
+
+# ╔═╡ e1d08709-d4bc-452f-a766-e43d25406fc2
+b
+
+# ╔═╡ 61f16e01-f7a3-420b-940f-ce0c6be93a99
+md"**Step 1:** Perform LU factorisation of $\mathbf D$:"
+
+# ╔═╡ ce383027-483d-424a-84c3-e8102475c43e
+begin
+	fac = lu(D)
+	(; fac.P, fac.L, fac.U)
+end
+
+# ╔═╡ dc00020e-2fa0-4816-8b13-d457aee00823
+md"**Step 2:** Compute $\mathbf z$ by forward substitution of $\mathbf P \mathbf b$ wrt. $\mathbf L$"
+
+# ╔═╡ 43f22f5c-1fab-459e-a67e-fe67f6310d86
+zD = forward_substitution(fac.L, fac.P * b)
+
+# ╔═╡ 22d2cc3c-b50a-4915-8ba4-d7f6221ebd61
+md"**Step 3:** Backward-substitute $\mathbf z$ wrt. $\mathbf U$:"
+
+# ╔═╡ e13c4c6e-b55c-4360-9ec4-501042490d59
+xD = backward_substitution(fac.U, zD)
+
+# ╔═╡ 38deeaeb-0596-48d5-b671-2d1fc2e73a27
+md"""**Verify result:** This solves the problem $\mathbf{D} \mathbf{x}_D = \mathbf{b}$ as desired:"""
+
+# ╔═╡ 25f18e3c-a00b-4d3a-9b5e-60d40eeb5596
+D * xD - b
+
+# ╔═╡ cdaead03-fbd7-4ff6-9f31-6296e8d5230f
+md"""
+## Conclusion: What backslash \ does to solve
+
+To conclude this discussion we return to our starting question:
+What does the `\` operator do in Julia.
+
+- We already saw that julia essentially solves `A \ b` by replacing it by `lu(A) \ b`.
+- Julia's `lu` by default also performs a row-pivoted LU factorisation,
+  providing thus a factorisation $\textbf P \mathbf{A} = \mathbf{L} \mathbf{U}$.
+- The returned object (an `LinearAlgebra.LU` object) internally stores
+  both the `L`, the `U` and the permutation matrix `P`
+- When we use `\` with an `LU` object it, Julia immediately exploits the factorised form and performs first (permuted) forward substitution (step 2.) then backward substitution (step 3.).
+- Therefore overall `A \ b` exactly performs Algorithm 5 above.
+"""
+
+# ╔═╡ 48979215-458c-40f5-82e4-a4485390bca4
+md"""
+## Optional: More details on pivoting
+
+In this section we provide some details of one common form of
+pivoting from LU factorisation, namely **row pivoting**.
+
+In this approach we allow ourselves 
+some flexibility in **Algorithm 4** by 
+allowing ourselves to change the order in the last few rows
+and thus *choose* the pivot amongst the entries
+$A^{(k)}_{ik}$ with $i \geq k$.
+The resulting change of row order will then define the permutation
+matrix $\mathbf{P}$ we employed in our above discussion.
+"""
+
+# ╔═╡ 827a75c2-2e3c-4da4-8deb-6c8a999596f2
+md"""
+As a guiding example we again consider the
+problem of factorising
+```math
+\mathbf{D} = \begin{pmatrix} 1 & 2 & 3\\\textcolor{blue}{2} & \textcolor{blue}{4} & \textcolor{blue}{5}\\ \textcolor{orange}{7} &\textcolor{orange}{8} &\textcolor{orange}{9}\end{pmatrix}
+```
+where we saw previously non-pivoted LU factorisation to fail.
+Without any pivoting / row swapping after the first LU factorisation step
+(i.e after $k=1$ is completed) the situation was
+
+```math
+  \textbf A^{(2)} = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{0} & -1\\ 0 &-6 &-12\end{pmatrix}, \qquad
+  \textbf L^{(1)} = \begin{pmatrix} 1 & & \\ 2 &\phantom{1} & \\ 7 & &\phantom{1} \end{pmatrix}.
+```
 
 Looking at $\textbf A^{(2)}$ it seems very reasonable to just swap the second and the
 third column in $\textbf A^{(2)}$ and thus move the $-6$ to become the new pivot.
-For consistency we not only need to swap $A^{(2)}$, but also $\textbf L^{(2)}$.
+For consistency we not only need to swap $\textbf A^{(2)}$, but also $\textbf L^{(2)}$.
 This gives us
 ```math
   \widetilde{\textbf{A}}^{(2)} = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{-6} &-12 \\
@@ -544,7 +872,10 @@ This gives us
 ```
 If we continue the algorithm now, the $-6$ sits in the position of the pivot
 $\left(A^{(k)}\right)_{kk}$ and the division by zero is avoided.
+"""
 
+# ╔═╡ f4a02392-ca42-44ac-bd1c-13cb3d6fafa2
+md"""
 In fact in this particular case there is nothing left to do and the matrix
 $\widetilde{\textbf{A}}^{(2)}$ already is in upper triangular form.
 We obtain from our algorithm
@@ -570,41 +901,49 @@ are swapped:
  2 & 4 & 5 \\
 \end{pmatrix}
 ```
-To resolve this, we introduce the **permutation matrix**
-```math
-\textbf P = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 0 & 1 \\ 0 & 1 & 0\end{pmatrix},
-```
-which is obtained by performing exactly the same row permutations
-we did during the algorithm to the identity matrix
---- i.e. we swap the second and third row.
-With this matrix we can easily check that
-```math
-\textbf L \textbf U = \textbf P \textbf A.
-```
-
-If we thus extend our `factorise_lu` function to additionally
-perform such pivoting permutations,
-the Gaussian elimination algorithm would terminate successfully.
-But pivoting brings additional opportunities.
-As it turns out numerical stability of LU factorisation
-improves if one permutes not only if a pivot $\left(A^{(k)}\right)_{kk}$ is zero,
-but in general if one *always* swaps the order of the rows
-such that the pivot is taken as large as possible.
-In other words in the $k$-th step of LU factorisation
-we always exchange row $k$ with the row $l$ where $l$ satisfies
-```math
-\left|\left(A^{(k)}\right)_{lk}\right| \leq \left|\left(A^{(k)}\right)_{ik}\right|
-\qquad
-\text{for all $i = k, \ldots n$}.
-```
-The appropriate swaps are tracked and returned as well.
-Note that instead of returning a permutation matrix
-$\textbf P$ (which requries to store $n^2$ elements)
-it is usually more convenient to store a permutation vector $\textbf p$,
-which has only $n$ elements.
-This vector tracks the indices of the rows of $\mathbf A$
-in the order they are used as pivots. In other words if
 """
+
+# ╔═╡ 2708ff44-5f30-43b3-b89a-19b9d8954100
+md"""
+	To resolve this, we introduce the **permutation matrix**
+	```math
+	\textbf P = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 0 & 1 \\ 0 & 1 & 0\end{pmatrix},
+	```
+	which is obtained by performing exactly the same row permutations
+	we did during the algorithm to the identity matrix
+	--- i.e. we swap the second and third row.
+	With this matrix we can easily check that
+	```math
+	\textbf L \textbf U = \textbf P \textbf A.
+	```
+	
+	If we thus extend our `factorise_lu` function to additionally
+	perform such pivoting permutations,
+	the Gaussian elimination algorithm would terminate successfully.
+	"""
+
+# ╔═╡ 59083552-006d-4376-9c8a-2f5b85c6bb44
+md"""
+	But pivoting brings additional opportunities.
+	As it turns out numerical stability of LU factorisation
+	improves if one permutes not only if a pivot $\left(A^{(k)}\right)_{kk}$ is zero,
+	but in general if one *always* swaps the order of the rows
+	such that the pivot is taken as large as possible.
+	In other words in the $k$-th step of LU factorisation
+	we always exchange row $k$ with the row $l$ where $l$ satisfies
+	```math
+	\left|\left(A^{(k)}\right)_{lk}\right| \leq \left|\left(A^{(k)}\right)_{ik}\right|
+	\qquad
+	\text{for all $i = k, \ldots n$}.
+	```
+	The appropriate swaps are tracked and returned as well.
+	Note that instead of returning a permutation matrix
+	$\textbf P$ (which requries to store $n^2$ elements)
+	it is usually more convenient to store a permutation vector $\textbf p$,
+	which has only $n$ elements.
+	This vector tracks the indices of the rows of $\mathbf A$
+	in the order they are used as pivots. In other words if
+	"""
 
 # ╔═╡ 6754911a-81dd-41ce-8b59-2a0743b324c0
 idmx = diagm(ones(4))
@@ -661,84 +1000,36 @@ function factorise_lu_pivot(A)
 end
 
 # ╔═╡ 24df3f6a-8ac3-492b-b4e7-80029af6918d
-md"""We conclude with a theoretical result:
-
-!!! info "Theorem 1"
-    Every non-singular matrix $\textbf A \in \mathbb{R}^{n\times n}$ admits a factorisation
-    ```math
-    \textbf P \textbf A = \textbf L \textbf U
-    ```
-    where $\textbf L$ is lower-triangular, $\textbf U$ upper-triangular
-    and $\textbf P$ is a permutation matrix.
-
-Note, that this implies that `factorise_lu_pivot` can be employed to construct a robust method for solving linear systems, namely Gaussian elimination with pivoting.
-The main idea is that using pivoted LU factorisation we can write:
-```math
-\textbf A \textbf x = \textbf b
-\quad \Longleftrightarrow \quad
-\textbf P \textbf A \textbf x = \textbf P  \textbf b
-\quad \Longleftrightarrow \quad
-\textbf L \textbf U \textbf x = \textbf P  \textbf b
-```
-
-!!! note "Algorithm 5: Solving linear systems with pivoted LU factorisation"
-    Given a matrix $\mathbf{A} \in \mathbb{R}^{n\times n}$,
-    a right-hand side $\mathbf b \in \mathbb{R}^{n}$
-    the linear system $\mathbf{A} \mathbf x = \mathbf b$
-    can be solved for  $\mathbf x \in \mathbb{R}^{n}$ as follows:
-    1. Factorise $\textbf P \mathbf{A} = \mathbf{L} \mathbf{U}$.
-    2. Solve $\mathbf{L} \mathbf{z} = \textbf P \mathbf b$ for $\mathbf z$
-       using *forward* substitution.
-    3. Solve $\mathbf U \mathbf x = \mathbf z$ for $\mathbf x$
-       using *backward* substitution.
-
-
-To conclude we return to our starting question:
-Understanding the `\` operator in Julia.
-- We already saw that julia essentially solves `A \ b` by replacing it by `lu(A) \ b`.
-- Julia's `lu` by default also performs a row-pivoted LU factorisation.
-- The returned object (an `LinearAlgebra.LU` object) internally stores
-  both the `L`, the `U` and the permutation vector `p`
-- When we use `\` with an `LU` object it, Julia immediately exploits the factorised form and performs first (permuted) forward substitution (step 2.) then backward substitution (step 3.).
-- Therefore overall `A \ b` exactly performs Algorithm 5 above.
-
-We can check against our implementation:
+md"""
+We check our implementation of pivoted LU factorisation against Julia's `RowMaximum` pivoting strategy, which implements the same algorithm.
 """
 
-# ╔═╡ 29d974a4-a748-4818-9c94-ca0a7b71e423
-fac = lu(AA)
+# ╔═╡ f55927a7-93de-4795-a1a9-734eca0ee60f
+reference = lu(D, RowMaximum())
 
-# ╔═╡ ae82d253-4937-4e72-b516-6f3da8f19df1
-fac.p
+# ╔═╡ b659f816-a443-4be1-8359-776105d6e01e
+md"The resulting L, U and pivot vector values are:"
 
-# ╔═╡ b8045050-09e2-42ea-a7aa-c702ec323fd3
+# ╔═╡ 6d0a9fcf-f8e9-48fb-8167-eadd17cd0082
 fac.L
 
-# ╔═╡ f79f92bc-e50b-4e5c-a82e-555269fa80b5
-factorise_lu_pivot(AA)[3]  # p
+# ╔═╡ ae82d253-4937-4e72-b516-6f3da8f19df1
+fac.U
+
+# ╔═╡ b8045050-09e2-42ea-a7aa-c702ec323fd3
+fac.p
+
+# ╔═╡ e5bf55d6-2698-4124-bd1c-2ea1d7e98ebd
+md"In contrast we obtain:"
 
 # ╔═╡ 8f06e886-6ebb-4a16-a1c5-8123e09ef723
-factorise_lu_pivot(AA)[1]  # L
+factorise_lu_pivot(D)[1]  # L
 
-# ╔═╡ dd9023ad-cf79-4540-9259-61a28efa1174
-TODO("Explain how to disable pivoting in julia and how to get the permuation matrix and so on")
+# ╔═╡ 88000701-f480-4efd-93b8-50b60c9d5d95
+factorise_lu_pivot(D)[2]  # U
 
-# ╔═╡ 0f8c8b5c-33e0-4952-8d89-f26606a8503e
-MM = [2 3  -4;
-	  2 2  -2;
-	  6 4 -11]
-
-# ╔═╡ 2abb0086-0375-4633-8c1f-467b995ddd33
-lu(MM).P
-
-# ╔═╡ cee62fc9-1d60-4356-b170-d9928e7de807
-([0 0 1; 0 1 0; 1 0 0] * [1 0 0; 0 0 1; 0 1 0])'
-
-# ╔═╡ 8bd7c41a-112c-4ba7-b69e-af8e8d621c26
-lu(MM, NoPivot())
-
-# ╔═╡ bd574872-321d-4315-9f0f-60c95933226f
-lu(MM)
+# ╔═╡ f79f92bc-e50b-4e5c-a82e-555269fa80b5
+factorise_lu_pivot(D)[3]  # p
 
 # ╔═╡ 3e110a7e-1272-4c50-80f6-290f61844952
 md"""
@@ -746,24 +1037,33 @@ md"""
 
 ### Sparse matrices
 
-The matrices and linear systems one encounters in physics and engineering applications not infrequently reach huge sizes. For example in the numerical solution of partial differential equations using finite difference or finite element methods the vector of unknowns frequently has a dimension in the order of $n \simeq 10^6$. This implies that matrices, i.e. entities from $\mathbb{R}^{n\times n}$ could hold around $10^{12}$ elements.
+The matrices and linear systems one encounters in physics and engineering applications not infrequently reach **huge sizes**. For example in the numerical solution of partial differential equations using finite difference or finite element methods the vector of unknowns frequently has a **dimension on the order of $n \simeq 10^6$**.
 
-In double precision, i.e. $64$-bit numbers, each entry requires $8$ bytes. As a result storing all elements of such a matrix explicitly in memory reqires
+Taking $n = 10^6$ thus as an example this implies that matrices,
+i.e. entities from $\mathbb{R}^{n\times n}$,
+hold around **$10^{12}$ elements**.
+In double precision, i.e. $64$-bit numbers, each entry requires $8$ bytes. As a result **storing all elements** of such a matrix explicitly in memory reqires
 """
+
+# ╔═╡ d0771eb3-6b89-4282-adfa-31c9a525f13c
+10^12 * 8
+
+# ╔═╡ 4647f5ea-9c17-4fd0-8f50-a734d8a1f840
+md"bytes or"
 
 # ╔═╡ 1f34c503-6815-4639-a932-9fe2d7e1b4c2
 10^12 * 8 / 1024^4  # TiB
 
 # ╔═╡ ef60d36e-02c7-44e1-8910-241f99a89a38
 md"""
-tibibyes of storage. This is a challenge even for standard compute clusters, where typically a node has around $512$ GiB. Laptops nowadays feature around $32$ GiB, so would be completely out of the question to solve such problems.
+tibibyes of storage. **This is a challenge** even for modern compute clusters, where typically a node has around $512$ GiB. Laptops nowadays feature around $32$ GiB, so would be completely out of the question to solve such problems.
 
-However, in many applications the arising matrices are sparse,
+However, **in many applications** the arising **matrices are sparse**,
 meaning that they contain a large number of zero elements,
 which do not need to be stored. Let us discuss a few examples.
 """
 
-# ╔═╡ cea0c83c-6c6d-45a9-815c-6a112c3b76a9
+# ╔═╡ 3ab0ccfe-df7c-4aed-b83f-f0113001610b
 md"""
 !!! info "Definition: Full matrix"
     A matrix $A \in \mathbb{R}^{n\times n}$ is called **full** if the number
@@ -772,7 +1072,10 @@ md"""
 
 Full matrices are the "standard case" and for them memory constraints usually set the limit of the size of problems, which can be tackled. For example an $32$ GiB memory laptop can store around $4 \cdot 10^9$ double-precision numbers, which means that
 linear problems with more than around $n \simeq 60000$ unknows cannot be treated.
+"""
 
+# ╔═╡ 946fb6e6-e7e5-4aee-b566-b7c33ead7789
+md"""
 !!! info "Definition: Sparse matrix"
     A matrix $A \in \mathbb{R}^{n\times n}$ is called **sparse** if the number
     of non-zero elements is at the order of $n$.
@@ -800,7 +1103,7 @@ sparse(M)
 
 # ╔═╡ fb87aa13-1fd6-4c13-8ba4-68caef5f775b
 md"""
-Using the `SparseArray` data structure from `SparseArrays` consistently allows to fully exploit sparsity when solving a problem. As a result the storage costs scale only as $O(n)$. With our laptop of 32 GiB memory we can thus tackle problems with around $n\simeq 4 \cdot 10^9$ unknowns --- much better than the $60000$ we found when using full matrices.
+Using the `SparseArray` data structure from `SparseArrays` consistently allows to fully exploit sparsity when solving a problem. As a result the **storage costs scale only as $O(n)$**. With our laptop of 32 GiB memory we can thus tackle problems with around $n\simeq 4 \cdot 10^9$ unknowns --- much better than the $60000$ we found when using full matrices.
 
 Finally we introduce a special kind of sparse matrix:
 
@@ -825,13 +1128,15 @@ band = spdiagm(-5 =>  -ones(100),
 
 # ╔═╡ 74709cb2-0be8-4b24-aa9d-926ef059fe2d
 md"""
-### LU factorisation of sparse matrices
+### Memory: LU factorisation of full matrices
 
 Since the amount of available memory can put hard constraints on the size of linear systems which can be solved, we now want to investigate the memory requirement of LU factorisation $\textbf A = \textbf L \textbf U$.
 
-If $\textbf A$ is a full matrix, then we know that $\textbf L$ and $\textbf U$ are triangular, thus contain less non-zero elements than  $\textbf A$ itself.
+If $\textbf A$ is a **full matrix**, then we know that $\textbf L$ and $\textbf U$ are triangular, thus **L and U** contain less non-zero elements or **more zero elements** than  $\textbf A$ itself and thus **require together as much memory** to be stored in memory as $\mathbf A$ itself.
 
-Let's contrast this with the sparse matrices we have considered above.
+### Memory: LU factorisation of sparse matrices
+
+Let's **contrast** this **with the sparse matrices** we have considered above.
 First the random sparse matrix:
 """
 
@@ -848,7 +1153,9 @@ md"""Storing both L and U thus requires a total number of"""
 nnz(lu(Asp).L) + nnz(lu(Asp).U)
 
 # ╔═╡ d7063c34-6418-4e0b-80df-ddd07566e578
-md"""non-zero elements, which is about **4 times as much** as the original matrix !"""
+md"""non-zero elements, which is about **$(
+round( (nnz(lu(Asp).L) + nnz(lu(Asp).U) ) / nnz(Asp), sigdigits=2)
+) times as much** as the original matrix !"""
 
 # ╔═╡ 0033e298-a85f-4718-acfa-fe9fd5a67746
 md"Now the banded matrix:"
@@ -866,7 +1173,9 @@ md"At least the banded structure is kept, but still we require"
 nnz(lu(band).L) + nnz(lu(band).U)
 
 # ╔═╡ 60ca2879-ee47-4163-b014-4a0af90b449f
-md"nonzeros, which is about 1.5 times than the original in this case."
+md"nonzeros, which is about $(
+round( (nnz(lu(band).L) + nnz(lu(band).U) ) / nnz(band), sigdigits=2)
+) times than the original in this case."
 
 # ╔═╡ 191fb08e-fade-43cd-8d8f-2273b594da68
 md"In both cases storing the $\mathbf L$ and the $\mathbf U$ factors require more non-zero elements than the original matrix. This phenomenon is usually referred to as **fill in**.
@@ -879,13 +1188,26 @@ md"""
 Let us add that for banded matrices the situation is slightly better as one can show that in this case the fill-in takes place at most inside the band. As a result the memory requirement stays at $O(n d)$.
 """
 
+# ╔═╡ e4aba0e4-adfc-4633-800e-3e2915300839
+md"""
+!!! info "Overview of LU factorisation memory cost"
+    We summarise the cost of LU factorisation in a table:
+
+	|  type of $n\times n$ matrix   | memory usage | comment |
+	| ------------------------- |  ------------ | ------------ |
+	|  full matrix  | $O(n^2)$             |
+    |  general sparse matrix | $O(n^2)$ | fill-in
+	|  banded matrix, band width $d$     | $O(n\,d)$     |  stays block-diagonal
+
+"""
+
 # ╔═╡ ca3eca34-3fc6-4488-ae74-69e9453c05e1
 md"""
 ## Computational cost of LU factorisation
 
 In this section we want to investigate how long it will take a computer to perform LU factorisation on a large matrix.
 
-Modern laptop computers nowadays have a clock frequence fo a few Gigahertz (GHz). This means they are able to perform about $10^9$ operations per second, where for simplicity we assume that "one operation" is an elementary addition, multiplication, division and so on. If we can determine how many such operations are needed to perform LU factorisation we can estimate the computational cost.
+**Modern laptop computers** nowadays have a clock frequency of a few Gigahertz (GHz). This means they are **able to perform about $10^9$ operations per second**, where for simplicity we assume that "one operation" is an elementary addition, multiplication, division and so on. If we can determine how many such operations are needed to perform LU factorisation we can estimate the computational cost.
 
 Before we look at the LU algorithm (Algorithm 4) we first understand a few simpler cases from linear algebra:
 """
@@ -912,7 +1234,7 @@ end
 
 # ╔═╡ e91b91ec-77b4-4c77-b2ce-0e022f54edb7
 md"""
-In the loop for each iteration we require $1$ multiplication and $1$ addition. In total the `scalar_product` function therefore requires $n$ multiplications and $n$ additions. The number of elementary operations is thus $2n$. We say the computational cost is $O(n)$ (i.e. on the order of $n$ or linear in $n$).
+In the loop for each iteration we require $1$ multiplication and $1$ addition. In total the `scalar_product` function therefore requires $n$ multiplications and $n$ additions. The number of elementary operations is thus $2n$. We say the **computational cost is $O(n)$** (i.e. on the order of $n$ or linear in $n$).
 
 If we take the dimensionality $n=1000$ the number of operations is $O(1000)$. On a 1 GHz computer (with $10^9$ operations per second) this therefore takes about $10^{-6}$ seconds ... hardly noticable.
 """
@@ -951,10 +1273,10 @@ The loop over $i$ runs over $n$ values (the number of rows of $A$)
 and the loop over $j$ over $n$ values as well (the number of columns of $A$).
 In total the inner most instruction `(*)` is thus run $n^2$ times,
 each times costing $2$ operations.
-The total cost is thus $O(n^2)$.
+The total **cost is thus $O(n^2)$**.
 
 For our case with $n = 1000$ and a 1 GHZ computer we thus now need
-$(10^3)^2 / 10^{9} s = 10^{-3} s = 1ms$, which is again a rather short time.
+$(10^3)^2 / 10^{9} s = 10^{-3} s = 1\text{ms}$, which is again a rather short time.
 
 """
 
@@ -973,25 +1295,36 @@ For this course if you are asked to determine the asymptotic complexity,
 you will not asked to deal with these details. For our problems it will be sufficient to only look at the most deeply nested loop and ignore the rest of the code as part of a complexity analysis.
 """)
 
-# ╔═╡ 4fac9508-bc29-447c-9188-a58da07abeb3
+# ╔═╡ 5d8d4e66-20a0-41d9-8aeb-faa7d56628f9
+md"""
+!!! info "Overview of computational cost"
+	For vectors $\textbf v, \textbf w \in \mathbb{R}^n$ and matrices $\mathbf A \in \mathbb R^{n\times n}$ the computational cost is
+
+	| operation  | cost  |
+	| ------------------------- |  ------------ |
+	|  dot product $\mathbf v ^T \mathbf w$ | $O(n^2)$             |
+    |  MatVec $\mathbf A \mathbf v$ | $O(n^3)$
+
+Finally a few rough guidelines:
+
+!!! info "General guideline to estimate computational cost"
+	1. Determine the instructions at the innermost (most deeply nested) loop level
+	2. Find the most expensive of these instructions and determine its cost in terms of *number of operations*
+	3. Determine the ranges of all loops in terms of the dimensionality of your problem. Typically for each loop level this is $n$
+	4. Multiply the result of 2. and all index ranges of 3 to get the total scaling. Typically for a single loop nesting the cost is $O(n)$ for a doubly nested loop $O(n^2)$ and so on.
+"""
+
+# ╔═╡ 2d98da64-481b-4e86-9daa-f199294ed417
 md"""
 ### LU factorisation
 
 We revisit Algorithm 4:
 
-!!! info ""
-    **Input:** $\textbf A \in \mathbb{R}^{n\times n}$ 
+$(alg_LU)
+"""
 
-    **Output:** $\mathbf U \in \mathbb{R}^{n\times n}$, $\mathbf L \in \mathbb{R}^{n\times n}$
-    -  $\textbf A^{(1)} = \textbf A$
-    - for $k = 1, \ldots, n-1$ *(algorithm steps)*
-      *  $L_{kk} = 1$
-      * for $i = k+1, \ldots, n$  *(Loop over rows)*
-        -   $L_{ik} = \frac{A_{ik}^{(k)}}{A^{(k)}_{kk}}$
-        - for $j = k+1, \ldots n$  *(Loop over columns)*
-          *   $A_{ij}^{(k+1)} = A_{ij}^{(k)} - L_{ik} A_{kj}^{(k)}$
-    -  $\textbf U = \textbf A^{(n)}$ 
-
+# ╔═╡ 41ebce0a-1fde-4704-b889-b1a8391ccac7
+md"""
 We notice that the instruction at the innermost loop level is
 ```math
   A_{ij}^{(k+1)} = A_{ij}^{(k)} - L_{ik} A_{kj}^{(k)},
@@ -1003,34 +1336,44 @@ $i$ also $n-1$ elements (assume $k=1$)
 and $j$ again in its worst case takes $n-1$ elements.
 In total the cost is thus $(n - 1)^3 = O(n^3)$.
 
-For our case with $n = 1000$ and a 1 GHZ computer the computation
+For our case with $n = 1000$ and a 1 GHz computer the computation
 thus needs approximately $(10^3)^3 / 10^{9} s = 1 s$,
 which starts to be a noticable amount of time.
 If we even consider $n = 10^5$ all of a sudden it takes $10^3 s$,
 which is about $15$ minutes.
-For large matrices the cost of computing
-LU factorisation can thus become important !
+For **large matrices the cost of computing
+LU factorisation can thus become important** !
+"""
 
+# ╔═╡ c34c30e8-b777-43b7-aae6-cd88d7179015
+md"""
 For **banded matrices** the computational scaling is a little improved.
 E.g. consider LU factorisation on a banded matrix $A$ with band width $d$.
 Then bothe the loop over $i$ (row loop) as well as the loop over $j$ (column loop) in the LU factorisation algorithm can be truncated and at most run over $d$ elements. As a result the computational cost at worst becomes $O(n d^2)$ which for a small band width (i.e. $d < n$) is substantially less than $O(n^3)$.
+"""
 
+# ╔═╡ 491d4fd8-1b22-4dac-9f2a-dcef9f3fb034
+md"""
 !!! info "Overview of LU factorisation computational cost and memory cost"
     We summarise the cost of LU factorisation in a table:
 
 	|  type of $n\times n$ matrix   | computational cost | memory usage |
 	| ------------------------- | ------------------ | ------------ |
 	|  full matrix  | $O(n^3)$           | $O(n^2)$      |
+    |  general sparse matrix
 	|  banded matrix, band width $d$  | $O(n\,d^2)$    | $O(n\,d)$      |
 
 """
 
-# ╔═╡ e8de3cd9-05bb-439e-b6fe-39d9c82f0ba6
+# ╔═╡ 51ab9105-5f8b-4370-867e-9042962fc777
 md"""
 ## Numerical stability
 
-To close off our discussion of Gaussian elimination we consider the question of its numerical stability, i.e. how it is effected by the round off errors introduced in the algorithm by finite-precision floating-point arithmetic.
+To close off our discussion of Gaussian elimination we consider the question of its numerical stability, i.e. how is the **result of LU factorisation effected by small round-off errors** introduced when performing a calculation on a computer with its finite precision to represent numbers.
+"""
 
+# ╔═╡ fe34bed1-702b-49f3-b5f2-0c9961ca4e72
+md"""
 In this chapter our goal has been to solve a linear system of the form
 ```math
 \tag{5}
@@ -1042,42 +1385,28 @@ and we wish to solve for $\mathbf{x}$
 We will later refer to this system as the **exact system**.
 
 Since the computer in general is unable to represent the matrix and right-hand side exactly in finite-precision floating point arithmetic,
-even providing this problem to a computer is already associated with making a small error: in practice the computer is only able to obtain a solution
- $\widetilde{\mathbf{x}}$ to a slighly modified linear system
+even **just providing this problem to a computer**
+will usually be associated with **making a small error**:
+in practice the computer only ever sees the **perturbed system**
 ```math
 \tag{6}
 \widetilde{\mathbf{A}} \widetilde{\mathbf{x}} = \widetilde{\mathbf{b}},
 ```
 where $\widetilde{\mathbf{A}}$ is an approximation to $\mathbf{A}$,
 $\widetilde{\mathbf{b}}$ is an approximation to $\mathbf{b}$.
-This linear system we will refer to as the **perturbed system**.
+It will thus yield the solution $\widetilde{\mathbf{x}}$
+by solving the perturbed system instead of providing $\mathbf{x}$.
 
-In standard floating-point arithmetic the *relative error* in representing
-any number is around $10^{-16}$. Mathematically we can find the following
-relationships between the elements of $\widetilde{\mathbf{b}}$
-and $\mathbf{b}$ as well as $\widetilde{\mathbf{A}}$
-and $\mathbf{A}$, respectively:
-```math
-\begin{aligned}
-\widetilde{b}_i    &= b_i   \, (1 + \varepsilon_i) && \text{where $\varepsilon_i$ is on the order of $10^{-16}$} \\
-\widetilde{A}_{ij} &= A_{ij} \, (1 + \eta_{ij}) && \text{where $\eta_{ij}$ is on the order of $10^{-16}$}
-\end{aligned}
-```
 To understand the numerical stability when solving linear systems
-our goal is now to understand how far the solution
+our goal is thus to understand how far the solution
 $\widetilde{\mathbf{x}}$ --- obtained on a computer ---
 differs from $\mathbf{x}$ --- the solution to (5), the true linear system
 we want to solve.
-
-To simplify matters in this course we will not attempt to answer this question in full generality, but concentrate on the case $\eta_{ij} = 0$, i.e. a setting where we only consider the rounding-error in the right-hand side $\widetilde{\mathbf{b}}$
-and $\mathbf{b}$, but assume that the system matrix is accessible to the computer without error ($\widetilde{\mathbf{A}} = \mathbf{A}$).
-For an alternative and more detailed discussion see also
-[chapter 2.8](https://tobydriscoll.net/fnc-julia/linsys/condition-number.html) of Driscoll, Brown: *Fundamentals of Numerical Computation*.
 """
 
 # ╔═╡ 97e1379a-b0bf-4c6f-8375-299e1f42899f
 md"""
-To provide a motivation why this type of analysis matters in practice,
+To provide a motivation **why this type of analysis matters in practice**,
 we first consider the following example:
 
 !!! warning "Example: Rounding error in a 2x2 system"
@@ -1102,15 +1431,53 @@ we first consider the following example:
 
 	The small perturbation of $10^{-16}$,
 	which may readily occurr just by inputing the data to a computer,
-	can already have an impactful effect on the solution and in fact
+	can already have a very noticable effect on the solution and in fact
 	render the solution we obtain from our our computation
 	(i.e. $\widetilde{\mathbf{x}}$) rather far from the answer we are actually after
 	(i.e. $\mathbf{x}$).
 """
 
+# ╔═╡ fdad2eae-1aa5-42da-a276-3be34c598c19
+md"""
+In standard floating-point arithmetic the **relative error** in representing
+any number is around $10^{-16}$. Mathematically we can find the following
+relationships between the elements of $\widetilde{\mathbf{b}}$
+and $\mathbf{b}$ as well as $\widetilde{\mathbf{A}}$
+and $\mathbf{A}$, respectively:
+```math
+\begin{aligned}
+\widetilde{b}_i    &= b_i   \, (1 + \varepsilon_i) && \text{where $\varepsilon_i$ is on the order of $10^{-16}$} \\
+\widetilde{A}_{ij} &= A_{ij} \, (1 + \eta_{ij}) && \text{where $\eta_{ij}$ is on the order of $10^{-16}$}
+\end{aligned}
+```
+However, to simplify the treatment in this course we will not attempt to discuss the effect of such relative errors on the numerical stability in full generality. Much rather we will employ the **error model**:
+"""
+
+# ╔═╡ 596b167c-6704-40bb-ac8a-99409466e831
+md"""
+!!! info "Error model in this notebook"
+	Between the exact system and the perturbed system we will assume the
+	foollowing relationship
+	```math
+	\begin{aligned}
+	\widetilde{b}_i    &= b_i   \, (1 + \varepsilon) && \text{where $\varepsilon \approx 10^{-16}$} \\
+	\widetilde{A}_{ij} &= A_{ij}
+	\end{aligned}
+	```
+
+In other words we assume that the system matrix $\mathbf{A}$ is exactly represented
+on the computer and that round-off errors only affect the right-hand side $\widetilde{\mathbf{b}}$. Moreover we assume that the relative error for all elements of $\mathbf b$ is identical to $\varepsilon$.
+
+For standard double-precision floating-point numbers we have
+$\epsilon \approx 10^{-16}$.
+
+For an alternative and more detailed discussion see also
+[chapter 2.8](https://tobydriscoll.net/fnc-julia/linsys/condition-number.html) of Driscoll, Brown: *Fundamentals of Numerical Computation*.
+"""
+
 # ╔═╡ f11b6f84-d0c4-4855-a5c6-31d837880407
 md"""
-### Matrix norm and condition numbers
+### Matrix condition numbers and stability result
 
 To analyse the error $\mathbf{x} - \widetilde{\mathbf{x}}$ mathematically, we first have to introduce some notation.
 
@@ -1145,7 +1512,7 @@ The previous definition implies in particular that
 ```
 """
 
-# ╔═╡ 0e4e510c-9662-4962-aeea-2a31f6c027fe
+# ╔═╡ 25e0ebf6-ca45-4491-b5bc-c29f2725aa7b
 md"""
 With this definitions in place we begin our analysis for (5) and (6) where $\mathbf{A} \in \mathbb{R}^{n\times n}$.
 From the definition of the exact and perturbed linear systems
@@ -1177,8 +1544,11 @@ such that with the above result we can bound the relative error as
 = \underbrace{\left\| \mathbf{A}^{-1}\right\| \, \|\mathbf{A}\|}_{=\kappa(\mathbf{A})}
 \, \frac{\left\| \mathbf{b} -  \widetilde{\mathbf{b}} \right\|}{\|\mathbf{b}\|}.
 ```
+"""
 
-From as stability analysis point of view the quantity $\kappa(\mathbf{A}) = \left\| \mathbf{A}^{-1}\right\| \, \|\mathbf{A}\|$ tus relates the relative error in the right-hand side (input quantity)
+# ╔═╡ 679bfd40-ec6a-4fda-b2ab-b15d6acdbd32
+md"""
+From as stability analysis point of view the quantity $\kappa(\mathbf{A}) = \left\| \mathbf{A}^{-1}\right\| \, \|\mathbf{A}\|$ thus relates the relative error in the right-hand side (input quantity)
 to the relative error in the solution $\mathbf{x}$ (output quantity).
 It is thus the condition number for a linear system:
 
@@ -1210,123 +1580,59 @@ as is summarised below:
 	```
 """
 
-# ╔═╡ d326776b-9a89-4464-b720-92d66e93e83c
+# ╔═╡ c4b82a47-1e66-4dfe-9160-ec3422420ce0
 md"""
-Before we continue to develop expression (8) we pause for a second to discuss how condition numbers can be computed in practice.
 
-First let us introduce the following notation:
-
-!!! info "Definition: Minimal and maximal eigenvalues"
-	Given a diagonalisable matrix $\mathbf{M} \in \mathbb{R}^{n\times n}$
-	we denote by $\lambda_\text{max}(\mathbf{M})$ the *largest* eigenvalue
-	of $\mathbf{M}$ and by $\lambda_\text{min}(\mathbf{M})$ the *smallest* eigenvalue
-	of $\mathbf{M}$, i.e.
-	```math
-	\lambda_\text{max}(\mathbf{M}) = \max_{i=1,\ldots,n} \lambda_i(\mathbf{M})
-	\qquad\text{and}\qquad
-	\lambda_\text{min}(\mathbf{M}) = \min_{i=1,\ldots,n} \lambda_i(\mathbf{M})
-	```
-	where $\lambda_i(\mathbf{M})$ for $i=1,\ldots,n$ are the eigenvalues of $\mathbf{M}$.
-
-It turns out that the minimal and maximal eigenvalues provide
-a convenient way to compute matrix norms:
-
-!!! info "Lemma 3: Computing matrix norms"
-	For any matrix  $\mathbf{M} \in \mathbb{R}^{m \times n}$
-	```math
-	\|\mathbf{M}\| = \sqrt{ \lambda_\text{max}(\mathbf{M}^T\mathbf{M}) }.
-	```
-	If $\mathbf{M}$ is moreover square and
-	invertible, then
-	```math
-	\|\mathbf{M}^{-1}\| = \sqrt{ \lambda_\text{max}(\mathbf{M}^{-T}\mathbf{M}^{-1}) } = \frac 1 {\sqrt{ \lambda_\text{min}(\mathbf{M}^T\mathbf{M}) }}.
-	```
+In this notebook we employed an error model
+where storing $\mathbf{b}$ on the computer
+(which leads to $\widetilde{\mathbf{b}}$)
+introduces a small relative error:
+```math
+\widetilde{b}_i = b_i \, (1 + \varepsilon).
+```
+This enables to simplify the expression of the absolute error
+of right-hand side:
+```math
+\left\| \mathbf{b} -  \widetilde{\mathbf{b}}  \right\|
+= \sqrt{\sum_{i=1}^n b_i^2 \varepsilon^2}
+= ε \, \sqrt{\sum_{i=1}^n b_i^2}
+= \epsilon \, \| \mathbf{b} \|,
+```
+which leads to the following result:
 """
 
-# ╔═╡ ab532d5b-4396-4792-b5e5-232216d6e4ca
+# ╔═╡ 630368a5-6934-4304-bbac-6995b819af8d
 md"""
-Based on this we can deduce a few useful formulas for computing condition numbers:
-
-- For any invertible $\mathbf{A} \in \mathbb{R}^{n\times n}$ the condition number
-  can be computed as
-  ```math
-  \kappa(\mathbf{A}) = \left\| \mathbf{A}^{-1}\right\| \, \left\| \mathbf{A}\right\|
-  = \frac{ \sqrt{ \lambda_\text{max}(\mathbf{A}^T\mathbf{A}) }}
-  { \sqrt{ \lambda_\text{min}(\mathbf{A}^T\mathbf{A}) }}.
-  ```
-- If $\mathbf{A} \in \mathbb{R}^{n\times n}$ is invertible and **symmetric**
-  then $\mathbf{A}^T = \mathbf{A}$. As a result we observe that
-  ```math
-  \lambda_{i}(\mathbf{A}^T\mathbf{A}) = \lambda_{i}(\mathbf{A}^2) = \lambda_{i}(\mathbf{A})^2 \qquad \text{for all $i=1,\ldots,n$}.
-  ```
-  As a result
-  ```math
-  \kappa(\mathbf{A})
-  = \frac{ \sqrt{ \lambda_\text{max}(\mathbf{A}^T\mathbf{A}) }}
-  { \sqrt{ \lambda_\text{min}(\mathbf{A}^T\mathbf{A}) }}
-  = \frac{ \sqrt{ \max_{i=1,\ldots,n} \lambda_{i}(\mathbf{A})^2}}
-     { \sqrt{\min_{i=1,\ldots,n} \lambda_{i}(\mathbf{A})^2}}
-  = \frac{ \max_{i=1,\ldots,n} |\lambda_{i}(\mathbf{A})|}
-     { \min_{i=1,\ldots,n} |\lambda_{i}(\mathbf{A})|}
-  ```
-- If $\mathbf{A} \in \mathbb{R}^{n\times n}$ is **both symmetric
-  and positive definite** (i.e. all eigenvalues are strictly positive),
-  then we can drop the moduli in the above expression and obtain:
-
-!!! info "Lemma 4: Condition number of symmetric, positive-definite matrices"
-	If $\mathbf{A} \in \mathbb{R}^{n\times n}$ is symmetric and positive definite,
-    then
-    ```math
-	\kappa(\mathbf{A}) = \frac{\lambda_\text{max}(\mathbf{A})}
-     { \lambda_\text{min}(\mathbf{A})}
+!!! info "Theorem 3: Stability of solving linear systems"
+	Given a linear system $\mathbf{A} \mathbf{x} = \mathbf{b}$
+	and $\widetilde{\mathbf{x}}$ the solution to a perturbed
+	linear system $\mathbf{A} \widetilde{\mathbf{x}} = \widetilde{\mathbf{b}}$,
+	where $\widetilde{b}_i = b_i \, (1 + \varepsilon)$ for $i=1,\ldots,n$, then
+	```math
+	\frac{\left\| \mathbf{x} -  \widetilde{\mathbf{x}}  \right\|}
+	{\| \mathbf{x}\|} \leq \kappa(\mathbf{A}) \, \varepsilon
 	```
+
+This inequality shows that the condition number of the matrix $\mathbf{A}$ plays the role of *amplifying* the round-off error introduced by the floating-point representation of the right-hand side.
 """
 
-# ╔═╡ f2e5abd8-a544-4c21-88fe-af0edec938ab
+# ╔═╡ 73e6a875-69bd-4bef-84d6-3ade74e30015
 md"""
-!!! warning "Rounding error in a 2x2 system (continued)"
-	We continue our example from earlier and evaluate the condition number
-	of the matrix
-	```math
-	\mathbf{A} = \begin{pmatrix} 1 & 10^{-16} \\ 1 &0\end{pmatrix}.
-	```
-	This matrix is not symmetric and we therefore use the expression
-	```math
-	\kappa(\mathbf{A}) = \frac { \sqrt{ \lambda_\text{max}(\mathbf{A}^T\mathbf{A}) }}  { \sqrt{ \lambda_\text{min}(\mathbf{A}^T\mathbf{A}) }},
-	```
-	which requires us to compute the eigenvalues of $\mathbf{A}^T\mathbf{A}$.
-	We note
-	```math
-	\mathbf{A}^T\mathbf{A})
-	= \begin{pmatrix} 1 & 1 \\ 10^{-16} &0\end{pmatrix}
-	\begin{pmatrix} 1 & 10^{-16} \\ 1 &0\end{pmatrix}
-	= \begin{pmatrix} 2 & 10^{-16}  \\ 10^{-16} & 10^{-32} \end{pmatrix}
-	```
-	and
-	```math
-	\det(\mathbf{A}^T\mathbf{A}) - \lambda I)
-	= \lambda^2 - (2 +  10^{-32}) \lambda +  10^{-32},
-	```
-	such that the two eigenvalues of $\mathbf{A}^T\mathbf{A})$ are
-	```math
-	\lambda_{\pm}(\mathbf{A}^T\mathbf{A})) = \frac12\left( 2 +  10^{-32} \pm \sqrt{4 +  10^{-64}} \right).
-	```
-	We conclude that
-	```math
-	\lambda_\text{max}(\mathbf{A}^T\mathbf{A}) \approx 2
-	\qquad\text{and}\qquad
-	\lambda_\text{min}(\mathbf{A}^T\mathbf{A}) \approx \frac{10^{-32}}{2}
-	```
-	therefore
-	```math
-	\kappa(\mathbf{A}) \approx 2 \cdot 10^{16},
-	```
-	which is huge !
+Since for standard double-precision floating-point numbers we have
+$\epsilon \approx 10^{-16}$, this means that condition numbers
+of $10^{16}$ lead to a relative error of $1$, i.e. $100\%$ error
+--- all precision is lost.
+In general condition numbers above $10^8$ start to become problematic
+as in this case the relative error in the solution is at most $10^{-8}$,
+i.e. roughly speaking no more than $8$ digits.
 """
 
 # ╔═╡ 3eb70fdb-457a-4b5b-94d8-13b062895cd3
 md"""
-In Julia code the condition number of a matrix is computed programmatically using the `cond` function. It automatically makes a guess to use the most appropriate of teh above formulas. For the above example we can compute:
+**Numerically computing the condition number.**
+In Julia code the condition number of a matrix is computed using the `cond` function. It effectively uses the above formulas for its computation.
+
+For example for our running example we obtain:
 """
 
 # ╔═╡ 6cb42cac-faa0-4bc4-bb2c-54195f07fd9a
@@ -1336,60 +1642,13 @@ let
 	κ = cond(A)
 end
 
-# ╔═╡ 9571044c-7d41-4dd0-8601-fd5f37f05f0c
+# ╔═╡ e9454cae-fe9a-4f35-ae53-2e723ea5a6b0
+md"""Notice, that this is $2 \cdot 10^{16}$, which is a huge number !"""
+
+# ╔═╡ 52280937-94b1-4259-93f8-d0d9214c27fc
 md"""
-### Stability result
-With these computational tools let us return to the previously obtained
-relationship (8) between relative error in the right-hand side
-and relative error in the solution of the exact and perturbed systems:
-
-```math
-\frac{\|\mathbf{x} -  \widetilde{\mathbf{x}}\|}{\|\mathbf{x}\|}
-\leq \kappa(\mathbf{A})
-\, \frac{\left\| \mathbf{b} -  \widetilde{\mathbf{b}} \right\|}{\|\mathbf{b}\|}.
-```
-
-In our setup we said that storing $\mathbf{b}$ on the computer
-(which leads to $\widetilde{\mathbf{b}}$)
-introduces a small relative error at each of the elements of the right-hand side,
-leading to a relationship
-```math
-\widetilde{b}_i = b_i \, (1 + \varepsilon_i).
-```
-Let us further define
-```math
-\epsilon = \max_{i=1,\ldots,n} |\varepsilon_i|.
-```
-For standard double-precision floating-point number
-as discusset at the beginning of this section,
-we have that $\epsilon \approx 10^{-16}$.
-
-With this setup we can simplify the
-expression of the absolute error of right-hand side:
-```math
-\left\| \mathbf{b} -  \widetilde{\mathbf{b}}  \right\|
-= \sqrt{\sum_{i=1}^n b_i^2 \varepsilon_i^2}
-\leq \sqrt{\sum_{i=1}^n b_i^2 \underbrace{\max_{i=1,\ldots,n} |\varepsilon_i|^2}_{=\epsilon^2}}
-= \epsilon \, \| \mathbf{b} \|.
-```
-
-This leads to the following stability result:
-
-!!! info "Theorem 5: Stability of solving linear systems"
-	Given a linear system $\mathbf{A} \mathbf{x} = \mathbf{b}$
-	and $\widetilde{\mathbf{x}}$ the solution to a perturbed
-	linear system $\mathbf{A} \widetilde{\mathbf{x}} = \widetilde{\mathbf{b}}$,
-	where $\widetilde{b}_i = b_i \, (1 + \varepsilon_i)$ for $i=1,\ldots,n$
-	and $\epsilon = \max_{i=1,\ldots,n} |\varepsilon_i|$, then
-	```math
-	\frac{\left\| \mathbf{x} -  \widetilde{\mathbf{x}}  \right\|}
-	{\| \mathbf{x}\|} \leq \kappa(\mathbf{A}) \, \epsilon
-	```
-
-This inequality shows that the condition number of the matrix $\mathbf{A}$ plays the role of *amplifying* the round-off error introduced by the floating-point representation of the right-hand side.
-
 !!! warning "Rounding error in a 2x2 system (continued)"
-	Using Theorem 5 we can finally understand the behaviour we observe
+	Using Theorem 3 we can finally understand the behaviour we observe
 	in our example.
 	Previously we found that a small perturbation
 	$1 \to 1 + 10^{-16}$ in one of the elements of the right hand side,
@@ -1403,7 +1662,7 @@ This inequality shows that the condition number of the matrix $\mathbf{A}$ plays
 	Note that in this example $\epsilon \approx 10^{-16}$ just like
 	for the case of a rounding error in the right-hand side.
 
-	As we found previously
+	As we computed above
 	```math
 	\kappa(\mathbf{A}) \approx 2 \cdot 10^{16},
 	```
@@ -1411,12 +1670,147 @@ This inequality shows that the condition number of the matrix $\mathbf{A}$ plays
 	condition number of this matrix.
 """
 
+# ╔═╡ 86954ae7-a870-4695-8162-d9436cd19a33
+md"""
+### Computing condition numbers
+
+Using the `cond` function of Julia enables us to easily compute condition numbers in practice.
+
+However, the expression $\kappa(\mathbf{A}) = \left\| \mathbf{A}^{-1}\right\| \, \left\| \mathbf{A}\right\|$ is not extremly handy to provide a good intuition for what the condition number actually means or how it varies as the matrix $\mathbf A$ is changed.
+
+In this section we thus discuss a few standard techniques how to compute condition numbers of matrices. These techniques are in fact exactly the algorithms that `cond` uses under the hood to do its computation.
+"""
+
+# ╔═╡ 8c327ba8-ea35-4acf-8774-a1f45126f040
+md"""
+First we need some notation:
+
+!!! info "Definition: Minimal and maximal eigenvalues"
+	Given a diagonalisable matrix $\mathbf{M} \in \mathbb{R}^{n\times n}$
+	we denote by $\lambda_\text{max}(\mathbf{M})$ the *largest* eigenvalue
+	of $\mathbf{M}$ and by $\lambda_\text{min}(\mathbf{M})$ the *smallest* eigenvalue
+	of $\mathbf{M}$, i.e.
+	```math
+	\lambda_\text{max}(\mathbf{M}) = \max_{i=1,\ldots,n} \lambda_i(\mathbf{M})
+	\qquad\text{and}\qquad
+	\lambda_\text{min}(\mathbf{M}) = \min_{i=1,\ldots,n} \lambda_i(\mathbf{M})
+	```
+	where $\lambda_i(\mathbf{M})$ for $i=1,\ldots,n$ are the eigenvalues of $\mathbf{M}$.
+"""
+
+# ╔═╡ fab51c98-55c8-4bdc-a206-3456de4a324e
+md"""
+It turns out that the minimal and maximal eigenvalues provide
+a convenient way to compute matrix norms:
+
+!!! info "Lemma 4: Computing matrix norms"
+	For any matrix  $\mathbf{M} \in \mathbb{R}^{m \times n}$
+	```math
+	\|\mathbf{M}\| = \sqrt{ \lambda_\text{max}(\mathbf{M}^T\mathbf{M}) }.
+	```
+	If $\mathbf{M}$ is moreover square and
+	invertible, then
+	```math
+	\|\mathbf{M}^{-1}\| = \sqrt{ \lambda_\text{max}(\mathbf{M}^{-T}\mathbf{M}^{-1}) } = \frac 1 {\sqrt{ \lambda_\text{min}(\mathbf{M}^T\mathbf{M}) }}.
+	```
+"""
+
+# ╔═╡ 9be40396-9ace-4088-ac7b-8e0a0117e4f4
+md"""
+Based on this we can deduce a few useful formulas for computing condition numbers.
+We start with the general expression:
+
+!!! info "Corollary 5: Condition number for invertible matrices"
+	If $\mathbf{A} \in \mathbb{R}^{n\times n}$ is invertible
+	the condition number can be computed as
+	```math
+	\kappa(\mathbf{A}) = \left\| \mathbf{A}^{-1}\right\| \, \left\| \mathbf{A}\right\|
+	= \frac{ \sqrt{ \lambda_\text{max}(\mathbf{A}^T\mathbf{A}) }}
+	{ \sqrt{ \lambda_\text{min}(\mathbf{A}^T\mathbf{A}) }}.
+	```
+"""
+
+# ╔═╡ 6f077373-cc53-4e9d-8849-c59c45b40178
+md"""
+Furthemore if $\mathbf{A} \in \mathbb{R}^{n\times n}$ is invertible and **symmetric**
+then $\mathbf{A}^T = \mathbf{A}$. As a result we observe that
+```math
+\lambda_{i}(\mathbf{A}^T\mathbf{A}) = \lambda_{i}(\mathbf{A}^2) = \lambda_{i}(\mathbf{A})^2 \qquad \text{for all $i=1,\ldots,n$}.
+```
+As a result
+```math
+\kappa(\mathbf{A})
+= \frac{ \sqrt{ \lambda_\text{max}(\mathbf{A}^T\mathbf{A}) }}
+{ \sqrt{ \lambda_\text{min}(\mathbf{A}^T\mathbf{A}) }}
+= \frac{ \sqrt{ \max_{i=1,\ldots,n} \lambda_{i}(\mathbf{A})^2}}
+   { \sqrt{\min_{i=1,\ldots,n} \lambda_{i}(\mathbf{A})^2}}
+= \frac{ \max_{i=1,\ldots,n} |\lambda_{i}(\mathbf{A})|}
+   { \min_{i=1,\ldots,n} |\lambda_{i}(\mathbf{A})|}
+```
+
+If $\mathbf{A} \in \mathbb{R}^{n\times n}$ is **both symmetric
+and positive definite** (i.e. all eigenvalues are strictly positive),
+then we can drop the moduli in the above expression and obtain:
+
+!!! info "Lemma 6: Condition number of symmetric, positive-definite matrices"
+	If $\mathbf{A} \in \mathbb{R}^{n\times n}$ is symmetric and positive definite,
+    then
+    ```math
+	\kappa(\mathbf{A}) = \frac{\lambda_\text{max}(\mathbf{A})}
+     { \lambda_\text{min}(\mathbf{A})}
+	```
+"""
+
+# ╔═╡ f2e5abd8-a544-4c21-88fe-af0edec938ab
+md"""
+!!! warning "Rounding error in a 2x2 system (continued)"
+	As an example we now compute the condition number
+	of the matrix analytically
+	```math
+	\mathbf{A} = \begin{pmatrix} 1 & 10^{-16} \\ 1 &0\end{pmatrix}.
+	```
+	Recall that the value computed by Julia's `cond` function was roughly $2 \cdot 10^{16}$.
+
+	This matrix is not symmetric and we therefore use the expression
+	```math
+	\kappa(\mathbf{A}) = \frac { \sqrt{ \lambda_\text{max}(\mathbf{A}^T\mathbf{A}) }}  { \sqrt{ \lambda_\text{min}(\mathbf{A}^T\mathbf{A}) }},
+	```
+	which requires us to compute the eigenvalues of $\mathbf{A}^T\mathbf{A}$.
+	We note
+	```math
+	\mathbf{A}^T\mathbf{A}
+	= \begin{pmatrix} 1 & 1 \\ 10^{-16} &0\end{pmatrix}
+	\begin{pmatrix} 1 & 10^{-16} \\ 1 &0\end{pmatrix}
+	= \begin{pmatrix} 2 & 10^{-16}  \\ 10^{-16} & 10^{-32} \end{pmatrix}
+	```
+	and
+	```math
+	\det(\mathbf{A}^T\mathbf{A} - \lambda I)
+	= \lambda^2 - (2 +  10^{-32}) \lambda +  10^{-32},
+	```
+	such that the two eigenvalues of $\mathbf{A}^T\mathbf{A}$ are
+	```math
+	\lambda_{\pm}(\mathbf{A}^T\mathbf{A})) = \frac12\left( 2 +  10^{-32} \pm \sqrt{4 +  10^{-64}} \right).
+	```
+	We conclude that
+	```math
+	\lambda_\text{max}(\mathbf{A}^T\mathbf{A}) \approx 2
+	\qquad\text{and}\qquad
+	\lambda_\text{min}(\mathbf{A}^T\mathbf{A}) \approx \frac{10^{-32}}{2}
+	```
+	therefore
+	```math
+	\kappa(\mathbf{A}) \approx 2 \cdot 10^{16},
+	```
+	--- i.e. the same huge number we obtained before.
+"""
+
 # ╔═╡ 45df2cc2-44d7-4b39-872d-b3a49cd59dfe
 let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 525)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 590)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1430,7 +1824,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 HypertextLiteral = "~0.9.5"
-PlutoTeachingTools = "~0.2.15"
+PlutoTeachingTools = "~0.3.1"
 PlutoUI = "~0.7.55"
 """
 
@@ -1438,37 +1832,39 @@ PlutoUI = "~0.7.55"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.4"
+julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "8e611390a0aadd23aca741d761c4cd296c83671d"
+project_hash = "a05f52688e4369db5594db7e90cf9dd4733214fc"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
-git-tree-sha1 = "c278dfab760520b8bb7e9511b968bf4ba38b7acc"
+git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
-version = "1.2.3"
+version = "1.3.2"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
-version = "1.1.1"
+version = "1.1.2"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+version = "1.11.0"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+version = "1.11.0"
 
 [[deps.CodeTracking]]
 deps = ["InteractiveUtils", "UUIDs"]
-git-tree-sha1 = "c0216e792f518b39b22212127d4a84dc31e4e386"
+git-tree-sha1 = "7eee164f122511d3e4e1ebadb7956939ea7e1c77"
 uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
-version = "1.3.5"
+version = "1.3.6"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
-git-tree-sha1 = "eb7f0f8307f71fac7c606984ea5fb2817275d6e4"
+git-tree-sha1 = "b10d0b65641d57b8b4d5e234446582de5047050d"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
-version = "0.11.4"
+version = "0.11.5"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1478,10 +1874,7 @@ version = "1.1.1+0"
 [[deps.Dates]]
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
-
-[[deps.Distributed]]
-deps = ["Random", "Serialization", "Sockets"]
-uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+version = "1.11.0"
 
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
@@ -1490,12 +1883,13 @@ version = "1.6.0"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
+version = "1.11.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
-git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
+git-tree-sha1 = "05882d6995ae5c12bb5f36dd2ed3f61c98cbb172"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
-version = "0.8.4"
+version = "0.8.5"
 
 [[deps.Format]]
 git-tree-sha1 = "9c68794ef81b08086aeb32eeaf33531668d5f5fc"
@@ -1516,13 +1910,14 @@ version = "0.9.5"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
-git-tree-sha1 = "8b72179abc660bfab5e28472e019392b97d0985c"
+git-tree-sha1 = "b6d6bfdd7ce25b0f9b2f6b3dd56b2673a66c8770"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.4"
+version = "0.2.5"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+version = "1.11.0"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -1532,27 +1927,29 @@ version = "0.21.4"
 
 [[deps.JuliaInterpreter]]
 deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "5d3a5a206297af3868151bb4a2cf27ebce46f16d"
+git-tree-sha1 = "a434e811d10e7cbf4f0674285542e697dca605d0"
 uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.9.33"
+version = "0.9.42"
 
 [[deps.LaTeXStrings]]
-git-tree-sha1 = "50901ebc375ed41dbf8058da26f9de442febbbec"
+git-tree-sha1 = "dda21b8cbd6a6c40d9d02a73230f9d70fed6918c"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
-version = "1.3.1"
+version = "1.4.0"
 
 [[deps.Latexify]]
 deps = ["Format", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
-git-tree-sha1 = "5b0d630f3020b82c0775a51d05895852f8506f50"
+git-tree-sha1 = "cd714447457c660382fe634710fb56eb255ee42e"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.16.4"
+version = "0.16.6"
 
     [deps.Latexify.extensions]
     DataFramesExt = "DataFrames"
+    SparseArraysExt = "SparseArrays"
     SymEngineExt = "SymEngine"
 
     [deps.Latexify.weakdeps]
     DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
 
 [[deps.LibCURL]]
@@ -1563,16 +1960,17 @@ version = "0.6.4"
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "8.4.0+0"
+version = "8.6.0+0"
 
 [[deps.LibGit2]]
 deps = ["Base64", "LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
+version = "1.11.0"
 
 [[deps.LibGit2_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll"]
 uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
-version = "1.6.4+0"
+version = "1.7.2+0"
 
 [[deps.LibSSH2_jll]]
 deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
@@ -1581,46 +1979,50 @@ version = "1.11.0+1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+version = "1.11.0"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+version = "1.11.0"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
+version = "1.11.0"
 
 [[deps.LoweredCodeUtils]]
 deps = ["JuliaInterpreter"]
-git-tree-sha1 = "0b898aba6cb0b01fb96245fa5375accb651a241a"
+git-tree-sha1 = "688d6d9e098109051ae33d126fcfc88c4ce4a021"
 uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
-version = "3.0.0"
+version = "3.1.0"
 
 [[deps.MIMEs]]
-git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
+git-tree-sha1 = "1833212fd6f580c20d4291da9c1b4e8a655b128e"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
-version = "0.1.4"
+version = "1.0.0"
 
 [[deps.MacroTools]]
-deps = ["Markdown", "Random"]
-git-tree-sha1 = "2fa9ee3e63fd3a4f7a9a4f4744a52f4856de82df"
+git-tree-sha1 = "72aebe0b5051e5143a079a4685a46da330a40472"
 uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
-version = "0.5.13"
+version = "0.5.15"
 
 [[deps.Markdown]]
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
+version = "1.11.0"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-version = "2.28.2+1"
+version = "2.28.6+0"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
+version = "1.11.0"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2023.1.10"
+version = "2023.12.12"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
@@ -1629,12 +2031,12 @@ version = "1.2.0"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.23+4"
+version = "0.3.27+1"
 
 [[deps.OrderedCollections]]
-git-tree-sha1 = "dfdf5519f235516220579f949664f1bf44e741c5"
+git-tree-sha1 = "cc4054e898b852042d7b503313f7ad03de99c3dd"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.6.3"
+version = "1.8.0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
@@ -1643,9 +2045,13 @@ uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.8.1"
 
 [[deps.Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.10.0"
+version = "1.11.0"
+weakdeps = ["REPL"]
+
+    [deps.Pkg.extensions]
+    REPLExt = "REPL"
 
 [[deps.PlutoHooks]]
 deps = ["InteractiveUtils", "Markdown", "UUIDs"]
@@ -1660,40 +2066,43 @@ uuid = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 version = "0.1.6"
 
 [[deps.PlutoTeachingTools]]
-deps = ["Downloads", "HypertextLiteral", "LaTeXStrings", "Latexify", "Markdown", "PlutoLinks", "PlutoUI", "Random"]
-git-tree-sha1 = "5d9ab1a4faf25a62bb9d07ef0003396ac258ef1c"
+deps = ["Downloads", "HypertextLiteral", "Latexify", "Markdown", "PlutoLinks", "PlutoUI"]
+git-tree-sha1 = "8252b5de1f81dc103eb0293523ddf917695adea1"
 uuid = "661c6b06-c737-4d37-b85c-46df65de6f69"
-version = "0.2.15"
+version = "0.3.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "68723afdb616445c6caaef6255067a8339f91325"
+git-tree-sha1 = "7e71a55b87222942f0f9337be62e26b1f103d3e4"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.55"
+version = "0.7.61"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
-git-tree-sha1 = "03b4c25b43cb84cee5c90aa9b5ea0a78fd848d2f"
+git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-version = "1.2.0"
+version = "1.2.1"
 
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "00805cd429dcb4870060ff49ef443486c262e38e"
+git-tree-sha1 = "9306f6085165d270f7e3db02af26a400d580f5c6"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.4.1"
+version = "1.4.3"
 
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+version = "1.11.0"
 
 [[deps.REPL]]
-deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
+deps = ["InteractiveUtils", "Markdown", "Sockets", "StyledStrings", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
+version = "1.11.0"
 
 [[deps.Random]]
 deps = ["SHA"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+version = "1.11.0"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -1702,15 +2111,21 @@ version = "1.2.2"
 
 [[deps.Requires]]
 deps = ["UUIDs"]
-git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
+git-tree-sha1 = "62389eeff14780bfe55195b7204c0d8738436d64"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
-version = "1.3.0"
+version = "1.3.1"
 
 [[deps.Revise]]
-deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "677b65e17aeb6b4a0be1982e281ec03b0f55155c"
+deps = ["CodeTracking", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "REPL", "Requires", "UUIDs", "Unicode"]
+git-tree-sha1 = "9bb80533cb9769933954ea4ffbecb3025a783198"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.5.16"
+version = "3.7.2"
+
+    [deps.Revise.extensions]
+    DistributedExt = "Distributed"
+
+    [deps.Revise.weakdeps]
+    Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -1718,24 +2133,35 @@ version = "0.7.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+version = "1.11.0"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
+version = "1.11.0"
 
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-version = "1.10.0"
+version = "1.11.0"
 
 [[deps.Statistics]]
-deps = ["LinearAlgebra", "SparseArrays"]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "ae3bb1eb3bba077cd276bc5cfc337cc65c3075c0"
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-version = "1.10.0"
+version = "1.11.1"
+weakdeps = ["SparseArrays"]
+
+    [deps.Statistics.extensions]
+    SparseArraysExt = ["SparseArrays"]
+
+[[deps.StyledStrings]]
+uuid = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
+version = "1.11.0"
 
 [[deps.SuiteSparse_jll]]
 deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "7.2.1+1"
+version = "7.7.0+0"
 
 [[deps.TOML]]
 deps = ["Dates"]
@@ -1750,11 +2176,12 @@ version = "1.10.0"
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+version = "1.11.0"
 
 [[deps.Tricks]]
-git-tree-sha1 = "eae1bb484cd63b36999ee58be2de6c178105112f"
+git-tree-sha1 = "6cae795a5a9313bbb4f60683f7263318fc7d1505"
 uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
-version = "0.1.8"
+version = "0.1.10"
 
 [[deps.URIs]]
 git-tree-sha1 = "67db6cc7b3821e19ebe75791a9dd19c9b1188f2b"
@@ -1764,9 +2191,11 @@ version = "1.5.1"
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+version = "1.11.0"
 
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+version = "1.11.0"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
@@ -1776,12 +2205,12 @@ version = "1.2.13+1"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.8.0+1"
+version = "5.11.0+0"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.52.0+1"
+version = "1.59.0+0"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1793,7 +2222,8 @@ version = "17.4.0+2"
 # ╟─ca2c949f-a6a0-485f-bd52-5dae3b050612
 # ╠═3295f30c-c1f4-11ee-3901-4fb291e0e4cb
 # ╟─21c9a859-f976-4a93-bae4-616122712a24
-# ╟─8e4312b5-f4ce-440b-a487-689959851098
+# ╟─b3cb31aa-c982-4454-8882-5b840c68df9b
+# ╟─be5d3f98-4c96-4e69-af91-fa2ae5f74af5
 # ╠═fafa019e-8a47-4a80-bfd8-a017ae31ab1f
 # ╠═e45952b2-714b-427b-8979-98d11c330294
 # ╟─52d8634e-116b-48e6-9673-2ee2a97423c0
@@ -1811,14 +2241,20 @@ version = "17.4.0+2"
 # ╠═2a1a8730-795b-4659-b688-6e320ffa81f8
 # ╠═a067a699-5cfe-405e-bae2-4e1033f9f9c9
 # ╟─ececcd18-56a3-41f7-8b15-bdff974080ac
-# ╟─06716c35-b551-40a6-bb14-906bc7569434
+# ╟─a4aab2c0-b254-4e24-a833-95a47abd0b25
+# ╟─4396fbdd-12d7-4d73-bb98-948d20303292
 # ╠═ef0babcf-d7a8-4fe3-9d64-a54504d8da77
 # ╟─6e6fce09-d14c-459d-9dd6-5f8fd1ee8248
 # ╠═d6a1c5e7-0921-4c4e-bc4a-fb2ebc94e45c
-# ╟─8e31aaec-2512-4ad9-88a4-3130734d6e15
+# ╟─7c66ecc0-f194-489a-bdbf-7b537f2d8567
+# ╟─4f017115-fd86-4087-8ce4-8ef896fa4959
 # ╟─d1c0d1ea-43c9-442e-899c-e83155f14841
 # ╟─1bcd8f38-5ae9-459e-8f91-8c9ad7cde407
 # ╠═9692c144-531a-4995-9057-60af2b91ecfa
+# ╟─ee45b963-fd91-4a7f-94b9-062bf45d5d7e
+# ╠═cd1bbd16-ce88-49a4-bf1f-a9f42bc8920b
+# ╟─039b93ac-0a0e-45c3-acf9-70ec49b077c3
+# ╟─c918c14f-1532-4f40-9857-127554aaaf42
 # ╟─4da6a534-6a8f-464d-bbd4-9a6eec942688
 # ╠═995a73db-6289-423b-8b5c-0fca4240472e
 # ╠═fa46c270-9eff-4fe4-9716-cf4cbc86d9c0
@@ -1830,12 +2266,47 @@ version = "17.4.0+2"
 # ╠═890f4d32-04ff-4931-bc3c-e69005221183
 # ╟─57279ca8-5824-445a-a837-6a7312a366a9
 # ╠═f84cedc8-07b2-4744-81c1-a7b98a86a664
-# ╟─50d0ccfb-78e4-432d-8f0a-abc18ccddacc
+# ╟─fa504b66-4b10-4ba8-a535-895aa0b0c658
+# ╟─87473cf7-68f6-4e34-b3b3-6780dc355506
+# ╟─75d4b513-4260-48dd-aa10-089ada83c093
+# ╠═c1bb18ef-b58d-40a3-9d84-f16d6ccf6930
+# ╟─8c0d6843-6bde-4c14-8a98-6cf7cb9f244a
 # ╟─2baa3355-f51b-464e-a55a-3471fb7e0100
-# ╠═036177c4-08dd-4c22-b3fb-ca0ee807b307
-# ╟─e35fe3ba-ae7d-407c-b034-5430449d414b
-# ╠═a5e8f3d1-246e-4b33-bceb-c682f3bb4fbc
-# ╟─c9a3dffd-c418-48a0-ade1-4c6ac3df9a40
+# ╟─7bece62a-5da4-4a4c-9da8-dfcb797fb27a
+# ╠═0e403214-ddd3-4d3a-ae60-7b81951ab1b1
+# ╟─8e3d0734-bf9f-459d-87e4-07c50685bab1
+# ╠═6f59c78d-7966-45ab-8b79-8443b82ba1df
+# ╠═a85a3ad2-a89d-4e7c-8275-a2f3cd2921b0
+# ╟─5bdda18b-cd8d-49f6-a107-ad58697eab52
+# ╠═0ea63086-f090-4b5b-a7d5-d6a1b21b1fd8
+# ╟─c42c3c63-b96c-4af0-a276-72ebd96fe23c
+# ╟─d85ab4d1-730b-4a6e-bd4d-46e450261f64
+# ╠═0de87398-22d4-4ba6-8831-bcf30e67a6db
+# ╟─d46ee923-0912-4e85-bc33-0ddc6abe2fa5
+# ╠═12a63b8a-360b-421b-bf4c-03f923f46cc4
+# ╠═edc42947-af9f-48f9-817c-037d9244f07a
+# ╟─7681fb06-703a-4b30-8973-20d45ca50732
+# ╠═9cf9c710-c76a-48b2-8799-efaaf7f1a82b
+# ╟─dbf95d60-0333-407c-bc89-97914fb08437
+# ╠═ff388011-a9ed-4d1c-9f13-0b70c72187ae
+# ╟─169ee211-c734-44d8-a034-b342aa5393d3
+# ╟─40f6f4c5-dc86-4834-a6c2-51852d87a3bb
+# ╠═24b7c334-28d4-41d1-b8f2-23fbc80ec2f3
+# ╠═e1d08709-d4bc-452f-a766-e43d25406fc2
+# ╟─61f16e01-f7a3-420b-940f-ce0c6be93a99
+# ╠═ce383027-483d-424a-84c3-e8102475c43e
+# ╟─dc00020e-2fa0-4816-8b13-d457aee00823
+# ╠═43f22f5c-1fab-459e-a67e-fe67f6310d86
+# ╟─22d2cc3c-b50a-4915-8ba4-d7f6221ebd61
+# ╠═e13c4c6e-b55c-4360-9ec4-501042490d59
+# ╟─38deeaeb-0596-48d5-b671-2d1fc2e73a27
+# ╠═25f18e3c-a00b-4d3a-9b5e-60d40eeb5596
+# ╟─cdaead03-fbd7-4ff6-9f31-6296e8d5230f
+# ╟─48979215-458c-40f5-82e4-a4485390bca4
+# ╟─827a75c2-2e3c-4da4-8deb-6c8a999596f2
+# ╟─f4a02392-ca42-44ac-bd1c-13cb3d6fafa2
+# ╟─2708ff44-5f30-43b3-b89a-19b9d8954100
+# ╟─59083552-006d-4376-9c8a-2f5b85c6bb44
 # ╠═6754911a-81dd-41ce-8b59-2a0743b324c0
 # ╟─c11a03f1-4aa2-4b6d-abf7-3e8c94d50498
 # ╠═a67a89e9-858d-4501-834b-18f1ffd2ad0e
@@ -1844,21 +2315,22 @@ version = "17.4.0+2"
 # ╟─a25724a6-097a-48b5-a500-f4c5f2fe5388
 # ╠═d09898da-dc12-4e0d-b548-72c8f32458e0
 # ╟─24df3f6a-8ac3-492b-b4e7-80029af6918d
-# ╠═29d974a4-a748-4818-9c94-ca0a7b71e423
+# ╠═f55927a7-93de-4795-a1a9-734eca0ee60f
+# ╟─b659f816-a443-4be1-8359-776105d6e01e
+# ╠═6d0a9fcf-f8e9-48fb-8167-eadd17cd0082
 # ╠═ae82d253-4937-4e72-b516-6f3da8f19df1
 # ╠═b8045050-09e2-42ea-a7aa-c702ec323fd3
-# ╠═f79f92bc-e50b-4e5c-a82e-555269fa80b5
+# ╟─e5bf55d6-2698-4124-bd1c-2ea1d7e98ebd
 # ╠═8f06e886-6ebb-4a16-a1c5-8123e09ef723
-# ╠═dd9023ad-cf79-4540-9259-61a28efa1174
-# ╠═0f8c8b5c-33e0-4952-8d89-f26606a8503e
-# ╠═2abb0086-0375-4633-8c1f-467b995ddd33
-# ╠═cee62fc9-1d60-4356-b170-d9928e7de807
-# ╠═8bd7c41a-112c-4ba7-b69e-af8e8d621c26
-# ╠═bd574872-321d-4315-9f0f-60c95933226f
+# ╠═88000701-f480-4efd-93b8-50b60c9d5d95
+# ╠═f79f92bc-e50b-4e5c-a82e-555269fa80b5
 # ╟─3e110a7e-1272-4c50-80f6-290f61844952
+# ╠═d0771eb3-6b89-4282-adfa-31c9a525f13c
+# ╟─4647f5ea-9c17-4fd0-8f50-a734d8a1f840
 # ╠═1f34c503-6815-4639-a932-9fe2d7e1b4c2
 # ╟─ef60d36e-02c7-44e1-8910-241f99a89a38
-# ╟─cea0c83c-6c6d-45a9-815c-6a112c3b76a9
+# ╟─3ab0ccfe-df7c-4aed-b83f-f0113001610b
+# ╟─946fb6e6-e7e5-4aee-b566-b7c33ead7789
 # ╠═4a0dc42d-31a8-49bc-8db0-5f77474d8785
 # ╟─d0a852cb-0d68-4807-861f-5302a5aeecd4
 # ╠═8353d1fd-75cc-41e0-866c-5234634219d5
@@ -1879,6 +2351,7 @@ version = "17.4.0+2"
 # ╟─60ca2879-ee47-4163-b014-4a0af90b449f
 # ╟─191fb08e-fade-43cd-8d8f-2273b594da68
 # ╟─f3fee115-f239-4578-81e0-a3153027056f
+# ╟─e4aba0e4-adfc-4633-800e-3e2915300839
 # ╟─ca3eca34-3fc6-4488-ae74-69e9453c05e1
 # ╟─c0b02aa0-642c-4a6f-ac21-cdb8e27d9279
 # ╠═48a19e05-ba2e-421a-b059-07d994bed73c
@@ -1887,17 +2360,32 @@ version = "17.4.0+2"
 # ╠═0f8b23ab-c797-4513-b70c-5827376f6093
 # ╟─756a5787-6f64-4308-b879-da7676d39a8c
 # ╟─01a66e18-bc56-4204-b4b8-9bf46155aec1
-# ╟─4fac9508-bc29-447c-9188-a58da07abeb3
-# ╟─e8de3cd9-05bb-439e-b6fe-39d9c82f0ba6
+# ╟─5d8d4e66-20a0-41d9-8aeb-faa7d56628f9
+# ╟─2d98da64-481b-4e86-9daa-f199294ed417
+# ╟─41ebce0a-1fde-4704-b889-b1a8391ccac7
+# ╟─c34c30e8-b777-43b7-aae6-cd88d7179015
+# ╟─491d4fd8-1b22-4dac-9f2a-dcef9f3fb034
+# ╟─51ab9105-5f8b-4370-867e-9042962fc777
+# ╟─fe34bed1-702b-49f3-b5f2-0c9961ca4e72
 # ╟─97e1379a-b0bf-4c6f-8375-299e1f42899f
+# ╟─fdad2eae-1aa5-42da-a276-3be34c598c19
+# ╟─596b167c-6704-40bb-ac8a-99409466e831
 # ╟─f11b6f84-d0c4-4855-a5c6-31d837880407
-# ╟─0e4e510c-9662-4962-aeea-2a31f6c027fe
-# ╟─d326776b-9a89-4464-b720-92d66e93e83c
-# ╟─ab532d5b-4396-4792-b5e5-232216d6e4ca
-# ╟─f2e5abd8-a544-4c21-88fe-af0edec938ab
+# ╟─25e0ebf6-ca45-4491-b5bc-c29f2725aa7b
+# ╟─679bfd40-ec6a-4fda-b2ab-b15d6acdbd32
+# ╟─c4b82a47-1e66-4dfe-9160-ec3422420ce0
+# ╟─630368a5-6934-4304-bbac-6995b819af8d
+# ╟─73e6a875-69bd-4bef-84d6-3ade74e30015
 # ╟─3eb70fdb-457a-4b5b-94d8-13b062895cd3
 # ╠═6cb42cac-faa0-4bc4-bb2c-54195f07fd9a
-# ╟─9571044c-7d41-4dd0-8601-fd5f37f05f0c
+# ╟─e9454cae-fe9a-4f35-ae53-2e723ea5a6b0
+# ╟─52280937-94b1-4259-93f8-d0d9214c27fc
+# ╟─86954ae7-a870-4695-8162-d9436cd19a33
+# ╟─8c327ba8-ea35-4acf-8774-a1f45126f040
+# ╟─fab51c98-55c8-4bdc-a206-3456de4a324e
+# ╟─9be40396-9ace-4088-ac7b-8e0a0117e4f4
+# ╟─6f077373-cc53-4e9d-8849-c59c45b40178
+# ╟─f2e5abd8-a544-4c21-88fe-af0edec938ab
 # ╟─45df2cc2-44d7-4b39-872d-b3a49cd59dfe
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
