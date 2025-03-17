@@ -484,11 +484,11 @@ A_manual = Float64[ 2  1  0;
 # ╔═╡ 039b93ac-0a0e-45c3-acf9-70ec49b077c3
 md"""With this slider you can stop `factorise_lu` after 1, 2 or 3 steps, checking that agrees with the steps we computed manually:
 
-- `nstep_lu_A = ` $(@bind nstep_lu_A Slider(1:3; default=1, show_value=true))
+- `nstep_lu_A = ` $(@bind nstep_lu_A Slider(0:3; default=0, show_value=true))
 """
 
 # ╔═╡ c918c14f-1532-4f40-9857-127554aaaf42
-let
+begin
 	function factorise_lu_steps(A; nstep=size(A, 1))
 	    n = size(A, 1)
 	    L = zeros(n, n)     # Initialise L and U by zeros
@@ -516,7 +516,7 @@ let
 	    return (; Aᵏ, L)
 	end
 
-	(; Aᵏ, L) = factorise_lu_steps(A_manual; nstep=nstep_lu_A)
+	factorise_lu_steps(A_manual; nstep=nstep_lu_A)
 end
 
 # ╔═╡ 4da6a534-6a8f-464d-bbd4-9a6eec942688
@@ -624,33 +624,42 @@ Applying **Algorithm 4** the first step ($k=1$) will zero out the first column i
 ```
 As a result the element `Aᵏ[k, k]` (for $k = 2$) is zero as marked \textcolor{red}{in red}. Continuing **Algorithm 4** for `k = 2` we would thus divide by zero 
 in the statement $L_{ik} = \frac{A_{ik}^{(k)}}{A^{(k)}_{kk}}$ 
---- which reflects above in the introduction of a `-Inf`
-in the matrix `L` that is returned by the algorithm:
+--- which in the introduction of a `-Inf`
+in the matrix `L` that is returned by the algorithm.
+
+We run the algorithm step by step by advancing the slider:
+
+- `nstep_lu_D = ` $(@bind nstep_lu_D Slider(0:3; default=0, show_value=true))
 """
 
-# ╔═╡ 0e403214-ddd3-4d3a-ae60-7b81951ab1b1
-let
-	L, U = factorise_lu(D)
-	L
-end
+# ╔═╡ 716a0a8d-2bf4-4e3d-8044-09d542152cdc
+factorise_lu_steps(D; nstep=nstep_lu_D)
 
-# ╔═╡ 8e3d0734-bf9f-459d-87e4-07c50685bab1
+# ╔═╡ 9d5aab1f-3156-4c73-9e2f-b91f3ebe3984
 md"""
-From this point our computations are numerical garbage.
+We observe that from step $k=1$ and onwards our computations are numerical garbage.
+
 Due their central role in the Gaussian elimination algorithm
 the elements $\left(A^{(k)}\right)_{kk}$
 --- respectively `Aᵏ[k, k]` in the implementation ---
 are usually referred to as **pivots**.
+"""
 
-Notice that if instead of considering the matrix $A$ we consider the **permuted matrix**
+# ╔═╡ 58c13b75-006d-48e4-8ddf-290df272488b
+md"""
+If instead of considering the matrix $A$ we factorise the **permuted matrix**
 ```math
 \mathbf{P}\mathbf{D} = \begin{pmatrix} 1 & 2 & 3\\
 \textcolor{orange}{7} &\textcolor{orange}{8} &\textcolor{orange}{9}\\
 \textcolor{blue}{2} & \textcolor{blue}{4} & \textcolor{blue}{5}
 \end{pmatrix}
 ```
-which is the matrix `D` multiplied by the permutation matrix
+which is the matrix `D` in which the last two rows are swapped,
+the algorithm goes through as expected:
 """
+
+# ╔═╡ 49f66db0-3757-431d-85d7-4fe75096f9cc
+md"We remark that the permutation matrix $\mathbf P$ is given by ..."
 
 # ╔═╡ 6f59c78d-7966-45ab-8b79-8443b82ba1df
 P = [1 0 0;
@@ -660,11 +669,6 @@ P = [1 0 0;
 # ╔═╡ a85a3ad2-a89d-4e7c-8275-a2f3cd2921b0
 P * D
 
-# ╔═╡ 5bdda18b-cd8d-49f6-a107-ad58697eab52
-md"""
-the algorithm goes through and works as expected:
-"""
-
 # ╔═╡ 0ea63086-f090-4b5b-a7d5-d6a1b21b1fd8
 let
 	L, U = factorise_lu(P*D)
@@ -673,12 +677,15 @@ let
 	@show L * U - P * D   # show that L * U = P * D
 end;
 
+# ╔═╡ 2d461a32-c40f-4670-9252-09baa5f3a6d5
+md"... and exactly achieves the task of swapping the last two rows, but leaving the rest of $\mathbf D$ intact as we saw above."
+
 # ╔═╡ c42c3c63-b96c-4af0-a276-72ebd96fe23c
 md"""
-That is we obtain a factorisation $\mathbf{L} \mathbf{U} = \mathbf{P} \mathbf{D}$ into lower-triangular $\mathbf L$ and upper-triangular $\mathbf U$,
-just not of the original matrix $\mathbf D$, but a permuted form.
+We notice that even though $\mathbf D$ cannot be permuted it is possible to obtain an  LU factorisation $\mathbf{L} \mathbf{U} = \mathbf{P} \mathbf{D}$
+if we additionally allow the freedom to cleverly permute the rows of $\mathbf D$.
 
-This result is in fact rather general:
+This is in fact a general result:
 
 !!! info "Theorem 1"
     Every non-singular matrix $\textbf A \in \mathbb{R}^{n\times n}$ admits a factorisation
@@ -692,7 +699,7 @@ This result is in fact rather general:
 # ╔═╡ d85ab4d1-730b-4a6e-bd4d-46e450261f64
 md"""
 That is to say, that while in general **factorising a matrix $\mathbf A$ can fail**,
-it always suceeds for non-singular matrices if we give ourselves the freedom to permute the rows of $\mathbf A$.
+**it always suceeds** for non-singular matrices if we **give ourselves the freedom to permute the rows** of $\mathbf A$.
 
 Finding a suitable $\mathbf P$ can be achieved by a small
 modification of **Algorithm 4**.
@@ -2273,12 +2280,14 @@ version = "17.4.0+2"
 # ╟─8c0d6843-6bde-4c14-8a98-6cf7cb9f244a
 # ╟─2baa3355-f51b-464e-a55a-3471fb7e0100
 # ╟─7bece62a-5da4-4a4c-9da8-dfcb797fb27a
-# ╠═0e403214-ddd3-4d3a-ae60-7b81951ab1b1
-# ╟─8e3d0734-bf9f-459d-87e4-07c50685bab1
-# ╠═6f59c78d-7966-45ab-8b79-8443b82ba1df
+# ╟─716a0a8d-2bf4-4e3d-8044-09d542152cdc
+# ╟─9d5aab1f-3156-4c73-9e2f-b91f3ebe3984
+# ╟─58c13b75-006d-48e4-8ddf-290df272488b
 # ╠═a85a3ad2-a89d-4e7c-8275-a2f3cd2921b0
-# ╟─5bdda18b-cd8d-49f6-a107-ad58697eab52
 # ╠═0ea63086-f090-4b5b-a7d5-d6a1b21b1fd8
+# ╟─49f66db0-3757-431d-85d7-4fe75096f9cc
+# ╠═6f59c78d-7966-45ab-8b79-8443b82ba1df
+# ╟─2d461a32-c40f-4670-9252-09baa5f3a6d5
 # ╟─c42c3c63-b96c-4af0-a276-72ebd96fe23c
 # ╟─d85ab4d1-730b-4a6e-bd4d-46e450261f64
 # ╠═0de87398-22d4-4ba6-8831-bcf30e67a6db
