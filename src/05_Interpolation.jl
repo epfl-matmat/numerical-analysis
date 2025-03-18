@@ -781,7 +781,7 @@ Introducing
     from the interval $[a, b]$ we denote Lebesgue's constant
     as the quantity
     ```math
-    \Lambda_n = \sup_{x\in[a,b]} \sum_{i=1}^{n+1} |L_i(x)|.
+    \Lambda_n = \max_{x\in[a,b]} \sum_{i=1}^{n+1} |L_i(x)|.
     ```
 
 we can rewrite this as
@@ -809,7 +809,7 @@ begin
 	L_equi(n) = 2^(n+1) / (n * ℯ * log(n))
 	L_Chebyshev(n) = 2π * log(n+1)
 	plot(ns, L_equi.(ns), lw=2, mark=:o, label=L"$Λ_n$ for equally spaced nodes")
-	plot!(ns, L_Chebyshev.(ns), lw=2, mark=:o, label=L"$Λ_n$ for Chebyshev nodes")
+	plot!(ns, L_Chebyshev.(ns), lw=2, mark=:o, label=L"$Λ_n$ for Chebyshev nodes", xlabel=L"n", ylabel=L"\Lambda_n")
 end
 
 # ╔═╡ 9c8b168d-494b-40ae-bc04-5dff7b535459
@@ -846,6 +846,9 @@ md"""
 - Number of nodes `n_nodes_poly = ` $(@bind n_nodes_poly Slider(2:20; show_value=true, default=10))
 - Logarithm of noise amplitude `η_log_poly = ` $(@bind η_log_poly Slider(-3:0.25:-0.5; show_value=true, default=-2))
 """
+
+# ╔═╡ e4ce9bd3-2b8c-458f-aade-b74fd973d19e
+md"Comparing to our theoretical analysis this gives a **noise ε = $(round(10^(η_log_poly), sigdigits=3))**."
 
 # ╔═╡ 4a4540a3-b4cf-47fd-a615-a5280505333f
 let
@@ -1121,7 +1124,7 @@ We summarise in a Theorem:
 
 !!! info "Theorem  4"
     Let $f : [a, b] \to \mathbb{R}$ be a $C^2$
-    function and $a = x_1 < x_2 < \cdots < x_{n+x} = b$
+    function and $a = x_1 < x_2 < \cdots < x_{n+1} = b$
     with equal nodal distance $h = (b - a) / n$.
     The piecewise linear polynomial interpolating the data
     $(x_i, f(x_i))$ satisfies the error estimate
@@ -1197,8 +1200,26 @@ let
 	order2 = (h ./ h[1]) .^ 2
 	plot!(p, h, order2, label=L"O(h^2)", ls=:dash)
 
+	yticks!(p, 10.0 .^ (-2.5:0.5:0))
+	xticks!(p, 10.0 .^ (-0.5:-0.25:-2))
+	
 	p
 end
+
+# ╔═╡ b922d2ea-b0f5-4ba9-bf7a-87a07e35949b
+md"""
+!!! info "Convergence with respect to n or h"
+	When discussing the convergence of a numerical method or an approximation
+	scheme one typically finds two formulations of limits in the literature.
+	- **Convergence as $n \to \infty$:** In this case $n$ is typically the **number of steps**, the **number of samples** or the **size of the approximation space**.
+	  For our **case of building an interpolating function $p$** to a ground-truth
+	  function $f$ the number $n$ is the number of data points and we study how
+	  $p \to f$ as $n \to \infty$.
+	- **Convergence as $h \to 0$:** In this case $h$ is typically the **size of a step**, the **distance between samples** or the **size of a small displacement**.
+	  For our **case of building an interpolating function $p$** the value $h$ is the spacing between nodes, so $h = \frac{b-a}{n}$ and we study how $p\to f$ as $h \to 0$.
+
+	The two formulations are often used interchangably when discussing convergence and the general idea is that $n$ is (up to constants) the inverse of $h$ and vice versa, so $n = O(1/h)$ or $h = O(1/n)$.
+"""
 
 # ╔═╡ 9d175a21-71e0-4df8-bbd5-f4eedbeb1384
 md"""
@@ -1938,7 +1959,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 500)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 515)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1965,7 +1986,7 @@ Polynomials = "~4.0.17"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.3"
+julia_version = "1.11.4"
 manifest_format = "2.0"
 project_hash = "09ea56855cccbf151b4ad3576b58d9161b143e43"
 
@@ -2539,7 +2560,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+2"
+version = "0.8.1+4"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -3293,6 +3314,7 @@ version = "1.4.1+2"
 # ╟─ebe08f78-d331-4563-9ef8-f99355ff672e
 # ╟─5e19f1a7-985e-4fb7-87c4-5113b5615521
 # ╟─d5de3b11-7781-4100-8a63-d26426685bbc
+# ╟─e4ce9bd3-2b8c-458f-aade-b74fd973d19e
 # ╟─4a4540a3-b4cf-47fd-a615-a5280505333f
 # ╟─50a3face-5831-4ef5-b6a5-225b8b7c46a0
 # ╟─2cefad7d-d734-4342-8039-aefdc33c2edd
@@ -3310,6 +3332,7 @@ version = "1.4.1+2"
 # ╟─a30c9fe0-1467-4ba9-86b3-3ea044798851
 # ╟─7e317807-d3ee-4197-91fb-9fc03f7297e8
 # ╠═eb96f944-74ac-4cc0-9322-825df83f34f2
+# ╟─b922d2ea-b0f5-4ba9-bf7a-87a07e35949b
 # ╟─9d175a21-71e0-4df8-bbd5-f4eedbeb1384
 # ╟─3eaddcc1-bddb-45a5-9e0d-0961dba5583c
 # ╟─2096258a-efd9-4de1-8f56-c02295407c0b
