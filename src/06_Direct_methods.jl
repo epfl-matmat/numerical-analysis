@@ -439,7 +439,7 @@ begin
       *  $L_{kk} = 1$
       * for $i = k+1, \ldots, n$ $\quad$   *(Loop over rows)*
         -   $L_{ik} = \frac{A_{ik}^{(k)}}{A^{(k)}_{kk}}$
-        - for $j = k+1, \ldots n$ $\quad$   *(Loop over columns)*
+        - for $j = k, \ldots n$ $\quad$   *(Loop over columns)*
           *   $A_{ij}^{(k+1)} = A_{ij}^{(k)} - L_{ik} A_{kj}^{(k)}$
 	-  $L_{nn} = 1$  $\quad$ *(the loop above only runs until $n-1$)*
     -  $\textbf U = \textbf A^{(n)}$ 
