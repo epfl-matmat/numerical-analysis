@@ -836,19 +836,16 @@ Let us **illustrate this result grapically**. We consider again our function $f_
 distinct nodes $\{x_i\}_{i=1}^{\texttt{n\_nodes\_poly}}$
 --- either equally spaced (left plot) or using Chebyshev nodes (right plot). Additional for both cases we consider an exact evaluation, i.e. points $(x_i, y_i) = (x_i, f(x_i))$ as well as noisy evaluations $(x_i, \tilde{y}_i)$ with
 ```math
-\tilde{y}_i = f(x_i) + η_i
+\tilde{y}_i = f(x_i) + ε_i
 ```
-where $η_i$ is a random number of magnitude $|\eta_i| ≤ 10^\texttt{η\_log\_poly}$.
+where $ε_i$ is a random number of magnitude $|ε_i| ≤ \texttt{ε\_poly}$.
 """
 
 # ╔═╡ d5de3b11-7781-4100-8a63-d26426685bbc
 md"""
 - Number of nodes `n_nodes_poly = ` $(@bind n_nodes_poly Slider(2:20; show_value=true, default=10))
-- Logarithm of noise amplitude `η_log_poly = ` $(@bind η_log_poly Slider(-3:0.25:-0.5; show_value=true, default=-2))
+- Noise amplitude `ε_poly = ` $(@bind ε_poly Slider(10 .^ (-3:0.25:-0.5); show_value=true, default=0.01))
 """
-
-# ╔═╡ e4ce9bd3-2b8c-458f-aade-b74fd973d19e
-md"Comparing to our theoretical analysis this gives a **noise ε = $(round(10^(η_log_poly), sigdigits=3))**."
 
 # ╔═╡ 4a4540a3-b4cf-47fd-a615-a5280505333f
 let
@@ -860,7 +857,7 @@ let
 
 	p = plot(; layout=grid(2, 2; heights=[0.75, 0.25]))
 	for (i, values) in enumerate((values_equispaced, values_chebyshev))
-		noise = [10^η_log_poly * (-1 + 2rand()) for _ in values]
+		noise = [ε_poly * (-1 + 2rand()) for _ in values]
 		
 		# fsin_accurate = fsin.(values) #  = [fsin(x) for x in values]
 		fsin_noise    = fsin.(values) + noise
@@ -877,7 +874,7 @@ let
 
 		sub_noise = i + 2
 		plot!(p, fine, abs.(fsin.(fine) .- poly_noise.(fine)), label="noisy fit", yaxis=:log, xlim=(-1, 1), ylims=(10e-5, 1), legend=:topright, c=3, lw=1.5, ylabel="error", subplot=sub_noise)
-		hline!(p, [10^η_log_poly], label=L"noise $\eta$", c=3, lw=1, ls=:dash, subplot=sub_noise)
+		hline!(p, [ε_poly], label=L"noise $\varepsilon$", c=3, lw=1, ls=:dash, subplot=sub_noise)
 		# plot!(p, fine, abs.(fsin.(fine) .- poly_accurate.(fine)), label="fit", c=2, lw=1.5, subplot=sub_noise)
 	end
 	title!(p, "equispaced"; subplot=1)
@@ -1068,7 +1065,7 @@ end
 
 # ╔═╡ f6055e59-1ddd-4148-8a85-95f4501e3f9f
 let
-	p = plot(; xlims=(-1, 1), title="Error for piecewise interpolation")
+	p = plot(; xlims=(-1, 1), title="Error for piecewise interpolation", ylabel=L"p_{1h} - f_{ratio}")
 	for n_nodes in (5, 10, 30, 40)
 		nodes = range(-1, 1; length=n_nodes)
 		p₁ₕ = pwlinear(nodes, fratio.(nodes))
@@ -1300,7 +1297,7 @@ we take $\texttt{n\_nodes\_pl}$ equally spaced nodes.
 # ╔═╡ 2096258a-efd9-4de1-8f56-c02295407c0b
 md"""
 - Number of nodes `n_nodes_pl = ` $(@bind n_nodes_pl Slider(2:2:40; show_value=true, default=20))
-- Logarithm of noise amplitude `η_log_pl = ` $(@bind η_log_pl Slider(-3:0.25:0; show_value=true, default=-2))
+- Noise amplitude `ε_pl = ` $(@bind ε_pl Slider(10 .^ (-3:0.25:0); show_value=true, default=0.01))
 """
 
 # ╔═╡ e2b32c49-9c8e-4d32-8bf6-a0517b7caa8a
@@ -1308,7 +1305,7 @@ let
 	fine  = range(-1.0, 1.0; length=500)
 
 	nodes = range(-1, 1; length=n_nodes_pl)
-	noise = [10^η_log_pl * (-1 + 2rand()) for _ in nodes]
+	noise = [ε_pl* (-1 + 2rand()) for _ in nodes]
 
 	p₁ₕ_accurate = pwlinear(nodes, fsin.(nodes))
 	p₁ₕ_noisy    = pwlinear(nodes, fsin.(nodes) + noise)
@@ -1321,7 +1318,7 @@ let
 	scatter!(p, nodes, fsin.(nodes) + noise; label="")
 
 	q = plot(fine, abs.(fsin.(fine) .- p₁ₕ_noisy.(fine)), label=L"noisy fit $\tilde{p}_{1,h}$", yaxis=:log, xlim=(-1, 1), ylims=(10e-5, 1), legend=:topright, c=3, lw=1.5, ylabel="error")
-	hline!(q, [10^η_log_pl], label=L"noise $\eta$", c=3, lw=1, ls=:dash)
+	hline!(q, [ε_pl], label=L"noise $\varepsilon$", c=3, lw=1, ls=:dash)
 	plot!(q, fine, abs.(fsin.(fine) .- p₁ₕ_accurate.(fine)), label=L"fit $p_{1,h}$", c=2, lw=1.5)
 
 	plot(p, q; layout=grid(2, 1; heights=[0.75, 0.25]))
@@ -1690,7 +1687,7 @@ Other choices are for example to employ
 However, we will not consider these further.
 """
 
-# ╔═╡ 2122f3c9-a901-4488-bd1b-4bd7e49b7c8a
+# ╔═╡ 2521d29f-64ee-4221-8d92-d83e71068758
 md"""
 ### Least squares problems
 We will now consider how to solve polynomial regression problems (16).
@@ -1699,24 +1696,24 @@ For this we introduce some linear algebra.
 Recall from equation (1) at the start of discussion of polynomial interpolation,
 that each polynomial $q \in \mathbb{P}_m$ can be written as a linear combination
 ```math
-q(x) = \sum_{j=0}^m c_j φ_j(x)
+q(x) = \sum_{j=0}^m c_j x^j
 ```
-where $φ_j$ are suitable basis functions, such as the monomials $φ_j(x) = x^j$.
+in terms of the monomial basis $1 = x^0, x^1, \ldots, x^m$.
 Inserting this, the least-squares error expression can be rewritten as
 ```math
-e_\text{LS} = \sum_{i=1}^{n} \left| y_i - \sum_{j=0}^m c_j φ_j(x_i) \right|^2
+e_\text{LS} = \sum_{i=1}^{n} \left| y_i - \sum_{j=0}^m c_j x_i^j \right|^2
 ```
 and further by introducing the matrix / vector notation
 ```math
 \textbf{V} = \left(\begin{array}{cccc}
-φ_0(x_1) & φ_1(x_1) & \cdots & φ_m(x_1) \\
-φ_0(x_2) & φ_1(x_2) & \cdots & φ_m(x_2) \\
+x_1^0 & x_1^1 & \cdots & x_1^m \\
+x_2^0 & x_2^1 & \cdots & x_2^m \\
 & \vdots\\
-φ_0(x_{n}) & φ_1(x_{n}) & \cdots & φ_m(x_{n})
+x_{n}^0 & x_{n}^1 & \cdots & x_{n}^m
 \end{array}\right) \qquad
 \textbf{y} = \left(\begin{array}{c} y_1 \\ y_2 \\ \vdots \\ y_n \end{array}\right)
 \qquad
-\textbf{c} = \left(\begin{array}{c} c_1 \\ c_2 \\ \vdots \\ c_n \end{array}\right)
+\textbf{c} = \left(\begin{array}{c} c_0 \\ c_2 \\ \vdots \\ c_{m} \end{array}\right)
 ```
 as
 ```math
@@ -1724,11 +1721,9 @@ as
 e_\text{LS} = \| \mathbf{y} - \mathbf{V} \mathbf{c} \|_2^2
 ```
 where $\| v \|_2 = \sqrt{ \sum_{i=1}^n v_i^2 }$ is the Euklidean norm.
-If we are using the monomial basis
-the matrix $\mathbf{V}$ is again equal to a Vandermode matrix,
-same as in polynomial interpolation.
-However, since for regression problems we usually have that $n > m + 1$
-it is rectangular in this case:
+We again recognise $\mathbf V$ to be a Vandermonde matrix
+similar to the polynomial interpolation case, just in this case a rectangular
+matrix as $n > m + 1$, that is
 ```math
 \mathbf{V} = \left(\begin{array}{ccc}
 1 & x_1 & \ldots & x_1^m \\
@@ -1737,7 +1732,10 @@ it is rectangular in this case:
 1 &x_n & \ldots & x_n^m \\
 \end{array}\right) \in \mathbb{R}^{n\times (m+1)}
 ```
+"""
 
+# ╔═╡ 20832145-54ba-4503-8099-e49b45f5024f
+md"""
 In polynomial regression our job is now to minimise expression (16),
 which means that we want to find the coefficient vector $\mathbf{c}$,
 which minimises $\|\mathbf{y} - \mathbf{V} \mathbf{c} \|_2^2$.
@@ -1868,21 +1866,21 @@ Here, we will restrict ourselves to exploring the parameter space a little using
 Foldable("Some interesting experiments with the visualisation below.",
 md"""
 **Polynomial interpolation regime: Sanity check with our results from before:**
-  - `n = 20` and `η_log` small: Increase degree `m` slowly up to `20`: you should observe Runge's phaenomenon for large `m` as before.
-  - Keep `n = 20` and `m = 20` and increase the noise `η_log`: The error drastically increases (well beyond the original noise level `η_log`); the fit is very unstable as we are essentially doing polynomial interpolation with equispaced points.
+  - `n = 20` and noise `ε` small (e.g. `ε = 0.001`): Increase degree `m` slowly up to `20`: you should observe Runge's phaenomenon for large `m` as before.
+  - Keep `n = 20` and `m = 20` and increase the noise `ε`: The error drastically increases (well beyond the original noise level `ε`); the fit is very unstable as we are essentially doing polynomial interpolation with equispaced points.
   - In general for `m = n` (polynomial interpolation) the situation is similar, try for example `n=15` and `m=15` with varying noise.
 
 **The regime $n \gg m$ of least-squares regression:**
-  - Set `m=15`, `m=15` and `η_log = -1`, so polynomial interpolation with large noise. The errors are fairly large. Now increase `n` slowly to `50`: All of a sudden the errors are in control and basically never exceed `η_log`. Play with `η_log` by making it even larger: You should see the error remains well below `η_log` in all cases.
-  - Set `m=40` and `η_log = -0.5` and slide the degree `m` between `20` and `10`. At `m=10` the error is notacibly smaller than at `m=20`. This suggests that somehow the ratio $\frac{m}{n}$ has some influence to what extend measurement noise $η$ translates to an error in the outcome of polynomial regression.
-  - Set `n=20` and `η_log = -1.5` and slide the polynomial degree. We realise that there is sweet spot aronud `m=10` when the error is overall smallest. At too low polynomial degrees $m$ the model is not rich enough to approximate the sine, while at too large degrees $m$ the ratio $\frac{m}{n}$ gets large we get into the regime of a polynomial interpolation. Therefore the numerical noise begins to amplify, resulting in larger and larger errors as we keep increasing $m$.
+  - Set `m=15`, `m=15` and `ε = 0.1`, so polynomial interpolation with large noise. The errors are fairly large. Now increase `n` slowly to `50`: All of a sudden the errors are in control and basically never exceed `ε`. Play with `ε` by making it even larger: You should see the error remains well below `ε` in all cases.
+  - Set `n=40` and `ε = 0.316` and slide the degree `m` between `20` and `10`. At `m=10` the error is notacibly smaller than at `m=20`. This suggests that somehow the ratio $\frac{m}{n}$ has some influence to what extend measurement noise $η$ translates to an error in the outcome of polynomial regression.
+  - Set `n=20` and `ε = 0.0316` and slide the polynomial degree. We realise that there is sweet spot aronud `m=10` when the error is overall smallest. At too low polynomial degrees $m$ the model is not rich enough to approximate the sine, while at too large degrees $m$ the ratio $\frac{m}{n}$ gets large we get into the regime of a polynomial interpolation. Therefore the numerical noise begins to amplify, resulting in larger and larger errors as we keep increasing $m$.
 """)
 
 # ╔═╡ 4562b2f4-3fcb-4c60-83b6-cafd6e4b3144
 md"""
 - Number of samples `n = ` $(@bind n Slider(10:5:50; show_value=true, default=20))
 - Polynomial degree `m = ` $(@bind m Slider(1:20; show_value=true, default=2))
-- Logarithm of noise amplitude `η_log = ` $(@bind η_log Slider(-3:0.25:0; show_value=true, default=-2))
+- Noise amplitude `ε = ` $(@bind ε Slider(10 .^ (-3:0.25:0); show_value=true, default=0.01))
 """
 
 # ╔═╡ 7829afd0-2693-40dc-b2d5-c8da72e96454
@@ -1890,7 +1888,7 @@ let
 	fine  = range(-1.0, 1.0; length=500)
 
 	nodes = range(BigFloat(-1), BigFloat(1); length=n)
-	noise = [10^η_log * (-1 + 2rand()) for _ in 1:n]
+	noise = [ε * (-1 + 2rand()) for _ in 1:n]
 	data  = fsin.(nodes) + noise
 
 	pₘᴸˢ = Polynomials.fit(nodes, data, m+1)
@@ -1902,7 +1900,7 @@ let
 	plot!(p, fine, pₘᴸˢ.(fine); label=L"regression $p_m^\textrm{LS}$", lw=2.5)
 
 	q = plot(fine, abs.(fsin.(fine) .-  pₘᴸˢ.(fine)), label="error", yaxis=:log, xlim=(-1, 1), ylims=(10e-5, 1), legend=:bottomright, c=3, lw=1.5)
-	hline!(q, [10^η_log], label=L"noise $\eta$", c=3, lw=1, ls=:dash)
+	hline!(q, [ε], label=L"noise $\epsilon$", c=3, lw=1, ls=:dash)
 
 	plot(p, q; layout=grid(2, 1; heights=[0.75, 0.25]))
 end
@@ -1952,6 +1950,8 @@ md"""
 - The **other solution** is to use **non-equally spaced points**:
   * The typical approach are **Chebyshev nodes**
   * These lead to **exponential convergence**
+
+Notice that all of these problems lead to linear systems $\textbf A \textbf x = \textbf b$ that we need to solve. How this can me done numerically we will see in [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html).
 """
 
 # ╔═╡ 2240f8bc-5c0b-450a-b56f-2b53ca66bb03
@@ -3314,7 +3314,6 @@ version = "1.4.1+2"
 # ╟─ebe08f78-d331-4563-9ef8-f99355ff672e
 # ╟─5e19f1a7-985e-4fb7-87c4-5113b5615521
 # ╟─d5de3b11-7781-4100-8a63-d26426685bbc
-# ╟─e4ce9bd3-2b8c-458f-aade-b74fd973d19e
 # ╟─4a4540a3-b4cf-47fd-a615-a5280505333f
 # ╟─50a3face-5831-4ef5-b6a5-225b8b7c46a0
 # ╟─2cefad7d-d734-4342-8039-aefdc33c2edd
@@ -3352,14 +3351,15 @@ version = "1.4.1+2"
 # ╟─7bd4720f-3ec8-459a-91be-17d5f2acaa5c
 # ╟─66cfe319-c19e-478f-8f36-645fa1ff8b3b
 # ╟─f6916b49-4fce-429c-9f55-d9a51dc46937
-# ╟─2122f3c9-a901-4488-bd1b-4bd7e49b7c8a
+# ╟─2521d29f-64ee-4221-8d92-d83e71068758
+# ╟─20832145-54ba-4503-8099-e49b45f5024f
 # ╟─30899dd5-b307-415d-bb94-efd09e7d0864
 # ╟─d846d3f2-8cfc-4fc5-a22b-d55762f88f45
 # ╠═0b8f2bcc-0948-47ed-bd62-4a0ceeee9156
 # ╟─d3fdad97-275d-49d8-a4aa-b1f6438a01b8
 # ╟─14bb1d8e-dd73-4795-9bb9-0213e83020d9
 # ╟─4562b2f4-3fcb-4c60-83b6-cafd6e4b3144
-# ╠═7829afd0-2693-40dc-b2d5-c8da72e96454
+# ╟─7829afd0-2693-40dc-b2d5-c8da72e96454
 # ╟─c2431601-afc7-4b37-9113-5ae85d4e5549
 # ╟─ebf6b5f4-b963-4296-9255-47e426d2d12d
 # ╟─2240f8bc-5c0b-450a-b56f-2b53ca66bb03

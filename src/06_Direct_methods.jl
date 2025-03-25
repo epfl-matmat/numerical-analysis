@@ -50,51 +50,70 @@ as well as a right-hand side $\mathbf{b} \in \mathbb{R}^n$.
 As the solution we seek the unknown $\mathbf{x} \in \mathbb{R}^n$.
 """
 
+# ╔═╡ 419d11bf-2561-49ca-a6e7-40c8d8b88b24
+md"""
+- `nmax = ` $(@bind nmax Slider([5, 10, 12, 15]; default=10, show_value=true))
+"""
+
 # ╔═╡ be5d3f98-4c96-4e69-af91-fa2ae5f74af5
 md"""
 ## A difficult example
 
-Solving linear equations is a standard exercise in linear algbra
+Solving linear equations is a standard exercise in linear algebra
 and you probably have already done it in previous courses.
 However, you might also know that solving such linear systems is
 not always equally easy.
 
-This one, for example, is particularly difficult:
+Let us consider a family of innocent-looking matrices, which are famously ill-conditioned, the **Hilbert matrices**. Here we show the $(nmax) by $(nmax) case.
+Feel free to increase the `nmax` to make the problem even more challenging:
 """
 
-# ╔═╡ fafa019e-8a47-4a80-bfd8-a017ae31ab1f
-M_difficult = [π          ℯ;
-			   355/113    23225/8544]   # Rational approximations to π and e
+# ╔═╡ 011c25d5-0d60-4729-b200-cdaf3dc89faf
+M_difficult = [ 1/(i+j) for i=1:nmax, j=1:nmax ]
+
+# ╔═╡ 8f6bffb7-e07a-45cf-a616-de6b3f0739b3
+md"We take the simple right-hand side of all ones:"
 
 # ╔═╡ e45952b2-714b-427b-8979-98d11c330294
-b_difficult = [1.0, 1.0]
+b_difficult = ones(nmax)
 
 # ╔═╡ 52d8634e-116b-48e6-9673-2ee2a97423c0
 md"""
-Solving it in 64-bit `Float64` gives this result:
+And solve the system using `\`:
 """
 
 # ╔═╡ 5fb995cc-b338-4608-a01c-fc0e84d9dfe9
-M_difficult \ b_difficult
+x_difficult = @time M_difficult \ b_difficult
 
 # ╔═╡ 4d9d19da-7a4f-49ba-9c6f-890dad00672c
 md"""
-while using 32-bit `Float32` gives this:
+Looks like a reasonable answer, **but is it ?**
+
+Let's check against a computation using Julia's `BigFloat` number. This is usually between 10 and 100 times more expensive, so not useful for practical computations. But it will give us a reference answer to much higher precision.
 """
 
-# ╔═╡ 08ec21d9-5474-4aae-8fb1-62fde1c7e864
-let
-	M_32 = convert(Matrix{Float32}, M_difficult)
-	b_32 = convert(Vector{Float32}, b_difficult)
-	M_32 \ b_32
+# ╔═╡ fec623d0-08d3-434c-85af-266abde46da1
+begin
+	M_big = [ 1/(big(i)+big(j)) for i=1:nmax, j=1:nmax ]
+	x_big = @time M_big \ b_difficult
 end
+
+# ╔═╡ 6e2c0370-a2a9-450c-b973-14925754edf8
+md"""Looking at the second entry we already see some **significant deviations in the standard `Float64` answer**, which actually get way worse as we increase `nmax`:
+"""
+
+# ╔═╡ fff3d0d9-f018-42ac-ac36-d12e11ce9362
+x_big - x_difficult
 
 # ╔═╡ a8559c5e-744a-4c25-a75c-5394558bc672
 md"""
-These clearly differ and we would probably trust the `Float64` result more.
-But is this justified ? 
-And what are conditions to quantify that a linear system is more
-challenging than another ?
+While for `nmax = 5` the answer still kind of ok, **the result of the standard `\`-operator become numerical garbage** from `nmax = 12` onwards.
+
+The related questions we want to ask here are:
+- How does Julia's `\`-operator work ?
+- How can we quantify when a linear system is more
+  challenging to solve than another ?
+- Based on this: When can we trust the results we get ?
 
 This is what we want to explore in this part of the course.
 """
@@ -343,21 +362,37 @@ A few remarks are in order:
   factorised form $\mathbf{L} \mathbf{U}$ can be used in its place.
 """
 
-# ╔═╡ d1c0d1ea-43c9-442e-899c-e83155f14841
+# ╔═╡ 95448773-88f3-4e52-a2d3-5cd7e4a3e28f
 md"""
-## Gaussian elimination and LU factorisation
+## LU factorisation
 
-We will now discuss how to compute an LU factorization.
-As it turns out the Gaussian elimination algorithm you already learned in previous
-linear algebra classes provides exactly this missing ingredient.
+The missing piece in our discussion is how the LU factorisation can be computed. As it turns out this is the Gaussian elimination algorithm, which you already learned in previous linear algebra classes. Indeed, this algorithm reduces a matrix to upper triangular form --- now we just need to be careful with the book-keeping to also extract the factor $\mathbf L$.
+"""
 
-Recall that **Gaussian elimination** allows us to
-transform a linear system into an upper
-triangular system using elementary operations,
-which combine the different equations.
+# ╔═╡ 1bcd8f38-5ae9-459e-8f91-8c9ad7cde407
+begin
+	alg_LU = md"""
+!!! info "Algorithm 4: LU factorisation"
+    **Input:** $\textbf A \in \mathbb{R}^{n\times n}$ 
 
-!!! warning "Example: Manual Gaussian elimination"
-	We will discuss one example, namely the linear system
+    **Output:** $\mathbf U \in \mathbb{R}^{n\times n}$, $\mathbf L \in \mathbb{R}^{n\times n}$
+	-  $\textbf U = \textbf A$ 
+    - for $k = 1, \ldots, n-1$ $\quad$  *(algorithm steps)*
+      *  $L_{kk} = 1$
+      * for $i = k+1, \ldots, n$ $\quad$   *(Loop over rows)*
+        -   $L_{ik} = \frac{U_{ik}}{U_{kk}}$
+        - for $j = k, \ldots n$ $\quad$   *(Loop over columns)*
+          *   $U_{ij} \leftarrow U_{ij} - L_{ik} U_{kj}$  $\qquad$ *(modify $U_{ij}$ to $U_{ij} - L_{ik} U_{kj}$)*
+	-  $L_{nn} = 1$  $\quad$ *(the loop above only runs until $n-1$)*
+	"""
+
+	alg_LU
+end
+
+# ╔═╡ c092eb61-b7f6-4868-8dc4-ca053c697a92
+md"""
+!!! warning "Example: Manual LU factorisation"
+	We will run this algorithm manually for solving the linear system
     ```math
 	\underbrace{\begin{pmatrix}
 	2 & 1 & 0 \\ -4 & 3 & -1 \\ 4 & -3 & 4
@@ -367,6 +402,73 @@ which combine the different equations.
 	4 \\ 2 \\ -2
 	\end{pmatrix}}_{= \textbf b}.
     ```
+	That is for factorising the matrix $\mathbf A$. Before we start the loop over `k`, the matrix $\mathbf L$ is empty and $\mathbf U$ is just equal to $\mathbf A$:
+	```math
+	\mathbf L =   \begin{pmatrix} \phantom{-1} &\phantom{-1}&\phantom{1} \\ \phantom{-1} &  &  \\ \phantom{-1} &  &  \end{pmatrix} \qquad
+	\mathbf U = \begin{pmatrix} \textcolor{red}{2} & 1 & 0 \\ -4 & 3 & -1 \\ 4 & -3 & 4\end{pmatrix}
+	```
+	- **`k=1` (Step 1):** In Gaussian elimination we would first zero out the **2nd and 3rd row** of the **1st column** of matrix $\mathbf A$. Here we do the same in a loop over rows starting at `k+1 = 2`.
+	  * **`i = 2` (Row 2):** To zero out the first entry of the second row by subtraction, we need to multiply the first row with this factor:
+	    -  $L_{21} = \frac{U_{21}}{\textcolor{red}{U_{11}}} = \frac{-4}{\textcolor{red}{2}} = \mathbf{-2}$
+	    - The *loop over columns* now just uses this factor to update the second
+	      row by subtracting $L_{21} = -2$ times the first --- or equivalently adding 2 times the first.
+	    - After this step we have:
+	      ```math
+	      \mathbf L =   \begin{pmatrix} 1 &\phantom{-1}&\phantom{1} \\ \mathbf{-2} &  &  \\ \phantom{-1} &  &  \end{pmatrix} \qquad
+	      \mathbf U = \begin{pmatrix} \textcolor{red}{2} & 1 & 0 \\ \textbf{0} & \textbf{5} & \textbf{-1} \\ 4 & -3 & 4\end{pmatrix}
+	      ```
+          where **bold** highlights the elements, that have changed.
+	  * **`i = 3` (Row 3):** Here we zero out $U_{31}$. We determine the factor
+	    -  $L_{31} = \frac{U_{31}}{\textcolor{red}{U_{11}}} = \frac{4}{\textcolor{red}{2}} = \mathbf{2}$
+	    - The *loop over columns* updates the third row by subtracting $L_{31} = 2$ times the first row.
+	    - After this step:
+	      ```math
+	      \mathbf L =   \begin{pmatrix} 1 &\phantom{-1}&\phantom{1} \\ -2 &  &  \\ \textbf{2} &  &  \end{pmatrix} \qquad
+	      \mathbf U = \begin{pmatrix} \textcolor{red}{2} & 1 & 0 \\ 0 & 5 & -1 \\ \textbf{0} & \textbf{-5} & \textbf{4}\end{pmatrix}
+	      ```
+	    - In *loop over rows* `i` only runs until `n = 3`, so we are done with it.
+	- **`k=2` (Step 2):** Our goal is now to zero out the 2nd column in all rows below the diagonal. We thus start another loop over rows, this time starting at `k+1 = 3`:
+	  * **`i = 3` (Row 3):** Our factor is now
+	    -  $L_{32} = \frac{U_{31}}{\textcolor{green}{U_{22}}} = \frac{-5}{\textcolor{green}{5}} = \mathbf{-1}$
+	    - After subtracting $L_{32} = -1$ times the second row from the 3rd in the *loop over columns*, i.e. we add 2nd and 3rd row, we get
+	      ```math
+	      \mathbf L =   \begin{pmatrix} 1 &\phantom{-1}&\phantom{1} \\ -2 & 1 &  \\ 2 & \textbf{-1} &  \end{pmatrix} \qquad
+	      \mathbf U = \begin{pmatrix} 2 & 1 & 0 \\ 0 & \textcolor{green}{5} & -1 \\ 0 & \textbf{0} & \textbf{3}\end{pmatrix}
+	      ```
+	  * Again we have reached the end of the *loop over rows* as `i = n = 3`.
+	- Since `k = n-1 = 2` we also reached the end of the loop over `k`
+    - Finally we set the missing $L_{33} = 1$ to obtain the final result:
+	  ```math
+	  \mathbf L =   \begin{pmatrix} 1 &\phantom{-1}&\phantom{1} \\ -2 & 1 &  \\ 2 & -1 & \textbf{1} \end{pmatrix} \qquad
+	  \mathbf U = \begin{pmatrix} 2 & 1 & 0 \\ 0 & 5 & -1 \\ 0 & 0 & 3\end{pmatrix}
+	  ```
+    This is the LU factorisation of $\mathbf A$, which is easily verified by multiplying out the matrices:
+    ```math
+    \mathbf{L} \mathbf U = \begin{pmatrix} 1 &\textcolor{grey}{0}&\textcolor{grey}{0} \\ -2 &  1& \textcolor{grey}{0} \\ 2 & -1 & 1 \end{pmatrix}\begin{pmatrix}
+	  2 & 1 & 0 \\ \textcolor{grey}{0}& 5 & -1 \\ \textcolor{grey}{0} &  \textcolor{grey}{0} & 3
+	\end{pmatrix} = \begin{pmatrix}
+	2 & 1 & 0 \\ -4 & 3 & -1 \\ 4 & -3 & 4
+	\end{pmatrix} = \mathbf A
+    ```
+"""
+
+# ╔═╡ 29bd39a3-9c0e-4038-a5ac-783fc9ac1629
+Foldable("Expand for an explict Gaussian elimination procedure, which works directly working on the equations in x", 
+md"""
+!!! warning "Example: Gaussian elimination by working on the equations."
+	We contrast the above algorithmic picture by a more naive approach working directly on the equations. In this case, too, the factors $L_{21}$, $L_{31}$ and $L_{32}$ appear.
+
+	Let us run standard Gaussian eliminition manually for solving the linear system
+    ```math
+	\underbrace{\begin{pmatrix}
+	2 & 1 & 0 \\ -4 & 3 & -1 \\ 4 & -3 & 4
+	\end{pmatrix}}_{=\textbf A}
+    \underbrace{\begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix}}_{=\textbf x}
+    = \underbrace{\begin{pmatrix}
+	4 \\ 2 \\ -2
+	\end{pmatrix}}_{= \textbf b}.
+    ```
+
     Let us call $r_1^{(1)}$, $r_2^{(1)}$ and $r_3^{(1)}$
     the three equations of the system:
 	```math
@@ -377,6 +479,7 @@ which combine the different equations.
 	\end{aligned}
 	```
 	on which we perform the following operations.
+
 
 	**1st step:** Zero out all but the first row in the first column.
 	```math
@@ -398,7 +501,8 @@ which combine the different equations.
 
 	After this step we have thus obtained an upper-triangular system,
     which we would solve using backward substitution.
-    Note that during the iterations the system matrix
+
+    Notice that as before system matrix $\mathbf{A}$
     got slowly reduced to an upper triangular matrix,
     which we can identify with $\mathbf{U}$:
 	```math
@@ -406,67 +510,32 @@ which combine the different equations.
 	\textbf A^{(2)}=\begin{pmatrix} 2 & 1 & 0 \\ \textcolor{grey}{0} & 5 & -1 \\ \textcolor{grey}{0} & -5 & 4\end{pmatrix}  \; \Rightarrow \;
 	\textbf A^{(3)}=\begin{pmatrix} 2 & 1 & 0 \\ \textcolor{grey}{0} & 5 & -1 \\ \textcolor{grey}{0} & \textcolor{grey}{0} & 3\end{pmatrix}=\textbf U
     ```
-	In turn the matrix $\textbf L$ is obtained by collecting the factors
-    we employed to multiply the rows. We add diagonal entries of $1$
-    to indicate that the $i$-th row has been left unchanged in the $i$-th step.
-    Accumulating step by step we obtain
-    ```math
-	\mathbf L^{(1)} =   \begin{pmatrix} 1 &\phantom{-1}&\phantom{1} \\ -\frac{4}{2} &  &  \\ \frac{4}{2} &  &  \end{pmatrix} \; \Rightarrow \;
-	\mathbf L^{(2)} =   \begin{pmatrix} 1 &\phantom{-1}& \\ -2 & 1 &  \\ 2 & -\frac{5}{5} &  \end{pmatrix} \; \Rightarrow \;
-	\mathbf L^{(3)} =   \begin{pmatrix} 1 &\phantom{-1}&\phantom{1} \\ -2 &  1&  \\ 2 & -1 & 1 \end{pmatrix} = \mathbf L
-    ```
-    Finally by multiplying out the matrices we easily verify
-    ```math
-    \mathbf{L} \mathbf U = \begin{pmatrix} 1 &\textcolor{grey}{0}&\textcolor{grey}{0} \\ -2 &  1& \textcolor{grey}{0} \\ 2 & -1 & 1 \end{pmatrix}\begin{pmatrix}
-	2 & 1 & 0 \\ \textcolor{grey}{0}& 5 & -1 \\ \textcolor{grey}{0} & \textcolor{grey}{0} & 3
-	\end{pmatrix} = \begin{pmatrix}
-	2 & 1 & 0 \\ -4 & 3 & -1 \\ 4 & -3 & 4
-	\end{pmatrix} = \mathbf A
-    ```
+""")
 
-So effectively Gaussian elimination provides us with an approach to compute the LU factorisation. As a result Algorithm 3 is nothing but a formalised form of the procedure you used in your linear algebra lectures to solve linear systems using Gaussian elimination. We summarise:
+# ╔═╡ af2e5735-b60d-4407-94fc-7ac3b14ac6a5
+md"""
+We see that indeed the LU factorisation algorithm can be seen as a formalisation of the Gaussian elimination procedure, reducing the matrix to triangular form $\mathbf{U}$.
+
+Finally, for completeness, we provide a Julia implementation of LU factorisation (Algorithm 4):
 """
-
-# ╔═╡ 1bcd8f38-5ae9-459e-8f91-8c9ad7cde407
-begin
-	alg_LU = md"""
-!!! info "Algorithm 4: LU factorisation"
-    **Input:** $\textbf A \in \mathbb{R}^{n\times n}$ 
-
-    **Output:** $\mathbf U \in \mathbb{R}^{n\times n}$, $\mathbf L \in \mathbb{R}^{n\times n}$
-    -  $\textbf A^{(1)} = \textbf A$
-    - for $k = 1, \ldots, n-1$ $\quad$  *(algorithm steps)*
-      *  $L_{kk} = 1$
-      * for $i = k+1, \ldots, n$ $\quad$   *(Loop over rows)*
-        -   $L_{ik} = \frac{A_{ik}^{(k)}}{A^{(k)}_{kk}}$
-        - for $j = k, \ldots n$ $\quad$   *(Loop over columns)*
-          *   $A_{ij}^{(k+1)} = A_{ij}^{(k)} - L_{ik} A_{kj}^{(k)}$
-	-  $L_{nn} = 1$  $\quad$ *(the loop above only runs until $n-1$)*
-    -  $\textbf U = \textbf A^{(n)}$ 
-	"""
-
-	md"""$(alg_LU) An implementation of LU factorisation could be realised as such:"""
-end
 
 # ╔═╡ 9692c144-531a-4995-9057-60af2b91ecfa
 function factorise_lu(A)
     n = size(A, 1)
     L = zeros(n, n)     # Initialise L and U by zeros
-    Aᵏ = float(copy(A))  # Make a copy of A and ensure that all entries
-	                     # are converted to floating-point numbers
+    U = float(copy(A))  # Make a copy of A and ensure that all entries
+	                    # are converted to floating-point numbers
 
     for k in 1:n-1          # Algorithm steps
 		L[k, k] = 1.0
 		for i in k+1:n      # Loop over rows
-			L[i, k] = Aᵏ[i, k] / Aᵏ[k, k]
+			L[i, k] = U[i, k] / U[k, k]
 			for j in k:n    # Loop over columns
-				# Update Aᵏ in-place to give Aᵏ⁺¹
-				Aᵏ[i, j] = Aᵏ[i, j] - L[i, k] * Aᵏ[k, j]
+				U[i, j] = U[i, j] - L[i, k] * U[k, j]  # Update U in-place
 			end
 		end
     end
 	L[n, n] = 1.0           # Since the loop only runs until n-1
-	U = Aᵏ
 		
 	# Return L and U using Julia datastructures to indicate
 	# their special lower-triangular and upper-triangular form.
@@ -492,8 +561,8 @@ begin
 	function factorise_lu_steps(A; nstep=size(A, 1))
 	    n = size(A, 1)
 	    L = zeros(n, n)     # Initialise L and U by zeros
-	    Aᵏ = float(copy(A))  # Make a copy of A and ensure that all entries
-		                     # are converted to floating-point numbers
+	    U = float(copy(A))  # Make a copy of A and ensure that all entries
+	        	            # are converted to floating-point numbers
 	
 	    for k in 1:n-1          # Algorithm steps
 			if k > nstep
@@ -502,10 +571,9 @@ begin
 			
 			L[k, k] = 1.0
 			for i in k+1:n      # Loop over rows
-				L[i, k] = Aᵏ[i, k] / Aᵏ[k, k]
+				L[i, k] = U[i, k] / U[k, k]
 				for j in k:n   # Loop over columns
-					# Update Aᵏ in-place to give Aᵏ⁺¹
-					Aᵏ[i, j] = Aᵏ[i, j] - L[i, k] * Aᵏ[k, j]
+					U[i, j] = U[i, j] - L[i, k] * U[k, j]
 				end
 			end
 	    end
@@ -513,7 +581,7 @@ begin
 			L[n, n] = 1.0      # Since the loop only runs until n-1
 		end
 			
-	    return (; Aᵏ, L)
+	    return (; U, L)
 	end
 
 	factorise_lu_steps(A_manual; nstep=nstep_lu_A)
@@ -615,18 +683,26 @@ We stay with the problem we identified at the end of the previous section. That 
 ```
 """
 
-# ╔═╡ 7bece62a-5da4-4a4c-9da8-dfcb797fb27a
+# ╔═╡ fbbff089-03ff-45ca-9ee7-2644d9fa8489
 md"""
 Applying **Algorithm 4** the first step ($k=1$) will zero out the first column in the second and third row by subtracting the 2 times (7 times) the first row from the second (third) row. This results in the matrices:
 ```math
   \textbf A^{(2)} = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{0} & -1\\ 0 &-6 &-12\end{pmatrix}, \qquad
   \textbf L^{(1)} = \begin{pmatrix} 1 & & \\ 2 &\phantom{1} & \\ 7 & &\phantom{1} \end{pmatrix}.
 ```
-As a result the element `Aᵏ[k, k]` (for $k = 2$) is zero as marked \textcolor{red}{in red}. Continuing **Algorithm 4** for `k = 2` we would thus divide by zero 
+As a result the element `Aᵏ[k, k]` (for $k = 2$) is zero as marked $\textcolor{red}{\text{in red}}$. Continuing **Algorithm 4** for `k = 2` we would thus divide by zero 
 in the statement $L_{ik} = \frac{A_{ik}^{(k)}}{A^{(k)}_{kk}}$ 
 --- which in the introduction of a `-Inf`
 in the matrix `L` that is returned by the algorithm.
 
+Due their central role in the Gaussian elimination algorithm
+the elements $\left(A^{(k)}\right)_{kk}$
+--- respectively `Aᵏ[k, k]` in the implementation ---
+are usually referred to as **pivots**.
+"""
+
+# ╔═╡ 8c4bc8a8-06bf-48ce-9d76-bf0c03f5a79d
+md"""
 We run the algorithm step by step by advancing the slider:
 
 - `nstep_lu_D = ` $(@bind nstep_lu_D Slider(0:3; default=0, show_value=true))
@@ -637,24 +713,19 @@ factorise_lu_steps(D; nstep=nstep_lu_D)
 
 # ╔═╡ 9d5aab1f-3156-4c73-9e2f-b91f3ebe3984
 md"""
-We observe that from step $k=1$ and onwards our computations are numerical garbage.
-
-Due their central role in the Gaussian elimination algorithm
-the elements $\left(A^{(k)}\right)_{kk}$
---- respectively `Aᵏ[k, k]` in the implementation ---
-are usually referred to as **pivots**.
+We observe that from step $k \geq 2$ and onwards our computations are numerical garbage because we have used a $0$ pivot.
 """
 
 # ╔═╡ 58c13b75-006d-48e4-8ddf-290df272488b
 md"""
-If instead of considering the matrix $A$ we factorise the **permuted matrix**
+However, if instead of $\textbf D$ we factorise the **permuted matrix**
 ```math
 \mathbf{P}\mathbf{D} = \begin{pmatrix} 1 & 2 & 3\\
 \textcolor{orange}{7} &\textcolor{orange}{8} &\textcolor{orange}{9}\\
 \textcolor{blue}{2} & \textcolor{blue}{4} & \textcolor{blue}{5}
 \end{pmatrix}
 ```
-which is the matrix `D` in which the last two rows are swapped,
+which is the matrix $\textbf D$ in which the last two rows are swapped,
 the algorithm goes through as expected:
 """
 
@@ -703,9 +774,9 @@ That is to say, that while in general **factorising a matrix $\mathbf A$ can fai
 
 Finding a suitable $\mathbf P$ can be achieved by a small
 modification of **Algorithm 4**.
-Essentially this modification boils down to *selecting* a permutation
-of rows of the factorised matrix on the fly,
-such that the pivots of the permuted matrix $\left(\mathbf{P} \mathbf{A}^{(k)}\right)_{kk}$ are always nonzero.
+Essentially this modification boils down to **selecting a permutation
+of rows** of the factorised matrix on the fly,
+**such that the pivots** of the permuted matrix $\left(\mathbf{P} \mathbf{A}^{(k)}\right)_{kk}$ **are always nonzero**.
 The precise way how this is achieved is called **pivoting strategy**
 and the details are beyond the scope of this course.
 The interested reader can find some discussion in the optional
@@ -740,6 +811,9 @@ md"Such that as expected $\mathbf L * \mathbf U = \mathbf P * \mathbf D$:"
 # ╔═╡ ff388011-a9ed-4d1c-9f13-0b70c72187ae
 facD.L * facD.U - facD.P * D
 
+# ╔═╡ adae52fe-4862-47f6-a8e4-70ae7cc563b1
+md"However, we notice that Julia's pivoting strategy did end up with a different permutation than our example."
+
 # ╔═╡ 169ee211-c734-44d8-a034-b342aa5393d3
 md"""
 ## Solving linear systems based on LU factorisation
@@ -767,7 +841,7 @@ which leads to the following algorithm:
     a right-hand side $\mathbf b \in \mathbb{R}^{n}$
     the linear system $\mathbf{A} \mathbf x = \mathbf b$
     can be solved for  $\mathbf x \in \mathbb{R}^{n}$ as follows:
-    1. Factorise $\textbf P \mathbf{A} = \mathbf{L} \mathbf{U}$ $\qquad$ (The `lu` Julia function).
+    1. Factorise $\textbf P \mathbf{A} = \mathbf{L} \mathbf{U}$, that is obtain $\mathbf P$, $\mathbf L$ and $\mathbf U$ $\qquad$ *(The `lu` Julia function)*.
     2. Solve $\mathbf{L} \mathbf{z} = \textbf P \mathbf b$ for $\mathbf z$
        using *forward* substitution.
     3. Solve $\mathbf U \mathbf x = \mathbf z$ for $\mathbf x$
@@ -822,7 +896,7 @@ D * xD - b
 
 # ╔═╡ cdaead03-fbd7-4ff6-9f31-6296e8d5230f
 md"""
-## Conclusion: What backslash \ does to solve
+## Conclusion: What backslash \ really does to solve
 
 To conclude this discussion we return to our starting question:
 What does the `\` operator do in Julia.
@@ -1817,7 +1891,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 590)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 615)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2231,12 +2305,16 @@ version = "17.4.0+2"
 # ╟─21c9a859-f976-4a93-bae4-616122712a24
 # ╟─b3cb31aa-c982-4454-8882-5b840c68df9b
 # ╟─be5d3f98-4c96-4e69-af91-fa2ae5f74af5
-# ╠═fafa019e-8a47-4a80-bfd8-a017ae31ab1f
+# ╟─419d11bf-2561-49ca-a6e7-40c8d8b88b24
+# ╠═011c25d5-0d60-4729-b200-cdaf3dc89faf
+# ╟─8f6bffb7-e07a-45cf-a616-de6b3f0739b3
 # ╠═e45952b2-714b-427b-8979-98d11c330294
 # ╟─52d8634e-116b-48e6-9673-2ee2a97423c0
 # ╠═5fb995cc-b338-4608-a01c-fc0e84d9dfe9
 # ╟─4d9d19da-7a4f-49ba-9c6f-890dad00672c
-# ╠═08ec21d9-5474-4aae-8fb1-62fde1c7e864
+# ╠═fec623d0-08d3-434c-85af-266abde46da1
+# ╟─6e2c0370-a2a9-450c-b973-14925754edf8
+# ╠═fff3d0d9-f018-42ac-ac36-d12e11ce9362
 # ╟─a8559c5e-744a-4c25-a75c-5394558bc672
 # ╟─0b8bccd7-28ad-4ebc-8bcc-71e6adda71e3
 # ╠═9230561b-26f3-4aa0-9c54-2f15aa231d80
@@ -2255,8 +2333,11 @@ version = "17.4.0+2"
 # ╠═d6a1c5e7-0921-4c4e-bc4a-fb2ebc94e45c
 # ╟─7c66ecc0-f194-489a-bdbf-7b537f2d8567
 # ╟─4f017115-fd86-4087-8ce4-8ef896fa4959
-# ╟─d1c0d1ea-43c9-442e-899c-e83155f14841
+# ╟─95448773-88f3-4e52-a2d3-5cd7e4a3e28f
 # ╟─1bcd8f38-5ae9-459e-8f91-8c9ad7cde407
+# ╟─c092eb61-b7f6-4868-8dc4-ca053c697a92
+# ╟─29bd39a3-9c0e-4038-a5ac-783fc9ac1629
+# ╟─af2e5735-b60d-4407-94fc-7ac3b14ac6a5
 # ╠═9692c144-531a-4995-9057-60af2b91ecfa
 # ╟─ee45b963-fd91-4a7f-94b9-062bf45d5d7e
 # ╠═cd1bbd16-ce88-49a4-bf1f-a9f42bc8920b
@@ -2279,7 +2360,8 @@ version = "17.4.0+2"
 # ╠═c1bb18ef-b58d-40a3-9d84-f16d6ccf6930
 # ╟─8c0d6843-6bde-4c14-8a98-6cf7cb9f244a
 # ╟─2baa3355-f51b-464e-a55a-3471fb7e0100
-# ╟─7bece62a-5da4-4a4c-9da8-dfcb797fb27a
+# ╟─fbbff089-03ff-45ca-9ee7-2644d9fa8489
+# ╟─8c4bc8a8-06bf-48ce-9d76-bf0c03f5a79d
 # ╟─716a0a8d-2bf4-4e3d-8044-09d542152cdc
 # ╟─9d5aab1f-3156-4c73-9e2f-b91f3ebe3984
 # ╟─58c13b75-006d-48e4-8ddf-290df272488b
@@ -2298,6 +2380,7 @@ version = "17.4.0+2"
 # ╠═9cf9c710-c76a-48b2-8799-efaaf7f1a82b
 # ╟─dbf95d60-0333-407c-bc89-97914fb08437
 # ╠═ff388011-a9ed-4d1c-9f13-0b70c72187ae
+# ╟─adae52fe-4862-47f6-a8e4-70ae7cc563b1
 # ╟─169ee211-c734-44d8-a034-b342aa5393d3
 # ╟─40f6f4c5-dc86-4834-a6c2-51852d87a3bb
 # ╠═24b7c334-28d4-41d1-b8f2-23fbc80ec2f3
