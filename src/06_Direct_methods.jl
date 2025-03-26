@@ -551,7 +551,7 @@ A_manual = Float64[ 2  1  0;
                     4 -3  4]
 
 # ╔═╡ 039b93ac-0a0e-45c3-acf9-70ec49b077c3
-md"""With this slider you can stop `factorise_lu` after 1, 2 or 3 steps, checking that agrees with the steps we computed manually:
+md"""With this slider you can stop `factorise_lu` after 1, 2 or 3 steps, checking that agrees with the steps we computed manually. The matrices displayed below show the situation after `k = nstep_lu_A` in **Algorithm 4** has finished.
 
 - `nstep_lu_A = ` $(@bind nstep_lu_A Slider(0:3; default=0, show_value=true))
 """
@@ -685,25 +685,20 @@ We stay with the problem we identified at the end of the previous section. That 
 
 # ╔═╡ fbbff089-03ff-45ca-9ee7-2644d9fa8489
 md"""
-Applying **Algorithm 4** the first step ($k=1$) will zero out the first column in the second and third row by subtracting the 2 times (7 times) the first row from the second (third) row. This results in the matrices:
+Applying **Algorithm 4** the first step ($k=1$) will zero out the first column in the second and third row by subtracting the 2 times (7 times) the first row from the second (third) row. When entering the loop for $k=2$ this results in:
 ```math
-  \textbf A^{(2)} = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{0} & -1\\ 0 &-6 &-12\end{pmatrix}, \qquad
-  \textbf L^{(1)} = \begin{pmatrix} 1 & & \\ 2 &\phantom{1} & \\ 7 & &\phantom{1} \end{pmatrix}.
+\text{at beginning of $k=2$:}\qquad
+  \textbf U = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{0} & -1\\ 0 &-6 &-12\end{pmatrix}, \qquad
+  \textbf L = \begin{pmatrix} 1 & & \\ 2 &\phantom{1} & \\ 7 & &\phantom{1} \end{pmatrix}.
 ```
-As a result the element `Aᵏ[k, k]` (for $k = 2$) is zero as marked $\textcolor{red}{\text{in red}}$. Continuing **Algorithm 4** for `k = 2` we would thus divide by zero 
-in the statement $L_{ik} = \frac{A_{ik}^{(k)}}{A^{(k)}_{kk}}$ 
---- which in the introduction of a `-Inf`
-in the matrix `L` that is returned by the algorithm.
-
-Due their central role in the Gaussian elimination algorithm
-the elements $\left(A^{(k)}\right)_{kk}$
---- respectively `Aᵏ[k, k]` in the implementation ---
-are usually referred to as **pivots**.
+The first step of the $k=2$ iteration in **Algorithm 4** will be to compute $L_{ik} = \frac{U_{ik}}{U_{kk}}$. However, the element $U_{kk}$ is zero as marked $\textcolor{red}{\text{in red}}$. We thus divide by zero, which is exactly what leads to the introduction of a `-Inf`
+in the matrix `L`
 """
 
 # ╔═╡ 8c4bc8a8-06bf-48ce-9d76-bf0c03f5a79d
 md"""
-We run the algorithm step by step by advancing the slider:
+To see this we use the slider to advance the algorithm step by step,
+the matrices below show the situtation after the `k = nstep_lu_D` iteration has finished.
 
 - `nstep_lu_D = ` $(@bind nstep_lu_D Slider(0:3; default=0, show_value=true))
 """
@@ -713,7 +708,11 @@ factorise_lu_steps(D; nstep=nstep_lu_D)
 
 # ╔═╡ 9d5aab1f-3156-4c73-9e2f-b91f3ebe3984
 md"""
-We observe that from step $k \geq 2$ and onwards our computations are numerical garbage because we have used a $0$ pivot.
+Due their central role in the Gaussian elimination algorithm
+the denominators $U_{kk}$ in the computation of the $L_{ik}$
+are usually referred to as **pivots**.
+
+In summary we observe that from step $k \geq 2$ and onwards our computations are numerical garbage because we have used a $0$ pivot.
 """
 
 # ╔═╡ 58c13b75-006d-48e4-8ddf-290df272488b
@@ -729,6 +728,16 @@ which is the matrix $\textbf D$ in which the last two rows are swapped,
 the algorithm goes through as expected:
 """
 
+# ╔═╡ dca2b3b4-2b15-4428-91d0-2b949442b6bf
+md"""
+- `nstep_lu_PD = ` $(@bind nstep_lu_PD Slider(0:3; default=0, show_value=true))
+"""
+
+# ╔═╡ d194baba-556c-4669-a345-255c03081965
+md"""
+Let us also check that the LU factorisation indeed yields P * U:
+"""
+
 # ╔═╡ 49f66db0-3757-431d-85d7-4fe75096f9cc
 md"We remark that the permutation matrix $\mathbf P$ is given by ..."
 
@@ -740,13 +749,14 @@ P = [1 0 0;
 # ╔═╡ a85a3ad2-a89d-4e7c-8275-a2f3cd2921b0
 P * D
 
+# ╔═╡ f6cc916b-78d0-47d4-8b89-f4ab18926c1b
+factorise_lu_steps(P * D; nstep=nstep_lu_PD)
+
 # ╔═╡ 0ea63086-f090-4b5b-a7d5-d6a1b21b1fd8
 let
-	L, U = factorise_lu(P*D)
-	@show L
-	@show L * U
-	@show L * U - P * D   # show that L * U = P * D
-end;
+	L, U = factorise_lu(P * D)
+	L * U - P * D   # show that L * U = P * D
+end
 
 # ╔═╡ 2d461a32-c40f-4670-9252-09baa5f3a6d5
 md"... and exactly achieves the task of swapping the last two rows, but leaving the rest of $\mathbf D$ intact as we saw above."
@@ -776,7 +786,7 @@ Finding a suitable $\mathbf P$ can be achieved by a small
 modification of **Algorithm 4**.
 Essentially this modification boils down to **selecting a permutation
 of rows** of the factorised matrix on the fly,
-**such that the pivots** of the permuted matrix $\left(\mathbf{P} \mathbf{A}^{(k)}\right)_{kk}$ **are always nonzero**.
+**such that the pivots** of the permuted matrix $\mathbf{P} \mathbf{A}$ **are always nonzero**.
 The precise way how this is achieved is called **pivoting strategy**
 and the details are beyond the scope of this course.
 The interested reader can find some discussion in the optional
@@ -921,7 +931,7 @@ In this approach we allow ourselves
 some flexibility in **Algorithm 4** by 
 allowing ourselves to change the order in the last few rows
 and thus *choose* the pivot amongst the entries
-$A^{(k)}_{ik}$ with $i \geq k$.
+$U_{ik}$ with $i \geq k$ in each step $k$.
 The resulting change of row order will then define the permutation
 matrix $\mathbf{P}$ we employed in our above discussion.
 """
@@ -935,21 +945,23 @@ problem of factorising
 ```
 where we saw previously non-pivoted LU factorisation to fail.
 Without any pivoting / row swapping after the first LU factorisation step
-(i.e after $k=1$ is completed) the situation was
+(i.e when $k=2$ will start) the situation is
 
 ```math
-  \textbf A^{(2)} = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{0} & -1\\ 0 &-6 &-12\end{pmatrix}, \qquad
-  \textbf L^{(1)} = \begin{pmatrix} 1 & & \\ 2 &\phantom{1} & \\ 7 & &\phantom{1} \end{pmatrix}.
+\text{at beginning of $k=2$:}\qquad
+  \textbf U = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{0} & -1\\ \textcolor{orange}{0} &\textcolor{orange}{-6} &\textcolor{orange}{-12}\end{pmatrix}, \qquad
+  \textbf L = \begin{pmatrix} 1 & & \\ \textcolor{blue}{2} &\phantom{1} & \\ \textcolor{orange}{7} & &\phantom{1} \end{pmatrix}.
 ```
 
-Looking at $\textbf A^{(2)}$ it seems very reasonable to just swap the second and the
-third column in $\textbf A^{(2)}$ and thus move the $-6$ to become the new pivot.
-For consistency we not only need to swap $\textbf A^{(2)}$, but also $\textbf L^{(2)}$.
+Looking at this $\textbf U$ it seems very reasonable to just swap the second and the
+third column in and thus move the $-6$ to become the new pivot.
+For consistency we not only need to swap $\textbf U$, but also $\textbf L$.
 This gives us
 ```math
-  \widetilde{\textbf{A}}^{(2)} = \begin{pmatrix} 1 & 2 & 3\\0 & \textcolor{red}{-6} &-12 \\
+	\text{after row swap:}\qquad
+  \textbf{U} = \begin{pmatrix} 1 & 2 & 3\\\textcolor{orange}{0} & \textcolor{red}{-6} &\textcolor{orange}{-12} \\
 0 & 0 & -1\end{pmatrix}, \qquad
-  \widetilde{\textbf{L}}^{(1)} = \begin{pmatrix} 1 & & \\ 7 &\phantom{1} & \\ 2 & &\phantom{1} \end{pmatrix}.
+  \textbf{L} = \begin{pmatrix} 1 & & \\ \textcolor{orange}{7} &\phantom{1} & \\ \textcolor{blue}{2} & &\phantom{1} \end{pmatrix}.
 ```
 If we continue the algorithm now, the $-6$ sits in the position of the pivot
 $\left(A^{(k)}\right)_{kk}$ and the division by zero is avoided.
@@ -957,18 +969,15 @@ $\left(A^{(k)}\right)_{kk}$ and the division by zero is avoided.
 
 # ╔═╡ f4a02392-ca42-44ac-bd1c-13cb3d6fafa2
 md"""
-In fact in this particular case there is nothing left to do and the matrix
-$\widetilde{\textbf{A}}^{(2)}$ already is in upper triangular form.
-We obtain from our algorithm
+In fact in this particular case the matrix $\mathbf U$ is already in upper triangular form after step $k=2$, such that in the step $k=3$ nothing will change, in fact we will just get $L_{32} = 0$. After $k=3$ we thus obtain from our algorithm:
 ```math
-\textbf U = \textbf A^{(3)} = \widetilde{\textbf{A}}^{(2)} = \begin{pmatrix} 1 & 2 & 3\\\textcolor{grey}{0} & -6 &-12 \\
+\textbf U = \begin{pmatrix} 1 & 2 & 3\\\textcolor{grey}{0} & -6 &-12 \\
 \textcolor{grey}{0} & \textcolor{grey}{0} & -1\end{pmatrix}
 \qquad
-\textbf L = \textbf L^{(3)} = \begin{pmatrix}1& \textcolor{grey}{0} &\textcolor{grey}{0} \\ 7 & 1 & \textcolor{grey}{0} \\ 2 & 0& 1 \end{pmatrix}.
+\textbf L = \begin{pmatrix}1& \textcolor{grey}{0} &\textcolor{grey}{0} \\ 7 & 1 & \textcolor{grey}{0} \\ 2 & 0& 1 \end{pmatrix}.
 ```
-Since the additional row permutation we performed
-not taken into account in the $\textbf L$ and $\textbf U$ factors,
-multiplying them out will not yield $\textbf A$,
+Due to the additional row permutation we performed
+multiplying out $\textbf L \textbf U$ will not yield $\textbf A$,
 but a matrix where the second and third rows of $\textbf A$
 are swapped:
 ```math
@@ -986,45 +995,52 @@ are swapped:
 
 # ╔═╡ 2708ff44-5f30-43b3-b89a-19b9d8954100
 md"""
-	To resolve this, we introduce the **permutation matrix**
-	```math
-	\textbf P = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 0 & 1 \\ 0 & 1 & 0\end{pmatrix},
-	```
-	which is obtained by performing exactly the same row permutations
-	we did during the algorithm to the identity matrix
-	--- i.e. we swap the second and third row.
-	With this matrix we can easily check that
-	```math
-	\textbf L \textbf U = \textbf P \textbf A.
-	```
-	
-	If we thus extend our `factorise_lu` function to additionally
-	perform such pivoting permutations,
-	the Gaussian elimination algorithm would terminate successfully.
-	"""
+This is not surprising as with pivoting we expect to get
+$\textbf L \textbf U = \textbf P \textbf A$, so our missing piece is to
+find the permutation matrix $\mathbf P$.
+
+Here the correct matrix is 
+```math
+\textbf P = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 0 & 1 \\ 0 & 1 & 0\end{pmatrix},
+```
+as we saw before. We can now understand how this matrix has been constructed:
+Namely if we take the identity matrix and perform exactly the same row permutations as during the pivoted LU factorisation.
+That is we swap the second and third row.
+With this matrix we can easily check that
+```math
+\textbf L \textbf U = \textbf P \textbf A.
+```
+
+If we thus extend our `factorise_lu` function to additionally
+perform such pivoting permutations,
+the Gaussian elimination algorithm would always terminate successfully.
+"""
 
 # ╔═╡ 59083552-006d-4376-9c8a-2f5b85c6bb44
 md"""
-	But pivoting brings additional opportunities.
-	As it turns out numerical stability of LU factorisation
-	improves if one permutes not only if a pivot $\left(A^{(k)}\right)_{kk}$ is zero,
-	but in general if one *always* swaps the order of the rows
-	such that the pivot is taken as large as possible.
-	In other words in the $k$-th step of LU factorisation
-	we always exchange row $k$ with the row $l$ where $l$ satisfies
-	```math
-	\left|\left(A^{(k)}\right)_{lk}\right| \leq \left|\left(A^{(k)}\right)_{ik}\right|
-	\qquad
-	\text{for all $i = k, \ldots n$}.
-	```
-	The appropriate swaps are tracked and returned as well.
-	Note that instead of returning a permutation matrix
-	$\textbf P$ (which requries to store $n^2$ elements)
-	it is usually more convenient to store a permutation vector $\textbf p$,
-	which has only $n$ elements.
-	This vector tracks the indices of the rows of $\mathbf A$
-	in the order they are used as pivots. In other words if
-	"""
+But pivoting brings additional opportunities.
+As it turns out numerical stability of LU factorisation
+can improve if one permuts the rows of $\textbf U$
+not only if a pivot $U_{kk}$ is zero,
+but in fact during each iteration $k$, ensuring that the 
+**pivot** is **as large as possible**.
+
+In other words in the $k$-th step of LU factorisation
+we always exchange row $k$ with the row $l$ where $l$ satisfies
+```math
+\left|\,U_{lk}\,\right| \leq \left|\,U_{ik}\,\right|
+\qquad
+\text{for all $i = k, \ldots n$}.
+```
+The appropriate swaps are tracked and returned as well.
+
+In practical algorithms instead of returning a permutation matrix
+$\textbf P$ (which requries to store $n^2$ elements)
+it is usually more convenient to store a permutation vector $\textbf p$,
+which has only $n$ elements.
+This vector tracks the indices of the rows of $\mathbf A$
+in the order they are used as pivots. In other words if
+"""
 
 # ╔═╡ 6754911a-81dd-41ce-8b59-2a0743b324c0
 idmx = diagm(ones(4))
@@ -2366,6 +2382,9 @@ version = "17.4.0+2"
 # ╟─9d5aab1f-3156-4c73-9e2f-b91f3ebe3984
 # ╟─58c13b75-006d-48e4-8ddf-290df272488b
 # ╠═a85a3ad2-a89d-4e7c-8275-a2f3cd2921b0
+# ╟─dca2b3b4-2b15-4428-91d0-2b949442b6bf
+# ╟─f6cc916b-78d0-47d4-8b89-f4ab18926c1b
+# ╟─d194baba-556c-4669-a345-255c03081965
 # ╠═0ea63086-f090-4b5b-a7d5-d6a1b21b1fd8
 # ╟─49f66db0-3757-431d-85d7-4fe75096f9cc
 # ╠═6f59c78d-7966-45ab-8b79-8443b82ba1df
