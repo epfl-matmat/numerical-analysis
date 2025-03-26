@@ -1070,30 +1070,30 @@ function factorise_lu_pivot(A)
     L = zeros(n, n)
 	U = zeros(n, n)
 	p = fill(0, n)
-    Aᵏ = float(copy(A))  # Make a copy of A and ensure that all entries
+    Ak = float(copy(A))  # Make a copy of A and ensure that all entries
 	                     # are converted to floating-point numbers
 
     for k in 1:n-1             # Algorithm steps
-		p[k] = argmax(abs.(Aᵏ[:, k]))  # Find row with maximal pivot
+		p[k] = argmax(abs.(Ak[:, k]))  # Find row with maximal pivot
 		
-		U[k, :] = Aᵏ[p[k], :]  # Copy pivot row to U, use U now instead of Aᵏ,
+		U[k, :] = Ak[p[k], :]  # Copy pivot row to U, use U now instead of Ak,
 		                       # which is again updated in-place
 		for i in 1:n           # Row loop: Note the full range as any row may
 		                       #           be non-zero
-			L[i, k] = Aᵏ[i, k] / U[k, k]
+			L[i, k] = Ak[i, k] / U[k, k]
 			for j = 1:n        # Column loop: Again full range
-				Aᵏ[i, j] = Aᵏ[i, j] - L[i, k] * U[k, j]
+				Ak[i, j] = Ak[i, j] - L[i, k] * U[k, j]
 			end
 		end
     end
-	p[n] = argmax(abs.(Aᵏ[:, n]))
-	U[n, n] = Aᵏ[p[n], n]
-	L[:, n] = Aᵏ[:, n] / U[n, n]
+	p[n] = argmax(abs.(Ak[:, n]))
+	U[n, n] = Ak[p[n], n]
+	L[:, n] = Ak[:, n] / U[n, n]
 
 	# To simplify assembling L we so far kept the rows in the same order
 	# as in A. To make the matrix upper triangular we also apply the column
 	# permutation p before returning the results.
-	LowerTriangular(L[p, :]), UpperTriangular(U), p
+	(; L=LowerTriangular(L[p, :]), U=UpperTriangular(U), p=p)
 end
 
 # ╔═╡ 24df3f6a-8ac3-492b-b4e7-80029af6918d
@@ -1120,13 +1120,13 @@ fac.p
 md"In contrast we obtain:"
 
 # ╔═╡ 8f06e886-6ebb-4a16-a1c5-8123e09ef723
-factorise_lu_pivot(D)[1]  # L
+factorise_lu_pivot(D).L
 
 # ╔═╡ 88000701-f480-4efd-93b8-50b60c9d5d95
-factorise_lu_pivot(D)[2]  # U
+factorise_lu_pivot(D).U
 
 # ╔═╡ f79f92bc-e50b-4e5c-a82e-555269fa80b5
-factorise_lu_pivot(D)[3]  # p
+factorise_lu_pivot(D).p
 
 # ╔═╡ 3e110a7e-1272-4c50-80f6-290f61844952
 md"""
@@ -2094,9 +2094,9 @@ uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
 version = "3.1.0"
 
 [[deps.MIMEs]]
-git-tree-sha1 = "1833212fd6f580c20d4291da9c1b4e8a655b128e"
+git-tree-sha1 = "c64d943587f7187e751162b3b84445bbbd79f691"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
-version = "1.0.0"
+version = "1.1.0"
 
 [[deps.MacroTools]]
 git-tree-sha1 = "72aebe0b5051e5143a079a4685a46da330a40472"
