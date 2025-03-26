@@ -1354,7 +1354,7 @@ function matrix_vector_product(A, x)
 	
 	for i in 1:size(A, 1)
 		for j in 1:size(A, 2)
-			y[i] = y[i] + A[i, j] * y[j]  # (*)
+			y[i] = y[i] + A[i, j] * x[j]  # (*)
 		end
 	end
 	result
