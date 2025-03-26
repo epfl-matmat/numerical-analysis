@@ -857,7 +857,7 @@ which leads to the following algorithm:
     3. Solve $\mathbf U \mathbf x = \mathbf z$ for $\mathbf x$
        using *backward* substitution.
 
-
+When we use Julia's backslash `\`-operator, effectively this **Algorithm 5** is executed under the hood.
 """
 
 # ╔═╡ 40f6f4c5-dc86-4834-a6c2-51852d87a3bb
@@ -903,22 +903,6 @@ md"""**Verify result:** This solves the problem $\mathbf{D} \mathbf{x}_D = \math
 
 # ╔═╡ 25f18e3c-a00b-4d3a-9b5e-60d40eeb5596
 D * xD - b
-
-# ╔═╡ cdaead03-fbd7-4ff6-9f31-6296e8d5230f
-md"""
-## Conclusion: What backslash \ really does to solve
-
-To conclude this discussion we return to our starting question:
-What does the `\` operator do in Julia.
-
-- We already saw that julia essentially solves `A \ b` by replacing it by `lu(A) \ b`.
-- Julia's `lu` by default also performs a row-pivoted LU factorisation,
-  providing thus a factorisation $\textbf P \mathbf{A} = \mathbf{L} \mathbf{U}$.
-- The returned object (an `LinearAlgebra.LU` object) internally stores
-  both the `L`, the `U` and the permutation matrix `P`
-- When we use `\` with an `LU` object it, Julia immediately exploits the factorised form and performs first (permuted) forward substitution (step 2.) then backward substitution (step 3.).
-- Therefore overall `A \ b` exactly performs Algorithm 5 above.
-"""
 
 # ╔═╡ 48979215-458c-40f5-82e4-a4485390bca4
 md"""
@@ -1312,10 +1296,10 @@ Before we look at the LU algorithm (Algorithm 4) we first understand a few simpl
 # ╔═╡ c0b02aa0-642c-4a6f-ac21-cdb8e27d9279
 md"""
 ### Scalar product
-Given two vectors $x, y \in \mathbb{R}^n$ consider computing
+Given two vectors $\textbf x, \textbf y \in \mathbb{R}^n$ consider computing
 the scalar product
 ```math
-x \cdot y = x^T y = \sum_{i=1}^n x_i \, y_i
+\textbf x \cdot \textbf y = \textbf x^T \textbf y = \sum_{i=1}^n x_i \, y_i
 ```
 which in code is achieved as
 """
@@ -1340,8 +1324,8 @@ If we take the dimensionality $n=1000$ the number of operations is $O(1000)$. On
 md"""
 ### Matrix-vector product
 
-Given a matrix $A \in \mathbb{R}^{n\times n}$ and a vector $x \in \mathbb{R}^n$
-the matrix-vector product $y = Ax$ is computed as
+Given a matrix $\textbf A \in \mathbb{R}^{n\times n}$ and a vector $\textbf x \in \mathbb{R}^n$
+the matrix-vector product $\textbf y = \textbf A \textbf x$ is computed as
 ```math
 y_i = \sum_{j=1}^{n} A_{ij} x_j \qquad \text{for $i = 1, \ldots, n$}
 ```
@@ -1366,8 +1350,8 @@ In the innermost loop we observe again that we require
 $1$ addition and $1$ multiplication per iteration.
 This instruction is performed once for each combination of $i$ and $j$,
 so we look at the limits of each of the nested loops.
-The loop over $i$ runs over $n$ values (the number of rows of $A$)
-and the loop over $j$ over $n$ values as well (the number of columns of $A$).
+The loop over $i$ runs over $n$ values (the number of rows of $\textbf A$)
+and the loop over $j$ over $n$ values as well (the number of columns of $\textbf A$).
 In total the inner most instruction `(*)` is thus run $n^2$ times,
 each times costing $2$ operations.
 The total **cost is thus $O(n^2)$**.
@@ -2412,7 +2396,6 @@ version = "17.4.0+2"
 # ╠═e13c4c6e-b55c-4360-9ec4-501042490d59
 # ╟─38deeaeb-0596-48d5-b671-2d1fc2e73a27
 # ╠═25f18e3c-a00b-4d3a-9b5e-60d40eeb5596
-# ╟─cdaead03-fbd7-4ff6-9f31-6296e8d5230f
 # ╟─48979215-458c-40f5-82e4-a4485390bca4
 # ╟─827a75c2-2e3c-4da4-8deb-6c8a999596f2
 # ╟─f4a02392-ca42-44ac-bd1c-13cb3d6fafa2
