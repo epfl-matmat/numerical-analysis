@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -1277,7 +1277,7 @@ md"""
 	|  type of $n\times n$ matrix   | memory usage | comment |
 	| ------------------------- |  ------------ | ------------ |
 	|  full matrix  | $O(n^2)$             |
-    |  general sparse matrix | $O(n^2)$ | fill-in
+    |  general sparse matrix | $O(n)$ | fill-in
 	|  banded matrix, band width $d$     | $O(n\,d)$     |  stays block-diagonal
 
 """
@@ -1376,16 +1376,21 @@ For this course if you are asked to determine the asymptotic complexity,
 you will not asked to deal with these details. For our problems it will be sufficient to only look at the most deeply nested loop and ignore the rest of the code as part of a complexity analysis.
 """)
 
-# ╔═╡ 5d8d4e66-20a0-41d9-8aeb-faa7d56628f9
+# ╔═╡ 334d83a2-4809-4e85-808f-1213a56be9b7
 md"""
 !!! info "Overview of computational cost"
 	For vectors $\textbf v, \textbf w \in \mathbb{R}^n$ and matrices $\mathbf A \in \mathbb R^{n\times n}$ the computational cost is
 
 	| operation  | cost  |
 	| ------------------------- |  ------------ |
-	|  dot product $\mathbf v ^T \mathbf w$ | $O(n^2)$             |
-    |  MatVec $\mathbf A \mathbf v$ | $O(n^3)$
+	|  dot product $\mathbf v ^T \mathbf w$ | $O(n)$             |
+    |  matriv-vector product $\mathbf A \mathbf v$ | $O(n^2)$
+    |  matrix-matrix multiplication $\mathbf A \mathbf B$ | $O(n^3)$
 
+"""
+
+# ╔═╡ 3de7544d-a5e2-43fc-9af0-d2e37386b72a
+md"""
 Finally a few rough guidelines:
 
 !!! info "General guideline to estimate computational cost"
@@ -1394,6 +1399,22 @@ Finally a few rough guidelines:
 	3. Determine the ranges of all loops in terms of the dimensionality of your problem. Typically for each loop level this is $n$
 	4. Multiply the result of 2. and all index ranges of 3 to get the total scaling. Typically for a single loop nesting the cost is $O(n)$ for a doubly nested loop $O(n^2)$ and so on.
 """
+
+# ╔═╡ 7afabc20-a2a8-4b6d-87f8-09b84206a6dd
+md"""
+!!! warning "Example Matrix-matrix multiplication"
+	Let us code up an algorithm how to compute the product of two matrices
+	$\mathbf A, \mathbf B \in \mathbb{R}^{n\times n}$ and analyse its complexity.
+"""
+
+# ╔═╡ 1863e20c-ef35-4cea-8d3c-a33a0a42fc2e
+function matmul(A, B)
+	C = zeros(size(A, 1), size(B, 2))
+
+	# loops ...
+	
+	C
+end
 
 # ╔═╡ 2d98da64-481b-4e86-9daa-f199294ed417
 md"""
@@ -2454,7 +2475,10 @@ version = "17.4.0+2"
 # ╠═0f8b23ab-c797-4513-b70c-5827376f6093
 # ╟─756a5787-6f64-4308-b879-da7676d39a8c
 # ╟─01a66e18-bc56-4204-b4b8-9bf46155aec1
-# ╟─5d8d4e66-20a0-41d9-8aeb-faa7d56628f9
+# ╟─334d83a2-4809-4e85-808f-1213a56be9b7
+# ╟─3de7544d-a5e2-43fc-9af0-d2e37386b72a
+# ╟─7afabc20-a2a8-4b6d-87f8-09b84206a6dd
+# ╠═1863e20c-ef35-4cea-8d3c-a33a0a42fc2e
 # ╟─2d98da64-481b-4e86-9daa-f199294ed417
 # ╟─41ebce0a-1fde-4704-b889-b1a8391ccac7
 # ╟─c34c30e8-b777-43b7-aae6-cd88d7179015
