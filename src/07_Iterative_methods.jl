@@ -235,59 +235,42 @@ md"""
     cost of the iterative scheme.
 """
 
-# ╔═╡ eba6e7cc-6961-4e1e-9925-04f881a77922
-TODO("
-Got until here.
-
-The convergence result, which follows, is essentially what has been discussed in chapter 4, so we should use that result to save time instead of re-explaining it.")
-
-# ╔═╡ 4c88dc9e-3629-4188-bac7-55e3e8276091
+# ╔═╡ 1f7765a2-4986-4ef2-849e-ca1efb59abcf
 md"""
 ## Convergence analysis
 
 Having established above that Richardson iteration indeed leads to numerically the correct answer, we proceed to analyse its convergence.
 
-Following our previous remark that Algorithm 1 can be brought into the setting of a fixed point method $\mathbf{x}^{(k+1)} = g(\mathbf{x}^{(k)})$ with
+As an iterative method Algorithm 1 can be brought into the setting of a fixed point method $\mathbf{x}^{(k+1)} = g(\mathbf{x}^{(k)})$ by choosing
 ```math
-g(\mathbf{x}) = \mathbf{x} + \mathbf{P}^{-1} \left( \textbf{b} - \mathbf{A} \mathbf{x} \right),
+g(\mathbf{x}) = \mathbf{x} + \mathbf{P}^{-1} \left( \textbf{b} - \mathbf{A} \mathbf{x} \right).
 ```
-we study the evolution of the error $\mathbf{e}^{(k)} = \mathbf{x}^{(k)} - \mathbf{x}_\ast$, where $\mathbf{x}_\ast = g(\mathbf{x}_\ast)$ is the fixed point.
-Subtracting $\mathbf{x}_\ast$ from both sides of $\mathbf{x}^{(k+1)} = g(\mathbf{x}^{(k)})$  we find
+In line with our discussion in [Root finding and fixed-point problems](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.html) the convergence depend on the properties of the **Jacobian** (i.e the derivative) of this map at the fixed point. The term $\mathbf{P}^{-1} \mathbf{b}$ does not depend on $\mathbf{x}$ and thus drops, for the rest we compute:
 ```math
-\tag{4}
-\begin{aligned}
-\mathbf{e}^{(k+1)} &= g(\mathbf{x}^{(k)}) - \mathbf{x}_\ast \\
-&= g(\mathbf{x}^{(k)}) - g(\mathbf{x}_\ast) \\
-&= \mathbf{x}^{(k)} + \mathbf{P}^{-1} \left( \textbf{b} - \mathbf{A} \mathbf{x}^{(k)} \right) - \mathbf{x}_\ast - \mathbf{P}^{-1} \left( \textbf{b} - \mathbf{A} \mathbf{x}_\ast \right) \\
-&= \mathbf{e}^{(k)} +  \mathbf{P}^{-1} \left(
-\textbf{b} - \mathbf{A} \mathbf{x}^{(k)} 
--  \textbf{b} + \mathbf{A} \mathbf{x}_\ast \right) \\
-&= \mathbf{e}^{(k)} -  \mathbf{P}^{-1} \mathbf{A} \left(\mathbf{x}^{(k)} - \mathbf{x}_\ast \right) \\
-&= \underbrace{ \left(\mathbf{I} - \mathbf{P}^{-1} \mathbf{A} \right) }_{= \mathbf{B}}\,\mathbf{e}^{(k)},
-\end{aligned}
+\begin{align*}
+g'(\mathbf{x}_\ast) &= \underbrace{\mathbf{I} - \mathbf{P}^{-1} \mathbf{A}}_{=\mathbf{B}}
+\end{align*}
 ```
-where $\mathbf{I}$ is the identity matrix and the matrix $\mathbf{B}$ is usually called the **iteration matrix**.
+where the matrix $\mathbf{B}$ is usually referred to as the **iteration matrix**.
+"""
 
-Recall the definition of the matrix norm for a matrix $M \in \mathbb{R}^{n\times n}$,
-namely
+# ╔═╡ ba77a115-f9fb-4f80-a0ea-eb50ddd9ae65
+md"""
+Previously we considered scalar-valued functions where the condition for convergence was that $|g'(x_\ast)| < 1$. A careful analysis in fact reveals that for vector-valued fixed-point maps like in the case of Richardson iterations this condition becomes
+```math
+\| g'(\mathbf{x}_\ast) \| = \| \mathbf{B} \| < 1,
+```
+i.e. the modulus is simply replaced by the matrix norm.
+
+As a reminder, recall that the definition of the matrix norm for a matrix $M \in \mathbb{R}^{n\times n}$ is
 ```math
 \|\mathbf{M}\| = \max_{\mathbf{0}\neq\mathbf{v}\in\mathbb{R}^n} \frac{\| \mathbf{M}\mathbf{v}\|}{\|\mathbf{v}\|}.
 ```
-Using this and (4) we thus have
-```math
-\begin{aligned}
-\|\mathbf{e}^{(k+1)}\| &= \left\|\mathbf{B}\mathbf{e}^{(k)}\right\| \\
-	&≤ \left\|\mathbf{B}\right\| \left\|\mathbf{e}^{(k)}\right\| \\
-	&≤ \left\|\mathbf{B}\right\|^2 \left\|\mathbf{e}^{(k-1)}\right\| \\
-	&\ \vdots \\
-	&≤ \left\|\mathbf{B}\right\|^{k+1} \left\|\mathbf{e}^{(0)}\right\| \\
-\end{aligned}
-```
 """
 
-# ╔═╡ 5b517ed9-cbcf-4b52-bdcf-c8269690736b
+# ╔═╡ 6f3d76f5-aeec-4a05-8aea-a4f97d625a4a
 md"""
-Provided $\|\mathbf{B}\| < 1$ the iteration thus converges. We summarise in a theorem:
+We summarise in a theorem:
 
 !!! info "Theorem 1"
     Given a system matrix $\mathbf{A} \in \mathbb{R}^{n \times n}$,
@@ -301,21 +284,76 @@ Provided $\|\mathbf{B}\| < 1$ the iteration thus converges. We summarise in a th
     ```math
     \|\mathbf{x}_\ast - \mathbf{x}^{(k)}\| ≤ \left\|\mathbf{B}\right\|^k \|\mathbf{x}_\ast - \mathbf{x}^{(0)}\|.
     ```
+	This is **linear convergence with rate**  $\| \mathbf{B}\|$.
 
-Notice that $\mathbf{B}$ is actually just the **Jacobian**
-of the fixed-point map $g$.
-In fact we can thus view the above theorem in the same light
-as the condition $|g'(x)| < 1$ we previously found for the convergence
-of the fixed-point methods for non-linear equations.
-However, the notable difference is that Richardson iterations
-converge for *any initial guess*, which for fiexd-point methods
-is not true in general.
 
-The norm of iteration matrix
-  $\|\mathbf{B}\|$ is the crucial quantity to determine not only *if*
-Richardson iterations converge, but also at which speed.
-To understand it a little better and in particular to understand
-the role of the preconditioner $\mathbf{P}$ we introduce the spectral radius:
+Notice that the theorem mentions that Richardson iterations
+converges for *any initial guess*, which for general fixed-point methods
+is not true.
+"""
+
+# ╔═╡ 28d6cb69-71ab-493f-a9a1-60f2fe37c1ed
+md"""
+This is in fact a consequence of the fact that $g$ is a linear function,
+i.e. that its Taylor expansion
+```math
+g(\mathbf x^{(k)}) = g(\mathbf{x}_\ast) + g'(\mathbf{x}_\ast) (\mathbf{x}^{(k)} - \mathbf{x}_\ast)
+```
+terminates after the linear term as we easily verify by inserting our obtained expressions into the right-hand side:
+```math
+\begin{aligned}
+g(\mathbf{x}_\ast) + g'(\mathbf{x}_\ast) (\mathbf{x}^{(k)} - \mathbf{x}_\ast)
+&= \mathbf{x}_\ast + \mathbf{P}^{-1} \left( \textbf{b} - \mathbf{A} \mathbf{x}_\ast \right) + \left(\mathbf{I} - \mathbf{P}^{-1} \mathbf{A} \right) (\mathbf{x}^{(k)} - \mathbf{x}_\ast) \\
+&=\mathbf{x}_\ast + \mathbf{P}^{-1} \left( \textbf{b} - \mathbf{A} \mathbf{x}_\ast \right) + \left(\mathbf{x}^{(k)} - \mathbf{x}_\ast - \mathbf{P}^{-1} \mathbf{A}\mathbf{x}^{(k)} + \mathbf{P}^{-1} \mathbf{A}\mathbf{x}_\ast\right) \\
+&= \mathbf{x}^{(k)} +  \mathbf{P}^{-1} \mathbf{b} - \mathbf{P}^{-1} \mathbf{A}\mathbf{x}^{(k)} \\
+&= g(\mathbf{x}^{(k)})
+\end{aligned}
+```
+Denoting the error in the $k$-th iteration as
+$\mathbf{e}^{(k)} = \mathbf{x}^{(k)} - \mathbf{x}_\ast$
+one can thus show that
+```math
+\tag{4}
+\mathbf{e}^{(k+1)} = \underbrace{ \left(\mathbf{I} - \mathbf{P}^{-1} \mathbf{A} \right) }_{= \mathbf{B}  \,=\, g'(\mathbf{x}_\ast)} \,\mathbf{e}^{(k)},
+```
+such that if $\left\|\mathbf{B}\right\| < 1$ the error is *guaranteed to shrink* in an iteration, independent on the current iterate $\mathbf{x}^{(k)}$.
+"""
+
+# ╔═╡ 6a5346df-6c21-47fb-9f99-d0bc75532135
+md"""
+This is in contrast to the Convergence analysis discussion in [Root finding and fixed-point problems](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.html)
+where for the case of *non-linear* fixed point functions we found that
+```math
+e^{(k+1)} = g'(x_\ast) e^{(k)} + O(|e^{(k)}|^2) 
+```
+where thus this was *not* an *exact equality* and one can thus only ensure
+the error to shrink for $k$ to $k+1$ if the higher-order terms are small enough,
+i.e. if $|e^{(k)}|$ is small enough, i.e. if one starts sufficiently close to the fixed point $x_\ast$.
+"""
+
+# ╔═╡ f2d4fbe9-e19a-41e0-9f3b-2f77ef0b12a7
+md"""
+!!! exercise
+	Show that for the fixed-point map of Richardson iteration
+	$g(\mathbf{x}) = \mathbf{x} + \mathbf{P}^{-1} \left( \textbf{b} - \mathbf{A} \mathbf{x} \right)$ we indeed have that
+	$\mathbf{e}^{(k+1)} = \mathbf{B} \,\mathbf{e}^{(k)}$
+	where $\mathbf{B} = \mathbf{I} - \mathbf{P}^{-1} \mathbf{A}$.
+	Making use of the inequality
+	```math
+	\| \mathbf{M}\mathbf{v}\| \leq \|\mathbf{M}\| \, \|\mathbf{v}\|
+	```
+	and by adapting our arguments in the
+	convergence analysis discussion of [Root finding and fixed-point problems](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.html)
+	show that for Richardson iteration the error always tends to zero
+	as the iteration progresses, i.e. that $\lim_{k\to\infty} \|\mathbf{e}^{(k)}\| = 0$.
+"""
+
+# ╔═╡ ef1ecb29-3ca0-4505-b96f-a56abd961979
+md"""
+From Theorem 1 we take away that the norm of iteration matrix
+$\|\mathbf{B}\|$ is the crucial quantity to determine not only *if*
+Richardson iterations converge, but also *at which rate*.
+We thus investigate the object further:
 
 !!! info "Definition: Spectral radius"
     Let $\mathbf{B} \in \mathbb{R}^{n \times n}$ be a diagonalisable matrix
@@ -333,11 +371,13 @@ Note that one can show that
 which implies
 
 !!! info "Theorem 2"
-    Richardson iterations (Algorithm 1) converge if and only if
+    Richardson iterations (Algorithm 1) converges if and only if
     $ρ(\mathbf{B}) < 1$,
     where $\mathbf{B} = \mathbf{I} - \mathbf{P}^{-1} \mathbf{A}$.
 
-With this we can understand why one would even precondition at all.
+With this relationship between the eigenvalues of $\mathbf B$
+and the condition for convergence of Richardson iterations
+we can understand the **role of preconditioning**.
 If we were not to perform any preconditioning, i.e. $\mathbf{P} = \mathbf{I}$,
 then $ρ(\mathbf{B}) = ρ\left(\mathbf{I} - \mathbf{A}\right)$
 becomes
@@ -351,7 +391,7 @@ end
 
 # ╔═╡ af630960-a734-4124-81d3-a2657456f6c2
 md"""
-whereas when using a diagonal preconditioner `P = Diagonal(A)`,
+However, when using a diagonal preconditioner `P = Diagonal(A)`,
 i.e. $ρ(\mathbf{B}) = ρ\left(\mathbf{I} - \mathbf{P}^{-1} \mathbf{A}\right)$,
 then
 """
@@ -365,7 +405,8 @@ end
 
 # ╔═╡ 114bc28c-7888-4c6c-85bd-8c6232624491
 md"""
-the result is that only the preconditioned iterations converge:
+Which is much smaller, in particular less than $1$.
+Therefore only the preconditioned iterations converge:
 """
 
 # ╔═╡ d8e0e584-985d-4ff0-8a5c-b21c83c226d9
@@ -381,7 +422,7 @@ let
 	      label=L"$P = I$", lw=2, mark=:o)
 end
 
-# ╔═╡ eaee3d23-bee2-4f22-bfcf-4b1e890033b2
+# ╔═╡ 96f2e900-d8e0-45d5-a79f-8df6d654fa3f
 md"""
 ## Choosing a good preconditioner
 
@@ -393,10 +434,15 @@ From the above experiments we notice:
     2. The spectral radius $ρ(\mathbf I - \mathbf P^{-1} \mathbf A)$ is as small as possible,
       definitely smaller than one (to ensure convergence).
 
-Clearly condition 2. suggests that the *ideal preconditioner* is $P = A$, such that $\mathbf{P}^{-1} = \mathbf{A}^{-1}$. In this setting $ρ(\mathbf I - \mathbf{P}^{-1} \mathbf{A}) = ρ(\mathbf I - \mathbf I) = 0$. The trouble of this choice is that step 2 of Algorithm 1 (Richardson iteration) now effectively requires to solve the system $\mathbf A \mathbf u^{(k)} = \mathbf r^{(k)}$ for $\mathbf u^{(k)}$, i.e. we are back to solving the original problem. 
+Clearly condition 2. suggests that the *perfect preconditioner* is $\mathbf{P} = \textbf{A}$, such that $\mathbf{P}^{-1} = \mathbf{A}^{-1}$. In this setting $ρ(\mathbf I - \mathbf{P}^{-1} \mathbf{A}) = ρ(\mathbf I - \mathbf I) = 0$,
+i.e. we converge in a single Richardson step !
+The trouble of this choice is that step 2 of Algorithm 1 (Richardson iteration) now effectively requires to solve the system $\mathbf A \mathbf u^{(k)} = \mathbf r^{(k)}$ for $\mathbf u^{(k)}$, i.e. we are back to solving the original problem. 
 
 On the other hand condition 1. suggests to use $\mathbf P^{-1} = \mathbf I^{-1}$ (since the identity is cheapest to invert --- nothing needs to be done). However, this does not really do anything and does thus not improve the spectral radius.
+"""
 
+# ╔═╡ a7ebacfb-b163-40aa-99c8-f5873478249b
+md"""
 In practice we thus need to find a compromise between the two. As mentioned above standard choices for the preconditioner are:
 - the diagonal of $\mathbf A$
 - the lower triangle of $\mathbf A$
@@ -406,10 +452,7 @@ In practice we thus need to find a compromise between the two. As mentioned abov
 We will not discuss the art of designing good preconditioners any further at this stage. Interested readers are referred to the excellent book [Youssef Saad *Iterative methods for Sparse Linear Systems*, SIAM (2003)](https://www-users.cse.umn.edu/~saad/IterMethBook_2ndEd.pdf).
 """
 
-# ╔═╡ e065649e-e8a9-4c54-bc4d-e6a907182008
-TODO("I should be short here and make clear that this is essentially the same thing as the numerical stability discussion.")
-
-# ╔═╡ 1dca7d0a-53f7-4903-b390-b5cc34a1f319
+# ╔═╡ d9bb93ce-5fac-4f3a-98b4-3024a23bcfb1
 md"""
 ### Error control and stopping criterion
 
@@ -425,12 +468,62 @@ we want to solve.
 Similarly $\mathbf{r}^{(k)} =  \mathbf{b} - \mathbf{A} \mathbf{x}^{(k)}$
 directly implies
 ```math
-\mathbf{A} \mathbf{x}^{(k)} = \underbrace{\mathbf{b} - \mathbf{r}^{(k)}}_{=\widehat{\mathbf{b}}}
+\mathbf{A} \mathbf{x}^{(k)} = \underbrace{\mathbf{b} - \mathbf{r}^{(k)}}_{=\widetilde{\mathbf{b}}}
 ```
-where we defined the "perturbed" RHS $\widehat{\mathbf{b}}$.
-Notably $\mathbf{x}^{(k)}$ is the *exact* solution of a linear system
-involving $\mathbf{A}$ and this perturbed RHS.
-Using further that
+where we defined the "perturbed" right-hand side $\widetilde{\mathbf{b}}$.
+Notably $\mathbf{x}^{(k)}$ is thus *exact* solution of a linear system
+involving $\mathbf{A}$ and this perturbed RHS,
+while we actually care to find the true solution $\mathbf{x}_\ast$
+obtained by solving the system $\mathbf{A} \mathbf{x}_\ast = \mathbf{b}$ employing an "unperturbed" right-hand side $\mathbf{b}$.
+
+We are thus in exactly the same setting as our
+final section on *Numerical stability* in our discussion
+on [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html)
+where instead of solving $\mathbf{A} \mathbf{x}_\ast = \mathbf{b}$
+we are only able to solve the perturbed system
+$\mathbf{A} \widetilde{\textbf{x}} = \widetilde{\mathbf{b}}$.
+"""
+
+# ╔═╡ 55a69e52-002f-40dc-8830-7fa16b7af081
+md"""
+We can thus directly apply Theorem 2
+from [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html), which states that
+```math
+\frac{\|\mathbf{x}_\ast - \widetilde{\mathbf{x}} \|}{\| \mathbf{x}_\ast \|}
+≤ κ(\mathbf{A}) 
+\frac{ \left\| \mathbf{b} - \widetilde{\mathbf{b}} \right\| }{\| \mathbf{b} \|}
+```
+Keeping in mind that here $\widetilde{\mathbf{x}} = \mathbf{x}^{(k)}$
+and $\mathbf{b} - \widetilde{\mathbf{b}} = \mathbf{r}^{(k)}$
+we thus obtain
+```math
+\frac{\|\mathbf{x}_\ast - \mathbf{x}^{(k)} \|}{\| \mathbf{x}_\ast \|}
+≤ κ(\mathbf{A}) 
+\frac{ \left\| \mathbf{r}^{(k)} \right\| }{\| \mathbf{b} \|}
+```
+Combining this with our stopping criterion from **Algorithm 1**, that is
+```math
+\frac{\left\|\mathbf{r}^{(k)} \right\|}{\| \mathbf{b} \|} < ε,
+```
+we finally obtain
+```math
+\frac{\|\mathbf{x}_\ast - \mathbf{x}^{(k)} \|}{\| \mathbf{x}_\ast \|}
+≤ κ(\mathbf{A}) \, ε.
+```
+In other words **our stopping criterion ensures** that the **relative error of the returned solution** is no larger than $κ(\mathbf{A})$ times the chosen tolerance.
+
+If the matrix is well-conditioned, i.e. $κ(\mathbf{A})$ is close to $1$,
+then the relative residual $\frac{\left\|\mathbf{r}^{(k)} \right\|}{\| \mathbf{b} \|}$
+provides a good estimate of the true error and our stopping criterion is appropriate.
+However, if $κ(\mathbf{A})$ is large, even a small residual may imply a large error in the returned solution.
+"""
+
+# ╔═╡ a5bedab1-b6a3-4539-82af-c18de2da4e92
+Foldable("Alternative derivation without applying the previous Theorem 2",
+md"""
+We start by noting that $\mathbf{A} \mathbf{x}_\ast = \mathbf{b}$
+and as discussed above that
+$\mathbf{A} \mathbf{x}^{(k)} = \mathbf{b} - \mathbf{r}^{(k)} = \widetilde{\mathbf{b}}$. Now using the inequality
 ```math
 \tag{6}
 \|\mathbf{b}\| = \|\mathbf{A} \mathbf{x}_\ast\| ≤ \|\mathbf{A}\| \, \|\mathbf{x}_\ast\| 
@@ -442,8 +535,8 @@ we develop for the relative error
 ```math
 \begin{aligned}
 \frac{\|\mathbf{x}_\ast - \mathbf{x}^{(k)} \|}{\| \mathbf{x}_\ast \|}
-\stackrel{(6)}{≤} \frac{ \| \mathbf{A} \| \, \left\|\mathbf{A}^{-1} \left(\mathbf{b} - \widehat{\mathbf{b}}\right) \right\|}{\| \mathbf{b} \|}
-≤ \| \mathbf{A} \| \, \| \mathbf{A}^{-1} \| \, \frac{ \left\| \mathbf{b} - \widehat{\mathbf{b}} \right\| }{\| \mathbf{b} \|}
+\stackrel{(6)}{≤} \frac{ \| \mathbf{A} \| \, \left\|\mathbf{A}^{-1} \left(\mathbf{b} - \widetilde{\mathbf{b}}\right) \right\|}{\| \mathbf{b} \|}
+≤ \| \mathbf{A} \| \, \| \mathbf{A}^{-1} \| \, \frac{ \left\| \mathbf{b} - \widetilde{\mathbf{b}} \right\| }{\| \mathbf{b} \|}
 =  \| \mathbf{A} \| \, \| \mathbf{A}^{-1} \| \, \frac{ \left\| \mathbf{r}^{(k)} \right\| }{\| \mathbf{b} \|}.
 \end{aligned}
 ```
@@ -456,18 +549,15 @@ as well as our stopping criterion from Algorithm 1, that is
 ```math
 \frac{\left\|\mathbf{r}^{(k)} \right\|}{\| \mathbf{b} \|} < ε,
 ```
-With these quantities we rewrite
+With these quantities we rewrite to again obtain
 ```math
 \frac{\|\mathbf{x}_\ast - \mathbf{x}^{(k)} \|}{\| \mathbf{x}_\ast \|}
 ≤ κ(\mathbf{A}) \frac{\left\|\mathbf{r}^{(k)} \right\|}{\| \mathbf{b} \|} = κ(\mathbf{A}) \, ε.
 ```
-In other words our stopping criterion ensures that the relative error of the returned solution is no larger than $κ(\mathbf{A})$ times the chosen tolerance.
+""")
 
-If the matrix is well-conditioned, i.e. $κ(\mathbf{A})$ is close to $1$,
-then the relative residual $\frac{\left\|\mathbf{r}^{(k)} \right\|}{\| \mathbf{b} \|}$
-provides a good estimate of the true error and our stopping criterion is appropriate.
-However, if $κ(\mathbf{A})$ is large, even a small residual may imply a large error in the returned solution.
-"""
+# ╔═╡ f101631e-e650-407e-b34a-3e6512eb93e4
+TODO("Here make the actual algorithms optional. The key thing is to get the general idea.")
 
 # ╔═╡ 858b7c87-80de-4c1a-8598-03657608e323
 md"""
@@ -2210,17 +2300,24 @@ version = "1.4.1+2"
 # ╟─03984b5d-3fe9-4557-9a0b-ddcc7d0a6c34
 # ╟─5913dace-5e27-4d4d-8bc3-0b4118b1b093
 # ╟─7b8bb857-35d3-4014-851b-9ab263f48967
-# ╠═eba6e7cc-6961-4e1e-9925-04f881a77922
-# ╟─4c88dc9e-3629-4188-bac7-55e3e8276091
-# ╟─5b517ed9-cbcf-4b52-bdcf-c8269690736b
+# ╟─1f7765a2-4986-4ef2-849e-ca1efb59abcf
+# ╟─ba77a115-f9fb-4f80-a0ea-eb50ddd9ae65
+# ╟─6f3d76f5-aeec-4a05-8aea-a4f97d625a4a
+# ╟─28d6cb69-71ab-493f-a9a1-60f2fe37c1ed
+# ╟─6a5346df-6c21-47fb-9f99-d0bc75532135
+# ╟─f2d4fbe9-e19a-41e0-9f3b-2f77ef0b12a7
+# ╟─ef1ecb29-3ca0-4505-b96f-a56abd961979
 # ╠═54cb29d7-4933-4ab4-a3b5-26431d8432f9
 # ╟─af630960-a734-4124-81d3-a2657456f6c2
 # ╠═51030114-04d7-49eb-9ac1-042941681446
 # ╟─114bc28c-7888-4c6c-85bd-8c6232624491
 # ╠═d8e0e584-985d-4ff0-8a5c-b21c83c226d9
-# ╟─eaee3d23-bee2-4f22-bfcf-4b1e890033b2
-# ╠═e065649e-e8a9-4c54-bc4d-e6a907182008
-# ╟─1dca7d0a-53f7-4903-b390-b5cc34a1f319
+# ╟─96f2e900-d8e0-45d5-a79f-8df6d654fa3f
+# ╟─a7ebacfb-b163-40aa-99c8-f5873478249b
+# ╟─d9bb93ce-5fac-4f3a-98b4-3024a23bcfb1
+# ╟─55a69e52-002f-40dc-8830-7fa16b7af081
+# ╟─a5bedab1-b6a3-4539-82af-c18de2da4e92
+# ╠═f101631e-e650-407e-b34a-3e6512eb93e4
 # ╟─858b7c87-80de-4c1a-8598-03657608e323
 # ╟─d3f4ef3a-1a17-4078-b7a8-9e9b767ee541
 # ╠═77f1c8d5-8058-47cb-a0b5-436b4259aec9
