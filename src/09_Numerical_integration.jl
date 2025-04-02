@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -98,6 +98,9 @@ Given (1) we define:
 
 	An older and still frequently used name for numerical integration is **quadrature**.
 """
+
+# ╔═╡ b182e64e-7d20-469a-b9a2-ee16c88b21c3
+TODO("Motivate this as: We know how to find polynomial interpolations, we know how to integrate polynomials, so let's combine both to integrate arbitrary functions numerically")
 
 # ╔═╡ 899f6285-331e-4cc5-8b0a-0e68c67082d2
 md"""
@@ -2178,6 +2181,7 @@ version = "1.4.1+1"
 # ╟─bfccad43-b336-4271-83eb-40af1ed36849
 # ╠═81c6042e-20a1-4aa7-b7ff-4a369126c22e
 # ╟─c277f1f5-5586-4717-ac72-c652e4c21579
+# ╠═b182e64e-7d20-469a-b9a2-ee16c88b21c3
 # ╟─899f6285-331e-4cc5-8b0a-0e68c67082d2
 # ╟─2da93494-ceff-40ec-90d3-3b214b134b5e
 # ╟─6acf71c6-4976-4891-ac6b-0906b4697c2a

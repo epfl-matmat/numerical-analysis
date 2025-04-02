@@ -890,7 +890,7 @@ As we increase polynomial order and noise, we see larger discrepancies for the i
 # ╔═╡ 2cefad7d-d734-4342-8039-aefdc33c2edd
 md"""
 ## Piecewise linear interpolation
-*Note:* We will only discuss the high-level results of this part in the lecture.
+*Note:* We will only discuss the high-level ideas of this part in the lecture. You can expect that there will not be any detailed exam questions on Jacobi and Gauss-Seidel  without providing you with the formulas and algorithms.
 
 In the previous section we looked at $n$-th degree polynomial interpolation,
 which we found to be poorly conditioned, e.g. when equispaced nodes and high 

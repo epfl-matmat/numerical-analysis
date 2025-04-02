@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -52,17 +52,17 @@ is Richardson's method. The idea is to introduce a **matrix splitting** $\mathbf
 and $\mathbf{R} = \mathbf{P} - \mathbf{A}$.
 With this idea we rewrite $\mathbf{A} \mathbf{x} = \mathbf{b}$ to
 ```math
-(\mathbf{P} - \mathbf{R})\mathbf{x} = \mathbf{b}
+(\mathbf{P} - \mathbf{R})\,\mathbf{x} = \mathbf{b}
 \qquad \Leftrightarrow \qquad
-\mathbf{P} \mathbf{x} = (\mathbf{P} - \mathbf{A}) \mathbf{x} + \mathbf{b}
+\mathbf{P} \mathbf{x} = (\mathbf{P} - \mathbf{A})\, \mathbf{x} + \mathbf{b}
 \qquad \Leftrightarrow \qquad
-\mathbf{x} = \mathbf{P}^{-1} (\mathbf{P} - \mathbf{A}) \mathbf{x} + \mathbf{b}
+\mathbf{x} = \mathbf{P}^{-1} \left[(\mathbf{P} - \mathbf{A}) \mathbf{x} + \mathbf{b}\right]
 ```
-If we define $g(\mathbf{x}) = \mathbf{P}^{-1} (\mathbf{P} - \mathbf{A}) \mathbf{x} + \mathbf{b}$ we observe this to be exactly the setting of
+If we define $g(\mathbf{x}) = \mathbf{P}^{-1} \left[(\mathbf{P} - \mathbf{A}) \mathbf{x} + \mathbf{b}\right]$ we observe this to be exactly the setting of
 the multi-dimensional fixed-point methods we developed
 in chapter 4,
 i.e. our goal is to obtain a solution $\mathbf{x}_\ast$
-with $\mathbf{x}_\ast = g(\mathbf{x}_\ast) = \mathbf{P}^{-1} (\mathbf{P} - \mathbf{A}) \mathbf{x}_\ast + \mathbf{b}$.
+with $\mathbf{x}_\ast = g(\mathbf{x}_\ast) = \mathbf{P}^{-1} \left[(\mathbf{P} - \mathbf{A}) \mathbf{x}_\ast + \mathbf{b}\right]$.
 
 Starting from an initial vector $\mathbf{x}^{(0)}$ we thus iterate
 ```math
@@ -556,12 +556,12 @@ With these quantities we rewrite to again obtain
 ```
 """)
 
-# ╔═╡ f101631e-e650-407e-b34a-3e6512eb93e4
-TODO("Here make the actual algorithms optional. The key thing is to get the general idea.")
-
 # ╔═╡ 858b7c87-80de-4c1a-8598-03657608e323
 md"""
 ## Jacobi and Gauss-Seidel method
+
+*Note:* We will only discuss the high-level ideas of this part in the lecture. You can expect that there will not be any detailed exam questions on Jacobi and Gauss-Seidel  without providing you with the formulas and algorithms.
+
 
 We will now briefly discuss the Jacobi and Gauss-Seidel methods,
 which can be seen as particular cases of Richardson iterations.
@@ -837,27 +837,238 @@ this stationary point is a minimum. As a result we obtain
     ```
 """
 
+# ╔═╡ 41a269c8-fe64-4660-aa66-054b8af8af20
+md"""
+Importantly there is thus a **relation between optimisation problems** and **solving linear systems** if the system matrix $\textbf{A}$ is s.p.d.
+"""
+
+# ╔═╡ bf9a171a-8aa4-4f21-bde3-56ccef40de24
+md"""
+SPD matrices are not unusual. For example, recall that in polynomial regression problems (see least-squares problems in [Interpolation](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html)),
+where we wanted to find the best polynomial through the points
+$(x_i, y_i)$ for $i=1, \ldots n$ by minimising the least-squares error,
+we had to solve the *normal equations*
+```math
+\mathbf{V}^T \mathbf{V} \mathbf{c} = \mathbf{V}^T \mathbf{y}
+```
+where $\mathbf{c} \in \mathbf{R}^m$ are the unknown coefficients of the polynomial $\sum_{j=0}^m c_j x^j$, $\mathbf{y}$ is the vector
+collecting all $y_i$ values and the $\mathbf{V}$ is the Vandermonde matrix
+```math
+\mathbf{V} = \left(\begin{array}{ccc}
+1 & x_1 & \ldots & x_1^m \\
+1 & x_2 & \ldots & x_2^m \\
+\vdots \\
+1 &x_n & \ldots & x_n^m \\
+\end{array}\right) \in \mathbb{R}^{n\times (m+1)}.
+```
+In this case the system matrix $\mathbf{A} = \mathbf{V}^T \mathbf{V}$ is *always* s.p.d.
+"""
+
 # ╔═╡ 590e8877-0600-4bbb-8e88-7033548815b5
 md"""
 ## Steepest descent method
 """
 
-# ╔═╡ fa7c4b56-c322-4662-a190-07a700947dd8
-TODO("More details")
-
-# ╔═╡ c330ec39-bcce-4b97-b5c9-11c13967de56
+# ╔═╡ fff80ab4-d1df-4bef-a1d2-2aa08c78ce54
 md"""
-A Julia implementation of steepest descent is given by
+If we view the problem of solving linear systems as an optimisation problem,
+a relatively simple idea is to construct an iterative method, where at every step $k$ we try to decrease the energy function $\phi$.
+
+To guide our thoughts we consider a 2D problem which is easy to visualise. We take as an example
+```math
+\mathbf A^\text{2D} = \begin{pmatrix} 2& 0 \\ 0& 60 \end{pmatrix}
+\qquad \mathbf b^\text{2D} = \begin{pmatrix}0\\0\end{pmatrix}
+```
+such that
+```math
+\phi(\mathbf x) = \frac12 \mathbf x^T \mathbf A^\text{2D} \mathbf x - \mathbf x^T \mathbf b^\text{2D} = x_1^2 + 30 x_2^2
+```
+"""
+
+# ╔═╡ bb45f71b-b4cc-4b9a-abcb-7b0647f32a9b
+A2d = [1.0  0.0;
+	   0.0 20.0]
+
+# ╔═╡ 53cc323c-d742-4cc6-8b96-e966e2b1ccb4
+b2d = [0.0;
+       0.0]
+
+# ╔═╡ e22c0abe-caa8-4e65-a3c1-8b05e820b7e7
+ϕ(x₁, x₂) = x₁^2 + 20 * x₂^2
+
+# ╔═╡ 46cf4acb-5883-4cf0-bc15-3150f401a401
+md"""
+This problem is visualised as a contour plot below:
+"""
+
+# ╔═╡ 92035249-948e-4f2f-a00e-8b4ae0ec2742
+begin
+	function plot_contour(; show_grad=false)
+		x = -6:0.1:6
+		y = -2:0.1:2
+		p = contour(x, y, ϕ; levels=5:5:100, clim=(0, 100), xlabel=L"x_1", ylabel=L"x_2", title="Contour plot of ϕ", aspect_ratio=1, legend=:topleft)
+
+		scatter!(p, [5], [1]; mark=:o, label=L"x^{(k)}", markersize=5, c=1)
+
+		if show_grad
+			α = 1/10
+			grad = A2d * [5; 1]
+			plot!(p, [5, 5 - α*grad[1]], [1, 1 - α*grad[2]],
+					 arrow=true, lw=3, c=3, label=L"$-\frac{1}{10} \, \nabla \phi(x^{(k)})$ "
+					)
+		end
+		
+		scatter!(p, [0], [0]; mark=:utriangle, label=L"Minimum $x_\ast$", markersize=6, c=1)
+	end
+
+	plot_contour(; show_grad=true)
+end
+
+# ╔═╡ 32b2a6e4-31ca-477f-9839-71cd940949b8
+md"""
+Now suppose we have an estimate $\mathbf{x}^{(k)}$ of the solutin of $\mathbf{A}\mathbf{x} = \mathbf{b}$ shown above by the blue dot.
+This $\mathbf{x}^{(k)}$ is also an estimate of the minimum of $\phi$.
+Our goal is thus to find a $\textbf{x}^{(k+1)}$ satisfying
+$\phi(\textbf{x}^{(k+1)}) < \phi(\textbf{x}^{(k)})$,
+i.e. to get closer to the minimum (blue triangle).
+
+The gradient $\nabla \phi(\textbf{x}^{(k)})$ provides
+the slope of the function $\phi$ at $\textbf{x}^{(k)}$
+in the *upwards* direction.
+Therefore, taking a step along the direction of $-\nabla \phi$
+takes us downhill (see green arrow). We thus propose an algorithm
+```math
+\tag{11}
+\begin{aligned}
+\phi(\textbf{x}^{(k+1)}) &= \phi(\textbf{x}^{(k)}) - \alpha_k \nabla \phi(\textbf{x}^{(k)}) \\&= \phi(\textbf{x}^{(k)}) + \alpha_k \textbf r^{(k)},
+\end{aligned}
+```
+where we used that $\nabla \phi(\textbf{x}^{(k)}) = - \textbf r^{(k)}$,
+and where $\alpha_k > 0$ is a parameter determining
+how far to follow along the direction of the negative gradient.
+
+Note, that this method is quite related to Richardson's iterations:
+for $α_k = 1$ we actually recover **Algorithm 1** with $\mathbf{P} = \mathbf{I}$.
+"""
+
+# ╔═╡ f8f62fa0-6a68-4083-909f-4a3367157f12
+Foldable("Rationale for introducing αₖ. Or: why not just take αₖ = 1 ?",
+md"""
+The rationale of having this parameter $\alpha_k$
+is that taking too large steps from $\mathbf x^{(k)}$
+to $\mathbf x^{(k+1)}$ is in general
+not useful. For example in the example visualised above the green arrow
+represents only $1/40$ times the actual gradient.
+Therefore simply
+updating $\mathbf x^{(k+1)} = \mathbf x^{(k)} + \mathbf r^{(k)}$
+with $\alpha_k = 1$ will substantially overshoot,
+such that $\mathbf x^{(k+1)}$ will be even further from the minimum
+than $\mathbf x^{(k)}$.
+Therefore we employ $0 < \alpha_k < 1$ to down-scale this step.
+""")
+
+# ╔═╡ cf1af660-1326-4c57-900f-ea12e9836f85
+md"""
+Since overall our goal is to find the minimum of $\phi$,
+a natural idea to determine $\alpha_k$ exactly such that
+we make the value of $\phi(\textbf{x}^{(k+1)})$ as small as possible.
+We compute
+
+```math
+\begin{aligned}
+ϕ(\mathbf{x}^{(k+1)}) &= ϕ(\mathbf{x}^{(k)} + α_k \mathbf{r}^{(k)}) \\
+&= \frac12 \left(\mathbf{x}^{(k)} + α_k \mathbf{r}^{(k)}\right)^T \mathbf{A}
+\left(\mathbf{x}^{(k)} + α_k \mathbf{r}^{(k)}\right)
+- \left(\mathbf{x}^{(k)} + α_k \mathbf{r}^{(k)}\right)^T\mathbf{b}\\
+&= \underbrace{\frac12 (\mathbf{r}^{(k)})^T\mathbf A\mathbf{r}^{(k)}}_{=a} α_k^2
++ \underbrace{\left[
+	\frac12 (\mathbf{x}^{(k)})^T\mathbf A\mathbf{r}^{(k)}
+	+ \frac12 (\mathbf{r}^{(k)})^T\mathbf A\mathbf{x}^{(k)}
+	- (\mathbf{r}^{(k)})^T \mathbf{b}
+\right]}_{=b} α_k^{(k)} \\
+	&\hspace{8.8em} + \underbrace{\left[
+	\frac12 (\mathbf{x}^{(k)})^T\mathbf A\mathbf{x}^{(k)}
+	- (\mathbf{x}^{(k)})^T \mathbf{b}
+\right]}_{=c}
+\end{aligned}
+```
+where
+```math
+\begin{aligned}
+a &= \frac12 (\mathbf{r}^{(k)})^T\mathbf A\mathbf{r}^{(k)}&
+c &= 
+	\frac12 (\mathbf{x}^{(k)})^T\mathbf A\mathbf{x}^{(k)}
+	- (\mathbf{x}^{(k)})^T \mathbf{b}
+\end{aligned}
+```
+and
+```math
+\begin{aligned}
+b &= 
+	\frac12 (\mathbf{x}^{(k)})^T\mathbf A\mathbf{r}^{(k)}
+	+ \frac12 (\mathbf{r}^{(k)})^T\mathbf A\mathbf{x}^{(k)}
+	- (\mathbf{r}^{(k)})^T \mathbf{b}\\
+	&= (\mathbf{x}^{(k)})^T\mathbf A\mathbf{r}^{(k)}- (\mathbf{r}^{(k)})^T \mathbf{b}\\
+	&= -(\mathbf{r}^{(k)})^T \, \mathbf{r}^{(k)}
+\end{aligned}
+```
+"""
+
+# ╔═╡ 599d5e8c-8e36-401e-a576-1d47ef045c18
+md"""
+We notice that $ϕ(\mathbf{x}^{(k+1)}) = a α_k^2 + bα_k + c$ is a second-degree polynomial in $α_k$. Setting its gradient to zero gives us the $α_k$
+which minimises the $ϕ$ as much as possible in this step. From
+```math
+0 = \frac{dϕ}{dα_k}(\mathbf{x}^{(k+1)}) = 2aα_k + b
+```
+we obtain the optimal step size as
+```math
+\tag{12}
+α_k = \frac{-b}{2a} = \frac{(\mathbf{r}^{(k)})^T \, \mathbf{r}^{(k)}}{(\mathbf{r}^{(k)})^T\mathbf A\,\mathbf{r}^{(k)}}.
+```
+In summary we obtain the algorithm:
+"""
+
+# ╔═╡ 6d4b968d-9cdc-4ca0-971a-6f2e5a8d06d8
+md"""
+!!! info "Algorithm 2: Steepest descent method"
+    Let $\mathbf{A} \in \mathbb{R}^{n\times n}$ be an s.p.d. system matrix,
+    right-hand side $\mathbf{b} \in \mathbb{R}^n$, 
+	an initial guess $\mathbf{x}^{(0)} \in \mathbb{R}^n$
+	and convergence threshold $ε$.
+
+	Compute the inital residual $\mathbf{r}^{(0)} = \mathbf{b} - \mathbf{A} \mathbf{x}^{(0)}$.
+	Then for $k = 0, 1, \ldots$ iterate:
+	1. Compute $\mathbf{w}^{(k)} = \mathbf{A} \mathbf{r}^{(k)}$
+	2. Step size: $α_k = \frac{(\mathbf{r}^{(k)})^T \, \mathbf{r}^{(k)}}{(\mathbf{r}^{(k)})^T\textcolor{red}{\mathbf{w}^{(k)}}}$ $\qquad$ *(Optimal because of (12) )*
+	3. Take step: $\mathbf{x}^{(k+1)} = \mathbf{x}^{(k)} + α_k \mathbf{r}^{(k)}$.
+	4. Update residual $\mathbf{r}^{(k+1)} = \mathbf{r}^{(k)} - α_k \mathbf{w}^{(k)}$
+    The iteration is stopped as soon as
+    $\frac{\| \mathbf{r}^{(k)} \|}{\| \mathbf{b} \|} < ε$.
+"""
+
+# ╔═╡ 3e4785cc-4120-4f69-b6ad-27da5bb3a17e
+md"""
+Notice that in this algorithm we used the trick
+```math
+\mathbf{r}^{(k+1)} = \mathbf{b} - \mathbf{A}\mathbf{x}^{(k+1)}
+= \mathbf{b} - \mathbf{A}\left(\mathbf{x}^{(k)} + α_k \mathbf{r}^{(k)} \right)
+= \mathbf{r}^{(k)} - α_k \mathbf{w}^{(k)}
+```
+to compute the residual $\mathbf{r}^{(k+1)}$ from $\mathbf{r}^{(k)}$ and $\mathbf{w}^{(k)}$, that is without computing another matrix-vector product. As matrix-vector products scale as $O(n^2)$, but vector operations only as $O(n)$ this saves computational cost.
+
+An implementation of this algorithm is given by the following function:
 """
 
 # ╔═╡ 0159a195-627c-4e07-834e-222248665da8
 function steepest_descent_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
-	history = Float64[]  # Track relative residual norm
+	resnorms = Float64[]  # Track relative residual norm
+	history = [x]
 	
 	r = b - A * x
 	for k in 1:maxiter
 		relnorm = norm(r) / norm(b)
-		push!(history, relnorm)
+		push!(resnorms, relnorm)
 		if relnorm < tol
 			break
 		end
@@ -866,9 +1077,76 @@ function steepest_descent_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
 		α = dot(r, r) / dot(r, Ar)
 		x = x + α * r
 		r = r - α * Ar
+
+		push!(history, x)
 	end
-	(; x, history)
+	(; x, history, resnorms)
 end
+
+# ╔═╡ c330ec39-bcce-4b97-b5c9-11c13967de56
+md"""
+Running it on our 2x2 example problem plotted above it produces the following steps
+(first 6 steps shown). 
+
+We realise that convergence is steadily towards the minimum, but seems to oscillate
+around the "best possible path". We will see in a second why this is.
+"""
+
+# ╔═╡ 0b7aad76-2e9d-41de-851d-5075d9f840b3
+let
+	p = plot_contour()
+	res = steepest_descent_simple(A2d, b2d; x=[5.0, 1.0], maxiter=8)
+	for i in 1:6
+		label = i == 1 ? "Steepest Decent iterations" : ""
+		plot!(p, first.(res.history)[i:i+1], last.(res.history)[i:i+1]; c=:red, arrow=true, label, lw=3, ls=:dash)
+	end
+	p
+end
+
+# ╔═╡ 3c09a9c8-015b-4d17-9643-1f270b8a1d9b
+md"""
+In line with our previous discussion we can again view **Algorithm 2**
+as a fixed-point method $\mathbf{x}^{(k+1)} = g(\mathbf{x}^{(k)})$,
+this time with fixed-point function
+```math
+g(\mathbf{x}) = \mathbf{x} + α(\mathbf{x}) \, \left( \mathbf{b} - \mathbf{A} \mathbf{x} \right)
+```
+where $α(\mathbf{x})$ is meant to indicate the step size determined according to equation (12). Clearly a fixed-point of this function satisfies
+$\mathbf{x} =  \mathbf{x} + α(\mathbf{x}) \, \left( \mathbf{b} - \mathbf{A} \mathbf{x} \right)$
+and thus $\mathbf{b} = \mathbf{A} \mathbf{x}$.
+"""
+
+# ╔═╡ 7207b521-e642-4ffd-a590-74b0f474f7a8
+md"""
+While the details are more involved and beyond our scope,
+applying the usual convergence theory on fixed-point methods
+yields the following observation:
+
+!!! note "Theorem 4: Convergence of steepest descent"
+    Given an s.p.d. matrix $\mathbf{A} \in \mathbb{R}^{n \times n}$
+	and a right-hand side $\mathbf{b}$ the solution of the linear system
+	$\mathbf{A} \mathbf{x} = \mathbf{b}$ can be obtained by applying
+	steepest descent starting from *any* initial position $\mathbf{x}^{(0)}$.
+	The following error estimate holds:
+	```math
+	\tag{13}
+	\|\mathbf{x} - \mathbf{x}^{(k)}\| \leq C \left(\frac{κ(A) - 1}{κ(A) + 1} \right)^k \|\mathbf{x} - \mathbf{x}^{(0)}\|
+	```
+	where $C$ is a positive constant.
+	This is **linear convergence** with rate $\frac{κ(A) - 1}{κ(A) + 1}$.
+
+The main result is thus that steepest descent **always converges**.
+However, if $κ(A)$ is large the convergence can be slow.
+Here is a plot of the rate with increasing $κ$.
+Recall, that smaller rate means faster convergence
+and a rate of $1$ is essentially stagnation.
+"""
+
+# ╔═╡ 7cc7488b-fe17-496c-8c59-c074819d81f0
+plot(κ -> (κ-1)/(κ+1), xaxis=:log, xlims=(1, 10^3), label="", xlabel=L"κ(A)", ylabel="Rate", lw=3)
+
+# ╔═╡ 95b48015-48d4-4742-94dd-fac1dbe5f041
+md"We try steepest descent on the following random SPD matrix."
 
 # ╔═╡ 9e34bd04-a4b7-4b60-b93b-dcd37b25287b
 begin
@@ -878,7 +1156,7 @@ begin
 end
 
 # ╔═╡ 45cfdf30-8738-4cb6-a49a-534392128475
-bₛ = rand(100);
+bₛ = ones(100);
 
 # ╔═╡ 646ebf55-d081-4884-8524-15e5b0ecebcc
 md"The system matrix has a condition number larger well larger than $1$:"
@@ -896,34 +1174,69 @@ rate_steep_desc = (cond(Aₛ) - 1) / (cond(Aₛ) + 1)
 let
 	descent = steepest_descent_simple(Aₛ, bₛ; tol=1e-6, maxiter=40)
 	
-	plot(descent.history;
+	plot(descent.resnorms;
 		yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||", ylims=(5e-2, 1.3),
 		title="Steepest descent convergence", label="Observed convergence", c=2)
 	
 	plot!(1:40, x -> 0.15rate_steep_desc^x, lw=2, ls=:dash, label="Theoretical rate", c=2)
 end
 
-# ╔═╡ 8090fe02-249a-492b-b04a-b3d1409253c4
+# ╔═╡ cc4b5c31-cd6a-4df8-b1cf-068e209aaa33
 md"""
-## Preconditioned steepest descent
+## Optional: Preconditioned steepest descent
+
+We noticed above that a condition number $κ(\mathbf{A}) \approx 1$ is providing the highest convergence rate for steepest descent.
+For cases where the condition number is large, a potential cure is to
+apply *preconditioning*. The idea is similar to Richardson iteration.
+Assume we have a matrix $\mathbf{P} \approx \mathbf{A}$.
+Then instead of applying steepest descent to $\mathbf{A} \mathbf{x} = \mathbf{b}$
+we instead apply it to
+```math
+\mathbf{P}^{-1} \mathbf{A} \mathbf{x} = \mathbf{P}^{-1} \mathbf{b},
+```
+such that this new method will now converge as
+```math
+\|\mathbf{x} - \mathbf{x}^{(k)}\| \leq C \left(\frac{κ(\mathbf{P}^{-1}\mathbf A) - 1}{κ(\mathbf{P}^{-1} \mathbf A) + 1} \right)^k \|\mathbf{x} - \mathbf{x}^{(0)}\|
+```
+If we use a good preconditioner, then $κ(\mathbf{P}^{-1} \mathbf A) \ll κ(\mathbf A)$ and convergence accelerates.
 """
 
-# ╔═╡ 7207e407-a42e-42c3-919c-69f8d8114f74
-TODO("More details")
-
-# ╔═╡ db4ab984-439d-4c43-8d02-1c0f288abdae
+# ╔═╡ 1c819b4a-d6d4-408f-a30f-aa4f6bb2871e
 md"""
-An implementation is
+Without going into many details, we remark that there are a few subtleties that apply:
+- Even if $\mathbf{P}$ *and* $\mathbf{A}$ are s.p.d. matrices, the matrix $\mathbf{P}^{-1} \mathbf A$ *may not be s.p.d.*. Therefore a practical implementation of preconditioned gradient descent is not realised by blindly applying the plain algorithm to $\mathbf{P}^{-1} \mathbf{A}$, but instead by "inlining" the application of $\mathbf{P}^{-1}$ into the actual algorithm. At the $k$-th iteration we thus want to update the solution $\mathbf{x}^{(k+1)} = \mathbf{x}^{(k)} + α_k \mathbf{z}^{(k)}$ using the *preconditioned residual*
+  ```math
+  \mathbf{z}^{(k)} = \mathbf{P}^{-1}\mathbf{b} - \mathbf{P}^{-1} \mathbf{A} \mathbf{x}^{(k)} = \mathbf{P}^{-1} \mathbf{r}^{(k)}.
+  ```
+  Following through with this change also in the computation of the optimal
+  step size leads to $α_k = \frac{(\mathbf{z}^{(k)})^T \, \mathbf{r}^{(k)}}{(\mathbf{z}^{(k)})^T\mathbf{A} \mathbf{z}^{(k)}}$, thus the following algorithm:
+  !!! info "Algorithm 3: Preconditioned steepest descent method"
+      Let $\mathbf{A} \in \mathbb{R}^{n\times n}$ be an s.p.d. system matrix,
+      right-hand side $\mathbf{b} \in \mathbb{R}^n$, 
+      preconditioner  $\mathbf{P} \in \mathbb{R}^{n\times n}$,
+      an initial guess $\mathbf{x}^{(0)} \in \mathbb{R}^n$
+      and convergence threshold $ε$.
+
+      Compute the inital residual $\mathbf{r}^{(0)} = \mathbf{b} - \mathbf{A} \mathbf{x}^{(0)}$.
+      Then for $k = 0, 1, \ldots$ iterate:
+      1. Solve $\mathbf{P} \mathbf{z}^{(k)} = \mathbf{r}^{(k)}$ for $\mathbf{z}^{(k)}$ $\qquad$ *(This is the new step)*
+      2. Compute $\mathbf{w}^{(k)} = \mathbf{A} \mathbf{z}^{(k)}$  $\qquad$ *(This has been changed)*
+      3. Step size: $α_k = \frac{(\mathbf{z}^{(k)})^T \, \mathbf{r}^{(k)}}{(\mathbf{z}^{(k)})^T\mathbf{w}^{(k)}}$
+      4. Take step: $\mathbf{x}^{(k+1)} = \mathbf{x}^{(k)} + α_k \mathbf{z}^{(k)}$.
+      5. Update residual $\mathbf{r}^{(k+1)} = \mathbf{r}^{(k)} - α_k \mathbf{w}^{(k)}$
+      The iteration is stopped as soon as
+      $\frac{\| \mathbf{r}^{(k)} \|}{\| \mathbf{b} \|} < ε$.
+- Similar to our discussion in the context of Richardson iterations, the choice of the preconditioner is delicate. The "perfect" preconditioner $\mathbf{P} = \mathbf{A}$ brings our condition number down to $κ(\mathbf A^{-1} \mathbf A) = κ(\mathbf I) = 1$, but requires us to solve the full problem in the first step of **Algorithm 3**. On the other hand no preconditioning, i.e. $\mathbf{P} = \mathbf{I}$, gives a cheap computation of $\mathbf{z}^{(k)}$ from $\mathbf{P} \mathbf{z}^{(k)} = \mathbf{r}^{(k)}$, but does nothing to reduce the conditioning. Often a simple preconditioner, such as the diagonal of the matrix already provides noteworthy improvements. For example:
 """
 
 # ╔═╡ fdbe3ba7-d1a3-43b0-bd56-ad0bc6f2200d
 function steepest_descent(A, b, P; x=zero(b), tol=1e-6, maxiter=100)
-	history = Float64[]
+	resnorms = Float64[]
 	
 	r = b - A * x
 	for k in 1:maxiter
 		relnorm = norm(r) / norm(b)
-		push!(history, relnorm)
+		push!(resnorms, relnorm)
 		if relnorm < tol
 			break
 		end
@@ -935,13 +1248,8 @@ function steepest_descent(A, b, P; x=zero(b), tol=1e-6, maxiter=100)
 		x = x + α * r
 		r = r - α * r
 	end
-	(; x, history)
+	(; x, resnorms)
 end
-
-# ╔═╡ 15f921ac-227c-49e9-8777-86ae502ebc6c
-md"""
-We  consider the convergence of both the preconditioned and the non-preconditioned steepest descent method on the model problem $\mathbf{A}_\text{s} \mathbf{x} = \mathbf{b}_\text{s}$.
-"""
 
 # ╔═╡ bf028cd7-c911-4329-86b0-442061a8e8c8
 let
@@ -949,33 +1257,99 @@ let
     descent_diagonal = steepest_descent(Aₛ, bₛ, P; tol=1e-6, maxiter=30)
     descent_no_preconditioner = steepest_descent_simple(Aₛ, bₛ; tol=1e-6, maxiter=30)
        
-    plot(descent_diagonal.history;
+    plot(descent_diagonal.resnorms;
          yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||",
          label=L"$P = \textrm{Diagonal(}A\textrm{)}$", legend=:bottomright,
          title="Steepest descent convergence", ylims=(1e-4, 1.3))
-    plot!(descent_no_preconditioner.history;
+    plot!(descent_no_preconditioner.resnorms;
           label=L"$P = I$", lw=2, mark=:o)
 end
 
-# ╔═╡ ca833c65-eba0-4344-ac9f-a1e360acc7dc
-md"""
-## Conjugate gradient method
-"""
-
 # ╔═╡ d698fe83-68a6-4988-b1e0-9e2dace2c6fd
 md"""
-We only show the conjugate gradient method *without preconditioning*.
+## Optional: Conjugate gradient method
+
+Recall that the key idea of steepest descent was to employ the update
+```math
+\textbf{x}^{(k+1)} = \textbf{x}^{(k)} - α_k \nabla \phi(\textbf{x}^{(k)})
+=  \textbf{x}^{(k)} + α_k \mathbf{r}^{(k)}
+```
+that is to follow in the *direction of maximal descent*
+--- i.e. along the direction of the negative gradient of $\phi$.
+
+While this is certainly a natural choice, we also saw that this can lead to a rather unsteady convergence behaviour:
 """
 
-# ╔═╡ 7050ffeb-91db-456c-8f07-3ee748f5c395
-TODO("Show a classic case where steepest descent fails and CG works, e.g. a Rosenbrock or a cartesian product of a steep and a shallow parabola.")
+# ╔═╡ 653dd5fd-2771-492e-9508-2b473d448be4
+let
+	p = plot_contour()
+	res = steepest_descent_simple(A2d, b2d; x=[5.0, 1.0], maxiter=10)
+	for i in 1:10
+		label = i == 1 ? "Steepest Decent iterations" : ""
+		plot!(p, first.(res.history)[i:i+1], last.(res.history)[i:i+1]; c=:red, arrow=i < 6, label, lw=2)
+	end
+	p
+end
 
-# ╔═╡ 3f5576db-8ee6-451c-b967-6a3a97626422
-TODO("More details")
+# ╔═╡ 6671fe27-7b0f-458a-a012-747c5fcb76eb
+md"""
+One way to cure this behaviour is in fact make a rather different choice for the update direction. While for the first update we keep $\mathbf{p}^{(1)} = \mathbf{r}^{(k)}$ we subsequently choose directions $\mathbf{p}^{(k)}$ with the property
+```math
+0 = \mathbf{p}^{(k)} \mathbf{A} \mathbf{p}^{(j)} \qquad \text{with $j = 0, 1, \ldots, k-1$}.
+```
+This property of the vectors $\mathbf{p}^{(k)}$ is usually called $\mathbf{A}$-orthogonality. Based on this update direction we iterate as
+```math
+\textbf{x}^{(k+1)} = \textbf{x}^{(k)} + α_k \mathbf{p}^{(k)}
+```
+with the optimal step size now being given by
+```math
+α_k = \frac{(\mathbf{p}^{(k)})^T \, \mathbf{r}^{(k)}}{(\mathbf{p}^{(k)})^T\mathbf{A} \mathbf{p}^{(k)}}.
+```
+The next $\mathbf{p}^{(k+1)}$ is found by $A$-orthogonalising $\mathbf{r}^{(k+1)}$ against all previous $\mathbf{p}^{j}$ with $j = 1, \ldots, k$. Perhaps surprisingly this can be achieved by the following recurrent algorithm
+```math
+\mathbf{p}^{(k+1)} = \mathbf{r}^{(k+1)} - β_k\, \mathbf{p}^{k}
+\qquad \text{with} \quad β_k = \frac{(\mathbf{A} \mathbf{p}^{(k)})^T \, \mathbf{r}^{(k)}}{(\mathbf{p}^{(k)})^T\mathbf{A} \mathbf{p}^{(k)}}.
+```
+
+This is called the [Conjugate gradient method](https://en.wikipedia.org/wiki/Conjugate_gradient_method) and despite its invention in 1952 is still the state-of-the-art method for solving linear systems or optimisation problems involving s.p.d. matrices.
+"""
+
+# ╔═╡ 1d3ea21f-0ebd-491b-a165-2e5cf7cc583f
+md"""
+Studying its convergence leads to the following strong result:
+
+!!! note "Theorem 4: Convergence of Conjugate Gradient (CG)"
+    Given an s.p.d. matrix $\mathbf{A} \in \mathbb{R}^{n \times n}$
+	and a right-hand side $\mathbf{b}$ the solution of the linear system
+	$\mathbf{A} \mathbf{x} = \mathbf{b}$ can be obtained by applying
+	the conjugate gradient algorithm
+	starting from *any* initial position $\mathbf{x}^{(0)}$
+	**in at most $n$ steps** in exact arithmetic.
+	Moreover the following error estimate holds:
+	```math
+	\tag{14}
+	\|\mathbf{x} - \mathbf{x}^{(k)}\| \leq C \left(\frac{\sqrt{κ(A)} - 1}{\sqrt{κ(A)} + 1} \right)^k \|\mathbf{x} - \mathbf{x}^{(0)}\|
+	```
+	where $C$ is a positive constant.
+	This is **linear convergence** with rate $\frac{\sqrt{κ(A)} - 1}{\sqrt{κ(A)} + 1}$.
+
+Notice (1) that this method is **guaranteed to converge after $n$ steps** and (2)  that the rate deteriorates much slower as the condition number increases (recall that smaller rates are better):
+"""
+
+# ╔═╡ 9061df24-9a36-4612-9b6f-926d8641231a
+let
+	p = plot(κ -> (κ-1)/(κ+1), xaxis=:log, xlims=(1, 10^3), label="Steepest descent", xlabel=L"κ(A)", ylabel="Rate", lw=3)
+	plot!(p, κ -> (sqrt(κ)-1)/(sqrt(κ)+1), lw=3, label="Conjugate gradient", ls=:dash)
+end
 
 # ╔═╡ 9e3340b7-1ecb-4f6d-96a0-089932ec306d
 md"""
-For this example the theoretical rate is:
+Indeed for our 2x2 matrix example two steps of CG are enough:
+"""
+
+# ╔═╡ 96d9ceb9-2917-44bd-a7af-724d7dd50414
+md"""
+Furthermore we note our random matrix example to converge noticably faster:
 """
 
 # ╔═╡ 7cbc6819-875a-498f-a81a-f63652c3dc8c
@@ -988,13 +1362,14 @@ A (non-optimised) CG implementation is:
 
 # ╔═╡ 5291c5f3-7d79-42b4-b704-24697fcc9782
 function conjugate_gradient_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
-	history = Float64[]  # Track relative residual norm
+	resnorms = Float64[]  # Track relative residual norm
+	history  = [x]
 	
 	r = b - A * x
 	p = r
 	for k in 1:maxiter
 		relnorm = norm(r) / norm(b)
-		push!(history, relnorm)
+		push!(resnorms, relnorm)
 		if relnorm < tol
 			break
 		end
@@ -1009,8 +1384,29 @@ function conjugate_gradient_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
 		β = dot(r_new, r_new) / dot(r, r)
 		p = r_new + β * p
 		r = r_new
+
+		push!(history, x)
 	end
-	(; x, history)
+	(; x, resnorms, history)
+end
+
+# ╔═╡ 2ad6d547-88d0-4ad2-b9d5-09719212b0cc
+let
+	p = plot_contour()
+
+	res = conjugate_gradient_simple(A2d, zeros(2); x=[5.0, 1.0], maxiter=4)
+	for i in 1:2
+		label = i == 1 ? "Conjugate Gradient" : ""
+		plot!(p, first.(res.history)[i:i+1], last.(res.history)[i:i+1]; c=:blue, arrow=true, label, lw=4)
+	end
+	
+	res = steepest_descent_simple(A2d, zeros(2); x=[5.0, 1.0], maxiter=10)
+	for i in 1:10
+		label = i == 1 ? "Steepest Decent" : ""
+		plot!(p, first.(res.history)[i:i+1], last.(res.history)[i:i+1]; c=:red, arrow=i < 6, label, lw=2)
+	end
+	
+	p
 end
 
 # ╔═╡ d0dfcbe6-6115-4f87-a310-5db427d90346
@@ -1019,10 +1415,10 @@ let
 	descent_no_preconditioner = steepest_descent_simple(Aₛ, bₛ; tol=1e-6, maxiter=40)
 	cg_no_preconditioner = conjugate_gradient_simple(Aₛ, bₛ; tol=1e-6, maxiter=40)
 	
-	plot(descent_no_preconditioner.history;
+	plot(descent_no_preconditioner.resnorms;
 	     yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||",
 	     label="Steepest descent", legend=:bottomleft, c=2,  ylims=(1e-4, 1.3))
-	plot!(cg_no_preconditioner.history; label="CG", lw=2, mark=:o, c=1)
+	plot!(cg_no_preconditioner.resnorms; label="CG", lw=2, mark=:o, c=1)
 
 
 	plot!(1:40, x -> 0.15rate_steep_desc^x, lw=2, ls=:dash, label="Rate steep. desc.", c=2)
@@ -1034,7 +1430,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 550)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 420)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2317,7 +2713,6 @@ version = "1.4.1+2"
 # ╟─d9bb93ce-5fac-4f3a-98b4-3024a23bcfb1
 # ╟─55a69e52-002f-40dc-8830-7fa16b7af081
 # ╟─a5bedab1-b6a3-4539-82af-c18de2da4e92
-# ╠═f101631e-e650-407e-b34a-3e6512eb93e4
 # ╟─858b7c87-80de-4c1a-8598-03657608e323
 # ╟─d3f4ef3a-1a17-4078-b7a8-9e9b767ee541
 # ╠═77f1c8d5-8058-47cb-a0b5-436b4259aec9
@@ -2333,10 +2728,28 @@ version = "1.4.1+2"
 # ╟─08dc1f90-2fc6-4328-a39d-8856f215db33
 # ╟─33cb7e52-abe1-40f0-81d0-f8b00468a9ff
 # ╟─b46abcc8-f739-4da0-9d63-f6673ed6884f
+# ╟─41a269c8-fe64-4660-aa66-054b8af8af20
+# ╟─bf9a171a-8aa4-4f21-bde3-56ccef40de24
 # ╟─590e8877-0600-4bbb-8e88-7033548815b5
-# ╠═fa7c4b56-c322-4662-a190-07a700947dd8
-# ╟─c330ec39-bcce-4b97-b5c9-11c13967de56
+# ╟─fff80ab4-d1df-4bef-a1d2-2aa08c78ce54
+# ╠═bb45f71b-b4cc-4b9a-abcb-7b0647f32a9b
+# ╠═53cc323c-d742-4cc6-8b96-e966e2b1ccb4
+# ╠═e22c0abe-caa8-4e65-a3c1-8b05e820b7e7
+# ╟─46cf4acb-5883-4cf0-bc15-3150f401a401
+# ╟─92035249-948e-4f2f-a00e-8b4ae0ec2742
+# ╟─32b2a6e4-31ca-477f-9839-71cd940949b8
+# ╟─f8f62fa0-6a68-4083-909f-4a3367157f12
+# ╟─cf1af660-1326-4c57-900f-ea12e9836f85
+# ╟─599d5e8c-8e36-401e-a576-1d47ef045c18
+# ╟─6d4b968d-9cdc-4ca0-971a-6f2e5a8d06d8
+# ╟─3e4785cc-4120-4f69-b6ad-27da5bb3a17e
 # ╠═0159a195-627c-4e07-834e-222248665da8
+# ╟─c330ec39-bcce-4b97-b5c9-11c13967de56
+# ╟─0b7aad76-2e9d-41de-851d-5075d9f840b3
+# ╟─3c09a9c8-015b-4d17-9643-1f270b8a1d9b
+# ╟─7207b521-e642-4ffd-a590-74b0f474f7a8
+# ╟─7cc7488b-fe17-496c-8c59-c074819d81f0
+# ╟─95b48015-48d4-4742-94dd-fac1dbe5f041
 # ╠═9e34bd04-a4b7-4b60-b93b-dcd37b25287b
 # ╠═45cfdf30-8738-4cb6-a49a-534392128475
 # ╟─646ebf55-d081-4884-8524-15e5b0ecebcc
@@ -2344,21 +2757,22 @@ version = "1.4.1+2"
 # ╟─7481b32b-d8c4-405b-9a97-dfb17ce87f53
 # ╠═1a675fdb-885d-462e-bc77-9ea074d49614
 # ╠═f0c0071f-5499-4bfa-b838-4f3d72ae3b3d
-# ╟─8090fe02-249a-492b-b04a-b3d1409253c4
-# ╠═7207e407-a42e-42c3-919c-69f8d8114f74
-# ╟─db4ab984-439d-4c43-8d02-1c0f288abdae
-# ╠═fdbe3ba7-d1a3-43b0-bd56-ad0bc6f2200d
-# ╟─15f921ac-227c-49e9-8777-86ae502ebc6c
-# ╠═bf028cd7-c911-4329-86b0-442061a8e8c8
-# ╟─ca833c65-eba0-4344-ac9f-a1e360acc7dc
-# ╠═d698fe83-68a6-4988-b1e0-9e2dace2c6fd
-# ╠═7050ffeb-91db-456c-8f07-3ee748f5c395
-# ╠═3f5576db-8ee6-451c-b967-6a3a97626422
+# ╟─cc4b5c31-cd6a-4df8-b1cf-068e209aaa33
+# ╟─1c819b4a-d6d4-408f-a30f-aa4f6bb2871e
+# ╟─fdbe3ba7-d1a3-43b0-bd56-ad0bc6f2200d
+# ╟─bf028cd7-c911-4329-86b0-442061a8e8c8
+# ╟─d698fe83-68a6-4988-b1e0-9e2dace2c6fd
+# ╟─653dd5fd-2771-492e-9508-2b473d448be4
+# ╟─6671fe27-7b0f-458a-a012-747c5fcb76eb
+# ╟─1d3ea21f-0ebd-491b-a165-2e5cf7cc583f
+# ╠═9061df24-9a36-4612-9b6f-926d8641231a
 # ╟─9e3340b7-1ecb-4f6d-96a0-089932ec306d
+# ╟─2ad6d547-88d0-4ad2-b9d5-09719212b0cc
+# ╟─96d9ceb9-2917-44bd-a7af-724d7dd50414
 # ╠═7cbc6819-875a-498f-a81a-f63652c3dc8c
 # ╟─cf8ae086-da8a-4fd7-83cd-167b8b8d7dd4
-# ╠═5291c5f3-7d79-42b4-b704-24697fcc9782
-# ╠═d0dfcbe6-6115-4f87-a310-5db427d90346
+# ╟─d0dfcbe6-6115-4f87-a310-5db427d90346
+# ╟─5291c5f3-7d79-42b4-b704-24697fcc9782
 # ╟─e566f53e-e841-40d4-914d-de7f660a1e67
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
