@@ -95,6 +95,10 @@ I will also link to this text in the lecture notes from time to time.
 
 A slightly different emphasis in topics, but otherwise a good summary provide the lecture notes [**First Semester Numerical analysis**](https://diginole.lib.fsu.edu/islandora/object/fsu%3A657877/datastream/PDF/view) **by Giray Ökten**. At places the text is more mathematical than our treatment. In the initial sections it has a good summary of basic Julia commands an concepts. [An online PDF](https://diginole.lib.fsu.edu/islandora/object/fsu%3A657877/datastream/PDF/view) is available.
 
+For an in-depth treatment with mathematical details and proofs for the results where we skip these details for brevity
+can be found in [**Numerical Mathematics**](https://link.springer.com/book/10.1007/b98885) **by A. Quarteroni, R. Sacco, F. Saleri**.
+A PDF can be downloaded from Springer by EPFL students.
+
 Finally, if you are curious about Julia, I can highly recommend [**MIT's computational thinking class**](https://computationalthinking.mit.edu), which introduces Julia as well as its way of solving scientific problems in a hands-on and fun way.
 """
 
