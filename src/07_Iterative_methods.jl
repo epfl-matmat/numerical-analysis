@@ -353,46 +353,29 @@ md"""
 From Theorem 1 we take away that the norm of iteration matrix
 $\|\mathbf{B}\|$ is the crucial quantity to determine not only *if*
 Richardson iterations converge, but also *at which rate*.
-We thus investigate the object further:
-
-!!! info "Definition: Spectral radius"
-    Let $\mathbf{B} \in \mathbb{R}^{n \times n}$ be a diagonalisable matrix
-    and denote its eigenvalues as $λ_i(\mathbf{B})$, $i = 1, \ldots n$.
-    The **spectral radius** of $\mathbf{B}$ is the quantity
-    ```math
-    \tag{5}
-    ρ(\mathbf{B}) = \max_{i=1,\ldots,n}\left|λ_i(\mathbf{B})\right|
-    ```
-
-Note that one can show that
+Recall in Lemma 4 of [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html)
+we had the result that for any matrix  $\mathbf{B} \in \mathbb{R}^{m \times n}$
 ```math
-   \|\mathbf{B}\|^2 = ρ(\mathbf{B}),
+\tag{5}
+\|\mathbf{B}\| = \sqrt{ \lambda_\text{max}(\mathbf{B}^T\mathbf{B}) }.
 ```
-which implies
-
-!!! info "Theorem 2"
-    Richardson iterations (Algorithm 1) converges if and only if
-    $ρ(\mathbf{B}) < 1$,
-    where $\mathbf{B} = \mathbf{I} - \mathbf{P}^{-1} \mathbf{A}$.
-
-With this relationship between the eigenvalues of $\mathbf B$
-and the condition for convergence of Richardson iterations
-we can understand the **role of preconditioning**.
+With this and the condition $\|\mathbf{B}\| < 1$ for convergence
+in Theorem we can understand the **role of preconditioning**.
 If we were not to perform any preconditioning, i.e. $\mathbf{P} = \mathbf{I}$,
-then $ρ(\mathbf{B}) = ρ\left(\mathbf{I} - \mathbf{A}\right)$
+then $\|\mathbf{B}\| = \|\mathbf{I} - \mathbf{A}\|$
 becomes
 """
 
 # ╔═╡ 54cb29d7-4933-4ab4-a3b5-26431d8432f9
 let
 	B = I - A    # Iteration matrix for P = I, i.e. no preconditioner
-	ρ = maximum(abs.(eigvals(B)))
+	norm_b = sqrt(maximum( B' * B ))
 end
 
 # ╔═╡ af630960-a734-4124-81d3-a2657456f6c2
 md"""
 However, when using a diagonal preconditioner `P = Diagonal(A)`,
-i.e. $ρ(\mathbf{B}) = ρ\left(\mathbf{I} - \mathbf{P}^{-1} \mathbf{A}\right)$,
+i.e. $\|\mathbf{B}\| = \|\mathbf{I} - \mathbf{P}^{-1} \mathbf{A}\|$,
 then
 """
 
@@ -400,7 +383,7 @@ then
 let
 	P = Diagonal(A)
 	B = I - inv(P) * A  # Iteration matrix for P = Diagonal(A)
-	ρ = maximum(abs.(eigvals(B)))
+	norm_b = sqrt(maximum( B' * B ))
 end
 
 # ╔═╡ 114bc28c-7888-4c6c-85bd-8c6232624491
@@ -431,10 +414,10 @@ From the above experiments we notice:
 !!! info "Observation: Preconditioners"
     A good preconditioner $P$ in the Richardson iterations, satisfies the following properties:
     1. It is *cheap to invert*, that is linear systems $\mathbf{P} \mathbf{u} = \mathbf{r}$ are cheap to solve.
-    2. The spectral radius $ρ(\mathbf I - \mathbf P^{-1} \mathbf A)$ is as small as possible,
+    2. The iteration matrix norm $\|\mathbf I - \mathbf P^{-1} \mathbf A\|$ is as small as possible,
       definitely smaller than one (to ensure convergence).
 
-Clearly condition 2. suggests that the *perfect preconditioner* is $\mathbf{P} = \textbf{A}$, such that $\mathbf{P}^{-1} = \mathbf{A}^{-1}$. In this setting $ρ(\mathbf I - \mathbf{P}^{-1} \mathbf{A}) = ρ(\mathbf I - \mathbf I) = 0$,
+Clearly condition 2. suggests that the *perfect preconditioner* is $\mathbf{P} = \textbf{A}$, such that $\mathbf{P}^{-1} = \mathbf{A}^{-1}$. In this setting $\|\mathbf I - \mathbf{P}^{-1} \mathbf{A}\| = \|\mathbf I - \mathbf I\| = 0$,
 i.e. we converge in a single Richardson step !
 The trouble of this choice is that step 2 of Algorithm 1 (Richardson iteration) now effectively requires to solve the system $\mathbf A \mathbf u^{(k)} = \mathbf r^{(k)}$ for $\mathbf u^{(k)}$, i.e. we are back to solving the original problem. 
 
@@ -1095,10 +1078,10 @@ around the "best possible path". We will see in a second why this is.
 # ╔═╡ 0b7aad76-2e9d-41de-851d-5075d9f840b3
 let
 	p = plot_contour()
-	res = steepest_descent_simple(A2d, b2d; x=[5.0, 1.0], maxiter=8)
-	for i in 1:6
+	res = steepest_descent_simple(A2d, b2d; x=[5.0, 1.0], maxiter=10)
+	for i in 1:10
 		label = i == 1 ? "Steepest Decent iterations" : ""
-		plot!(p, first.(res.history)[i:i+1], last.(res.history)[i:i+1]; c=:red, arrow=true, label, lw=3, ls=:dash)
+		plot!(p, first.(res.history)[i:i+1], last.(res.history)[i:i+1]; c=:red, arrow=i < 6, label, lw=2)
 	end
 	p
 end
