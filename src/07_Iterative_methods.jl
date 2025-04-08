@@ -159,7 +159,7 @@ md"""Let us consider the test problem $\textbf{A} \textbf{x} = \textbf{b}$ with"
 
 # ╔═╡ 1c4ba2a0-553f-4b35-8b45-3de1c9e3a4e8
 # Generate a random matrix, which has large entries on the diagonal
-A = randn(100, 100) + Diagonal(10 .+ 50rand(100))
+A = randn(100, 100) + Diagonal(15 .+ 50rand(100))
 
 # ╔═╡ 49134b41-d3ca-4286-ae9a-5be0d1569241
 b = rand(100);
@@ -366,10 +366,13 @@ then $\|\mathbf{B}\| = \|\mathbf{I} - \mathbf{A}\|$
 becomes
 """
 
+# ╔═╡ e277ff4c-87a8-440d-bba4-f30a20b47788
+A
+
 # ╔═╡ 54cb29d7-4933-4ab4-a3b5-26431d8432f9
 let
 	B = I - A    # Iteration matrix for P = I, i.e. no preconditioner
-	norm_b = sqrt(maximum( B' * B ))
+	norm_b = sqrt(maximum(eigvals( B' * B )))
 end
 
 # ╔═╡ af630960-a734-4124-81d3-a2657456f6c2
@@ -383,7 +386,7 @@ then
 let
 	P = Diagonal(A)
 	B = I - inv(P) * A  # Iteration matrix for P = Diagonal(A)
-	norm_b = sqrt(maximum( B' * B ))
+	norm_b = sqrt(maximum(eigvals( B' * B )))
 end
 
 # ╔═╡ 114bc28c-7888-4c6c-85bd-8c6232624491
@@ -395,12 +398,13 @@ Therefore only the preconditioned iterations converge:
 # ╔═╡ d8e0e584-985d-4ff0-8a5c-b21c83c226d9
 let
 	P = Diagonal(A)
-	richardson_diagonal = richardson(A, b, P; tol=1e-6, maxiter=30)
-	richardson_no_preconditioner = richardson(A, b, I; tol=1e-6, maxiter=30)
+	richardson_diagonal = richardson(A, b, P; tol=1e-10, maxiter=30)
+	richardson_no_preconditioner = richardson(A, b, I; tol=1e-10, maxiter=30)
 	
 	plot(richardson_diagonal.history;
 	     yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||",
-	     label=L"$P = \textrm{Diagonal(}A\textrm{)}$", legend=:bottomright)
+	     label=L"$P = \textrm{Diagonal(}A\textrm{)}$", legend=:bottomright,
+		 ylims=(1e-10, 1e5))
 	plot!(richardson_no_preconditioner.history;
 	      label=L"$P = I$", lw=2, mark=:o)
 end
@@ -421,7 +425,7 @@ Clearly condition 2. suggests that the *perfect preconditioner* is $\mathbf{P} =
 i.e. we converge in a single Richardson step !
 The trouble of this choice is that step 2 of Algorithm 1 (Richardson iteration) now effectively requires to solve the system $\mathbf A \mathbf u^{(k)} = \mathbf r^{(k)}$ for $\mathbf u^{(k)}$, i.e. we are back to solving the original problem. 
 
-On the other hand condition 1. suggests to use $\mathbf P^{-1} = \mathbf I^{-1}$ (since the identity is cheapest to invert --- nothing needs to be done). However, this does not really do anything and does thus not improve the spectral radius.
+On the other hand condition 1. suggests to use $\mathbf P^{-1} = \mathbf I^{-1}$ (since the identity is cheapest to invert --- nothing needs to be done). However, this does not really do anything and does thus not reduce the value of $\|\mathbf{B}\|$. It will just be $\|\mathbf I - \mathbf A\|$.
 """
 
 # ╔═╡ a7ebacfb-b163-40aa-99c8-f5873478249b
@@ -923,7 +927,7 @@ takes us downhill (see green arrow). We thus propose an algorithm
 ```math
 \tag{11}
 \begin{aligned}
-\phi(\textbf{x}^{(k+1)}) &= \phi(\textbf{x}^{(k)}) - \alpha_k \nabla \phi(\textbf{x}^{(k)}) \\&= \phi(\textbf{x}^{(k)}) + \alpha_k \textbf r^{(k)},
+\textbf{x}^{(k+1)} &= \textbf{x}^{(k)} - \alpha_k \nabla \phi(\textbf{x}^{(k)}) \\&= \textbf{x}^{(k)} + \alpha_k \textbf r^{(k)},
 \end{aligned}
 ```
 where we used that $\nabla \phi(\textbf{x}^{(k)}) = - \textbf r^{(k)}$,
@@ -2686,6 +2690,7 @@ version = "1.4.1+2"
 # ╟─6a5346df-6c21-47fb-9f99-d0bc75532135
 # ╟─f2d4fbe9-e19a-41e0-9f3b-2f77ef0b12a7
 # ╟─ef1ecb29-3ca0-4505-b96f-a56abd961979
+# ╠═e277ff4c-87a8-440d-bba4-f30a20b47788
 # ╠═54cb29d7-4933-4ab4-a3b5-26431d8432f9
 # ╟─af630960-a734-4124-81d3-a2657456f6c2
 # ╠═51030114-04d7-49eb-9ac1-042941681446
