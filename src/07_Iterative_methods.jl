@@ -495,9 +495,9 @@ Combining this with our stopping criterion from **Algorithm 1**, that is
 we finally obtain
 ```math
 \frac{\|\mathbf{x}_\ast - \mathbf{x}^{(k)} \|}{\| \mathbf{x}_\ast \|}
-≤ κ(\mathbf{A}) \, ε.
+< κ(\mathbf{A}) \, ε.
 ```
-In other words **our stopping criterion ensures** that the **relative error of the returned solution** is no larger than $κ(\mathbf{A})$ times the chosen tolerance.
+In other words **our stopping criterion ensures** that the **relative error of the returned solution** is smaller than $κ(\mathbf{A})$ times the chosen tolerance.
 
 If the matrix is well-conditioned, i.e. $κ(\mathbf{A})$ is close to $1$,
 then the relative residual $\frac{\left\|\mathbf{r}^{(k)} \right\|}{\| \mathbf{b} \|}$
