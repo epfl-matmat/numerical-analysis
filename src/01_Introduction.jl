@@ -143,7 +143,7 @@ Clearly, the quality of such a fit depends strongly on the polynomial order.
 Perhaps suprising is, however, that **higher degree is not necessarily better**.
 We will discuss why this is.
 
-!!! warning "Related questions we will discuss:"
+!!! info "Related questions we will discuss:"
 	- How can I fit a polynomial to data points ?
 	- How accurate can I expect such a polynomial fit to be ?
 	- Can I choose an optimal polynomial order to obtain the most accurate answer ?
@@ -269,7 +269,7 @@ end
 
 # ╔═╡ 9aed0528-8e7e-477b-bc1f-0fd3e76bddd7
 md"""
-!!! warning "Related questions we will discuss:"
+!!! info "Related questions we will discuss:"
 	- There seems to be some optimal value for $h$. Is it independent of the function to be differentiated ?
 	- Here seems to be some minimal error we can achieve. Are there more accurate derivative formulas ?
 	- The convergence plot as $h$ decreases seems to have the same slope (convergence rate) for all points $t$. Does this slope depend on $f$ ? How can we reach faster convergence ?
@@ -415,7 +415,7 @@ Even if you now might think, that your heart beats for **experimental research**
 
 # ╔═╡ 14ed579e-dc0b-4a3e-87cf-7a2a87de0dcf
 md"""
-!!! warning "Related questions we will discuss:"
+!!! info "Related questions we will discuss:"
 	- How can I understand whether an obtained numerical answer is credible ?
 	- What techniques based on visualisation or plotting help me to understand the accuracy of a numerical algorithm ?
 	- How can I overcome numerical issues ?

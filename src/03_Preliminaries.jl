@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -244,6 +244,9 @@ This indeed can be shown to be the case.
   ```
   for $i = 1, \ldots, n+1$.
 """
+
+# ╔═╡ 126bffa5-efe1-4dc2-8fc7-0e7bd117a1f8
+TODO("Properties of scalar product (symmetry), matrix-vector product and ways to write it (as sum, using vector transposes, connection to visual approach to perform operations))")
 
 # ╔═╡ 8e287200-7bb7-4a6a-a20f-2fdfaf450e33
 md"""
@@ -499,7 +502,7 @@ PlutoUI = "~0.7.59"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.3"
+julia_version = "1.11.4"
 manifest_format = "2.0"
 project_hash = "528735389673e88801bde36819b6ba9aa28abdbb"
 
@@ -889,6 +892,7 @@ version = "17.4.0+2"
 # ╟─00744f80-67ef-4613-bd4c-ed428c5dba0f
 # ╟─3579e3fb-e540-4c9c-94c5-d336047258c5
 # ╟─bbc55b67-c0fd-48a5-9c87-3cf1a4d5fd07
+# ╟─126bffa5-efe1-4dc2-8fc7-0e7bd117a1f8
 # ╟─8e287200-7bb7-4a6a-a20f-2fdfaf450e33
 # ╟─e363da18-0001-4870-adb5-ef7d73514a36
 # ╟─bd53a113-a153-405e-9340-da78a61b775a

@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ 9688d440-d231-11ee-0510-8db284ccd0c9
 begin
@@ -12,6 +24,8 @@ begin
 	using Printf
 	using LaTeXStrings
 	using HypertextLiteral
+	using Symbolics
+	using ForwardDiff
 end
 
 # ╔═╡ 4103c9d2-ef89-4c65-be3f-3dab59d1cc47
@@ -23,20 +37,61 @@ md"""
 # ╔═╡ e9151d3f-8d28-4e9b-add8-43c713f6f068
 TableOfContents()
 
-# ╔═╡ d4e538c0-5529-4ec3-bc11-ec797bda8cfc
+# ╔═╡ bc9f0276-6b7b-4b19-8ef0-6371da964a9c
 md"""
 # Numerical differentiation
 
-In the last chapter we discussed numerical techniques for integration based on quadrature formulas. In this chapter we will consider numerical techniques for performing the inverse operation, namely differentiation.
+Taking derivatives by hand can be a error-prone and time-consuming task.
+Recall the innocent-looking function
 """
 
-# ╔═╡ fe24a732-672f-470d-9174-315df4e4a7ca
+# ╔═╡ 7b74f71f-a5fa-47ba-b218-c1798fa540f7
+v(t) = 64t * (1 − t) * (1 − 2t)^2 * (1 − 8t + 8t^2)^2
+
+# ╔═╡ 80df99a7-3e31-4418-9314-399116831e72
+let
+	p = plot(v;
+			 ylims=(-10, 2),
+			 xlims=(-0.5, 1.5),
+			 linewidth=2,
+		     label="",
+			 xlabel="t",
+		     ylabel="v")
+end
+
+# ╔═╡ 87753dbe-f075-435b-9ac5-75bdcd6019c0
+md"""
+we already considered in the [Introduction](https://teaching.matmat.org/numerical-analysis/01_Introduction.html). Recall that it's derivative was a rather lengthy and technical expression, which one would like to avoid computing by hand:
+"""
+
+# ╔═╡ 0f0c0f37-f751-4950-9a8e-8dadb038325e
+let
+	@variables t          # Define a variable
+	dt = Differential(t)  # Differentiating wrt. t
+	dv_dt = dt( v(t) )    # Compute dv / dt
+	dv_dt = expand_derivatives(dv_dt)
+end
+
+# ╔═╡ 657a065f-738f-4512-9a48-84fc9dae76da
+md"""
+In this chapter we will consider numerical techniques for computing such derivatives.
+"""
+
+# ╔═╡ 50cb2913-618f-4fd8-93a2-dd4f4411bbe1
 md"""
 ## First order derivatives
 
-Given a regular function $f : [a, b] \to \mathbb{R}$ our goal is to approximate numerically its derivative $f'$ in a point $x \in [a, b]$. Similar to the case of numerical integration we will allow ourselves only to perform $n$ pointwise evaluations $f(t_i)$ with $t_i \in [a, b]$ and $i = 1, \ldots, n$ and take linear combinations of these results.
+Given a regular function $f : [a, b] \to \mathbb{R}$ our goal is to **approximate numerically its derivative** $f'$ in a point $x \in [a, b]$. We will allow ourselves **only to perform $n$ pointwise evaluations** $f(t_i)$ with $t_i \in [a, b]$ and $i = 1, \ldots, n$ and **take linear combinations of these results**. That is we work towards approximations of the form
+```math
+    f'(x) = \sum_{i=1}^m α_i f(x_i),
+```
+where $x_i$ are points around $x$ and $α_i$ some coefficients,
+with details how to choose these points and coefficients to be specified.
+"""
 
-A first idea goes back to the definition of the derivative $f'(x)$ as the limit $h\to 0$ of the slope of secants over an intervall $[x, x+h]$, i.e.
+# ╔═╡ 1df757af-8d84-429b-8005-b17e9814e48c
+md"""
+A first idea to achieve such a **numerical differentiation formula** takes us back to the definition of the derivative $f'(x)$ as the limit $h\to 0$ of the slope of secants over an intervall $[x, x+h]$, i.e.
 ```math
 f'(x) = \lim_{h\to 0} \frac{f(x+h) - f(x)}{h}.
 ```
@@ -53,9 +108,12 @@ D^+_h f(x) = \frac{1}{h} \Big( f(x+h) - f(x) \Big).
 Note that in this expression
 we interpret $D^+_h f(x)$ in the same way as $\frac{d}{dx} f(x)$,
 i.e. as an operation applied to the function $f$ at the point $x$.
+"""
 
+# ╔═╡ 0d8522c0-8824-47d5-97d1-d2472e9c1adf
+md"""
 Without any surprise this can indeed be employed to approximate derivatives.
-Let us consider the function $f(x) = \sin\left(e^{x + 1}\right)$ or
+We will consider the function $f(x) = \sin(e^{x+1})$, or in code
 """
 
 # ╔═╡ 40634b5e-d328-4da0-8274-48f166ffdbba
@@ -63,7 +121,10 @@ f(x) = sin(exp(x + 1))
 
 # ╔═╡ 965625d6-b9da-4279-ad6d-54b2b62f1247
 md"""
-which has analytical derivative $f'(x) = e^{x+1} \cos\left(e^{x + 1}\right)$, i.e. $f'(0) = e \cos(e)$ or
+which has a slightly more tractable analytical derivative
+compared to $v(t)$, so makes it easier for us to compare results.
+
+We note $f'(x) = e^{x+1} \cos\left(e^{x + 1}\right)$, i.e. $f'(0) = e \cos(e)$ or
 """
 
 # ╔═╡ 0c3831e6-0353-4dbc-927b-f55521ccd8e4
@@ -99,11 +160,13 @@ let
 	(D⁺ₕ, error)
 end
 
-# ╔═╡ 1d818a50-65a1-4788-985b-c7a1c9e9e5b0
+# ╔═╡ 05022c02-5324-43ec-b86f-6dfa338c7fc4
+md"Continuing this further we observe **linear convergence**."
+
+# ╔═╡ 977c6fe3-8c0b-4dfc-b354-8fdab0c76884
 md"""
-This experiment already points to **linear convergence** (Why ?),
-so let us investigate the convergence behaviour more closely.
-We consider a Talyor serios of $f$ around $x$:
+Let us investigate the convergence behaviour more closely.
+We consider a Talyor series of $f$ around $x$:
 ```math
 f(x+h) = f(x) + f'(x)h + \frac12 f''(\xi) h^2 \qquad \text{for $\xi \in (x, x+h)$}
 ```
@@ -118,7 +181,10 @@ or
 = \frac h2 \|f''\|_\infty
 ```
 We just proved the linear convergence of $D^+_h$:
+"""
 
+# ╔═╡ 544bfd07-d57c-45f3-9a1a-37ea0bb7c0e3
+md"""
 !!! info "Theorem 1: Convergence of forward finite differences"
 	Given $f : [a, b] \to \mathbb{R}$ a $C^2$ function, then
 	the forward finite difference formula (1) converges linearly
@@ -159,7 +225,7 @@ A general definition is:
 	```
 """
 
-# ╔═╡ 63f156df-afa5-4f1d-9091-dc5d4e8b1ce2
+# ╔═╡ 12c00f60-63d6-4be3-9e0b-45934e29e9ca
 md"""
 The forward differences formula (1) only employed the two nodes $x$ and $x + h$, i.e. $m=0$ and $n=1$. Two other formulas with only two nodes are frequently employed, namely:
 - **Backward finite differences:** Instead of constructing the line through $x$ and $x+h$, one can also construct the line through $x-h$ and $x$, which leads to
@@ -178,8 +244,48 @@ The forward differences formula (1) only employed the two nodes $x$ and $x + h$,
   obtained by adding half of (1) to half of (3).
 """
 
-# ╔═╡ 0e0936aa-d759-4fe7-8375-89b9f7ea37b4
-TODO("Some image explaining these formulas using the slope of lines between points would be good.")
+# ╔═╡ 4e996740-ac6f-4c83-87ed-f0e09aa45e89
+md"""
+Visualisation of the derivatives obtained by these methods as slopes:
+- Exact derivative: $(@bind show_exact CheckBox(default=false))
+- Forward finite differences: $(@bind show_forward CheckBox(default=true))
+- Backward finite differences: $(@bind show_backward CheckBox(default=true))
+- Central finite differences: $(@bind show_central CheckBox(default=true))
+"""
+
+# ╔═╡ 2ea81c7f-fd18-48c5-9676-2e460c66e35f
+let
+	x₀ = 0.5
+	h  = 0.1
+
+	fdash      = exp(x₀+1) * cos(exp(x₀+1))
+	df_left    = 1/h  * (f(x₀ + h) - f(x₀))
+	df_right   = 1/h  * (f(x₀) - f(x₀ - h))
+	df_central = 1/2h * (f(x₀+h) - f(x₀-h))
+	
+	p = plot(f, xlims=(0.25, 0.75), lw=3, label="f", ylims=(-1.2, -0.7), legend=:bottomleft)
+	if show_exact
+	plot!(p, x -> f(x₀) + fdash * (x - x₀);
+		  label="Exact derivative", lw=1.5, ls=:dash, c=2)
+	end
+		
+	if show_forward
+	plot!(p, x -> f(x₀) + df_left * (x - x₀);
+		  label="Forward finite differences", lw=1.5, ls=:dash, c=4)
+	end
+	if show_backward
+	plot!(p, x -> f(x₀) + df_right * (x - x₀);
+		  label="Backward finite differences", lw=1.5, ls=:dash, c=3)
+	end
+	if show_central
+	plot!(p, x -> f(x₀) + df_central * (x - x₀) + 0.091;
+		  label="Central finite differences", lw=1.5, ls=:dash, c=5)
+	end
+	
+	scatter!(p, [x₀],   [f(x₀)],   label="x", c=2)
+	scatter!(p, [x₀-h], [f(x₀-h)], label="x-h", c=3)
+	scatter!(p, [x₀+h], [f(x₀+h)], label="x+h", c=4)
+end
 
 # ╔═╡ 6c316ead-2b3e-47e3-b625-2b33ff410d89
 md"""Let us consider the convergence of these three variants for computing the derivative of $f(x) = e^{\sin(x)}$ at $x=0$. First we construct the range of $h$ values:
@@ -198,6 +304,16 @@ begin
 	deriv_backward = [1/h    * (f(x)   - f(x-h)) for h in hs]
 	deriv_center   = [1/(2h) * (f(x+h) - f(x-h)) for h in hs]
 end;
+
+# ╔═╡ 4d265f09-143c-4cd9-ac5c-aea0aad85bea
+let
+	p = plot(; yaxis=:log, xaxis=:log, xflip=true, ylims=(1e-9, 10),
+		   xlabel=L"h", ylabel="absolute error")
+	hs = [10^e for e in 0:-0.5:-7];
+	deriv_forward = [1/h * (f(x + h) - f(x)) for h in hs]
+	error_forward  = abs.(deriv_forward  .- exact_value)
+	plot!(p, hs, error_forward;  label="forward",  lw=2, mark=:x)
+end
 
 # ╔═╡ 45126823-9ba8-4f89-a9c5-81789244ed99
 md"Next we compute the errors agains. the reference $f'(x) = 1$
@@ -222,10 +338,13 @@ let
 	plot!(p, hs, 0.5hs.^2; ls=:dash, label=L"O(h^2)", lw=2)
 end
 
-# ╔═╡ 48442160-36e1-4604-9a7a-c8bc6014494a
+# ╔═╡ dd5220d0-0290-490a-8309-c8b66164d332
 md"""
 We observe that both forward and backward finite differences converge at about the same rate. Indeed, one easily proves that the **backward finite differences** formula is also of **first order**.
+"""
 
+# ╔═╡ 7d48ab14-1638-4c03-90bc-188068183391
+md"""
 However, the center finite differences formula converges much faster. We again analyse using Taylor's formula:
 ```math
 \begin{aligned}
@@ -240,7 +359,12 @@ f(x) - h f'(x) + \frac{h^2}2 f''(x) - \frac{h^3}{6} f'''(\xi_2)
 &≤ f'(x) + \frac{2 h^2}{6} \max_{x\in [a, b]} |f'''(x)|
 \end{aligned}
 ```
-where $\xi_1 \in (x, x+h)$ and $\xi_2 \in (x-h, x)$. Therefore central finite differences is of second order:
+where $\xi_1 \in (x, x+h)$ and $\xi_2 \in (x-h, x)$.
+"""
+
+# ╔═╡ 94e8d3cb-f664-4f26-b234-e955ab3f61cb
+md"""
+Therefore central finite differences is of second order:
 
 !!! info "Theorem 2: Convergence of central finite differences"
 	Given $f : [a, b] \to \mathbb{R}$ a $C^3$ function, then
@@ -267,41 +391,355 @@ In light of this discussion let us formalise the definition of convergence order
 	as long as the function $f$ is sufficiently regular.
 """
 
+# ╔═╡ c6a94a08-3c8d-43e2-85e1-dc15d4f8b071
+md"""
+## Numerical stability
+
+One of the key principles behind all finite difference formulas we considered was that they approximate the derivative, in the sense that $f'(x) = \lim_{h\to0} D_h \, f(x)$. As a result we would expect results to become more and more accurate as $h$ gets smaller.
+"""
+
+# ╔═╡ 0d89e57d-a8e8-405f-8962-e6377ab87842
+md"""
+We stick to our example function
+```math
+\begin{aligned}
+f(x)  &= \sin(e^{x+1}) \\
+f'(x) &= e^{x+1} \cos\left(e^{x + 1}\right)
+\end{aligned}
+```
+where we consider the function on the interval $[a, b] = [-1, 1]$.
+In particular we evaluate the derivative at $0$,
+such that $f'(0) = e \, \cos(e)$.
+
+Using the forward finite differences formula we compute
+"""
+
+# ╔═╡ 56636368-9ff6-4b45-a3be-8b1e05f6ee20
+begin
+	X = 0.0
+	derivative_at_X = ℯ * cos(ℯ)
+	
+	all_h = [10^i for i in -1:-1.0:-14]
+	all_error = Float64[]  # Error of D⁺ₕ
+	for h in all_h
+		D⁺ₕ = 1/h * (f(X + h) - f(X))
+		error = abs(D⁺ₕ - derivative_at_X)
+		@printf "h=%.1e   D⁺ₕ=%.12f   error=%.6e\n" h D⁺ₕ error
+		push!(all_error, error)
+	end	
+end
+
+# ╔═╡ 1e426a63-f3ea-46e7-b89d-1de6b2a0c421
+md"""Plotting this error graphically yields:"""
+
+# ╔═╡ e165dccd-c909-428f-95d6-9942fc8adce2
+begin
+	# Plot log-log plot of error versus step size:
+	p = plot(all_h, all_error; xaxis=:log, yaxis=:log, mark=:x, lw=2, label="error", xflip=true, xlabel=L"h", ylims=(1e-9, 2), xlims=(1e-14, 1))
+
+	# Plot guide line for linear convergence:
+	plot!(p, all_h, 0.5all_h, label=L"O(h)", lw=1.5, ls=:dash)
+
+	# Make y-axis labels denser
+	yticks!(p, 10.0 .^ (-8:2:0))
+end
+
+# ╔═╡ 4bc09748-a008-4e62-b3f0-cc401b27af03
+md"""
+We notice that the derivative formula gives a good approximation to the exact derivative $f'(0) = e\,\cos(e)$ for $h = 10^{-8}$. However, if the node distance $h$ is **further descreased** the **approximation deteriorates**.
+This is a result of the **round-off error in the finite-precision floating-point arithmetic** of the computer as we will discuss now in more detail.
+"""
+
+# ╔═╡ 77d5c198-ee33-40a4-a6e0-057c2e9c8281
+md"""
+We take another look at the forward finite difference formula
+```math
+D^+_h f(x) = \frac{f(x+h) - f(x)}{h}.
+```
+As $h$ gets smaller computing the difference $f(x+h) - f(x)$ becomes problematic.
+Both the values of $f(x+h)$ and $f(x)$ can **only be computed to finite precision** in the computer's arithmetic. 
+As these **values become more and more similar** (after all we take $h$ smaller and smaller) and this makes the **difference $f(x+h) - f(x)$
+less and less precise**.
+For example let us assume $16$ digits are accurate for both $f(x+h)$ and $f(x)$
+and that we have chosen $h$ so small, that the first $10$ digits of both $f(x+h)$ and $f(x)$ agree.
+Than taking the difference  $f(x+h) - f(x)$ will effectively nullify these first $10$ digits,
+leaving us with only $6$ correct digits in the final answer.
+We conclude: As **$h$ gets smaller**, the **difference $f(x+h) - f(x)$ has less and less correct digits**, in turn making the **numerical derivative** $D^+_h f(x)$
+**less and less accurate**.
+"""
+
+# ╔═╡ 724f7887-9d5b-4b9c-b2fd-70e2a7062782
+md"""
+This rationalises our observations in the above plot,
+but it does not yet tell us how we should choose the best $h$.
+To answer this question we consider a more **quantitative mathematical analysis**.
+When evaluate the function $f(x)$ using a numerical procedure
+we always suffer from a small round-off error.
+Instead of evaluating $f(x_1)$ the **computer thus actually evaluates**
+```math
+\tag{5}
+\widetilde{f}(x_1) = f(x_1) (1 + ϵ_1),
+```
+where the round-off error $ϵ_1$ is on the order of $10^{-16}$.
+Note, that $|ϵ_1|$ is the relative error of $\widetilde{f}$
+```math
+\frac{|\widetilde{f}(x_1) - f(x_1)|}{|{f}(x_1)|} = \frac{|ϵ_1| \, |f(x_1)|}{|f(x_1)|} = |ϵ_1|.
+```
+In general $ϵ_1$ will depend on $x_1$,
+i.e. evaluating at a different point $x_2$ will lead to
+a slightly different error $ϵ_2$.
+However, standard floating-point furthermore come with the guarantee that
+```math
+|\epsilon_i| ≤ \epsilon_M
+```
+For double-precision floating-point numbers $\epsilon_M$ has the value
+"""
+
+# ╔═╡ 062f5835-42f5-4c57-a17b-ec3e617b542d
+eps(Float64)
+
+# ╔═╡ 6f4da5cf-9d05-42ec-8c27-1ae20632e94b
+Foldable("Optional: Effect of additional error contributions when evaluating f",
+md"""Note that on top of round-off errors there may be additional error contributions. A typical case is when evaluating $f(\mathbf x)$ involves itself an iterative procedure. For example if $f(\mathbf{x}) = \mathbf{z}$ where $\mathbf{z}$ is the solution to a linear systems $\mathbf A \mathbf z = \mathbf x$ computed using a conjugate gradient algorithm. In this case the iterative procedure is rarely solved perfectly, but stopped once a relative residual norm has been reached, which causes additional errors, effectively leading to an increase of the $\epsilon_M$ to be employed when working out the $h_\text{opt}$.
+""")
+
+# ╔═╡ 4f1ea545-4d37-4e78-b5de-6c8071e09d67
+md"""
+Employing this error model (5) within the
+evaluation of the **first-order finite-difference formula** (1)
+the computer will thus actually compute
+```math
+\begin{aligned}
+\widetilde{D}^+_h f(x)
+&= \frac{\widetilde{f}(x+h) - \widetilde{f}(x)}{h} \\
+&= \frac{f(x+h) (1+ϵ_1) - f(x) (1+ϵ_2)}{h} \\
+&= \frac{f(x+h) - f(x)}{h} + \frac{ϵ_1}{h}f(x+h) - \frac{ϵ_2}{h} f(x) \\
+&= f'(x) + \frac{f''(\xi)}{2} h + \frac{ϵ_1}{h}f(x+h) - \frac{ϵ_2}{h} f(x),
+\end{aligned}
+```
+where $|ϵ_1| ≤ \epsilon_M$, $|ϵ_2| ≤ \epsilon_M$
+and $\xi \in (x, x+h)$. Collecting everything we obtain the error
+of the computed finite-difference approximation to $f'(x)$ as
+```math
+\tag{6}
+\begin{aligned}
+|f'(x) - \widetilde{D}^+_h f(x)|
+&≤ \frac{h}{2} \max_{x \in [a, b]} |f''(x)| + 2 \, \max_{x \in [a, b]} |f(x)| \, \frac{\epsilon_M}{h} \\
+&= \underbrace{\frac{h}{2} \|f''\|_\infty}_{\text{trunc. error}}
++ \underbrace{\frac{2 \epsilon_M}{h} \|f\|_\infty}_{\text{round-off error}}
+\end{aligned}
+```
+"""
+
+# ╔═╡ 99974a63-9ba9-43c1-95ac-b02d83363e74
+md"""
+We notice there are **two error terms** in (6).
+One is **proportional to $h$** (finite differences **truncation error**)
+and one is **proportional to $1/h$**
+(due to **round-off error**).
+As $h\to0$ the first term thus derceases as the finite-difference approximation gets better. However, if $h$ is taken too small the second error growing as $1/h$ will dominate and our approximation will be bad.
+"""
+
+# ╔═╡ 896ee051-09d0-4849-8173-6f894ce66357
+md"""
+To obtain which $h$ gives the best sweet spot
+we want to **balance both errors**. Utilising equation (6)
+the total error of the approximation is bounded by
+```math
+\text{error}(h) = \frac{h}{2} \|f''\|_\infty + \frac{2 \epsilon_M}{h} \|f\|_\infty.
+```
+This function has a **single minimum**, which we can compute by
+```math
+0 = \frac{d\,\text{error}}{dh} \qquad \Rightarrow \qquad \frac{\|f''\|_\infty}{2} - \frac{2\, \epsilon_M \, \|f\|_\infty}{h^2} = 0
+```
+The **optimal node distance** $h_\text{opt}$, which **minimises the error**,
+is thus
+```math
+\tag{7}
+h_\text{opt} = \sqrt{\frac{4 \|f\|_\infty}{\|f''\|_\infty}} \, \sqrt{\epsilon_M}.
+```
+In our example we have $\|f\|_\infty = 1$ and $\|f''\|_\infty ≈ |f''(1)| ≈ e^4 ≈ 55$ and therefore $h_\text{opt}$ is of order $\sqrt{10^{-16}} = 10^{-8}$,
+which we also observed numerically.
+"""
+
+# ╔═╡ 3cda6ecd-a0a2-452b-8cb6-b36432c0bdda
+let
+	# Plot log-log plot of error versus step size:
+	p = plot(all_h, all_error; xaxis=:log, yaxis=:log, mark=:x, lw=2, label="error", xflip=true, xlabel=L"h", ylims=(1e-12, 2), xlims=(1e-14, 1))
+
+	# Plot guide line for linear convergence:
+	plot!(p, all_h, 0.5all_h, label=L"O(h)", lw=1.5, ls=:dash)
+
+	plot!(p, all_h, 1e-16 ./ all_h, label=L"O(1/h)", lw=1.5, ls=:dash)
+
+
+	# Make y-axis labels denser
+	yticks!(p, 10.0 .^ (-12:2:0))
+end
+
+# ╔═╡ 31644da8-5501-477b-a65d-54f38c649718
+md"""
+**Optimal $h$ for higher-order formulas:**
+Note that in (6) the $h$ dependence of the **first error term** (finite difference truncation error) depends on the **order of the finite difference formula**.
+
+For an order $p$ method the error will thus have the form
+```math
+\text{error}(h) = C_1 h^p + C_2 {\epsilon_M}{h}
+```
+with appropriate constants $C_1$ and $C_2$.
+By a similar argument to minimise this error wrt. $h$
+one can show that the optimal value of $h$ is
+on the order of $\sqrt[p+1]{\epsilon_M}$     .
+We summarise:
+
+!!! info "Observation: Optimal nodal spacing h for finite differences"
+    When computing a numerical derivative of $f$ using a **finite-difference
+	method of order $p$**
+	the optimal spacing of nodes satisfies roughly
+	```math
+	h_\text{opt} \approx \sqrt[p+1]{\epsilon_M}.
+	```
+	where $\epsilon_M$ is the maximal relative error in the evaluation of $f$.
+"""
+
+# ╔═╡ 86d719b4-494b-489d-9c6a-40c8d2477bad
+md"""
+To illustrate this graphically we apply three finite-difference (FD) formulas
+
+- **1st order:**  $\displaystyle D_1\, g(x_0) = \frac{g(x_0+h) - g(x_0)}{h} \qquad \qquad$ *(forward finite differences)*
+- **2nd order:**  $\displaystyle D_2\, g(x_0) = \frac{g(x_0+h) - g(x_0-h)}{2h} \qquad$ *(central finite differences)*
+- **4th order:**  $\displaystyle D_4\, g(x_0) = \frac{g(x_0-2h) -8\, g(x_0-h) + 8\, g(x_0+h) - g(x_0+2h)}{12h}$
+
+to the selected function to compute the derivative at at $x_0 = 0.2$.
+
+- `g = ` $(@bind g Select([(x -> exp(-1.3x)) => "h(x) = exp(-1.3 x)", v => "v(t) = 64t * (1 − t) * (1 − 2t)^2 * (1 − 8t + 8t^2)^2", f => "f(x) = sin( exp(x+1) )"]))
+"""
+
+# ╔═╡ 512f4377-c80a-47da-a195-b63a746fcf75
+md"We **compute a reference** using `ForwardDiff`, a more precise algorithmic technique to compute derivatives (outside of the scope of this course):"
+
+# ╔═╡ 1469326c-92b1-4fad-a54f-e6397596c39f
+x₀ = 0.2
+
+# ╔═╡ 2db471c0-ebfb-4e30-9a95-f281d9467a4f
+let
+	p = plot(g, xlims=(-1, 1), label="Selected function g", lw=2, ylims=(-2, 2))
+	scatter!(p, [x₀], [g(x₀)], label="x₀")
+end
+
+# ╔═╡ c7e410cc-aeba-4630-9ebb-87af7ef093a5
+reference = ForwardDiff.derivative(g, x₀)
+
+# ╔═╡ 6b30e9a0-b220-49c9-aa31-76c8d24d93b2
+md"... and apply the three formulas:"
+
+# ╔═╡ b0c56709-a77e-4417-bd2b-bf4543cb2a13
+let
+	error_fd1 = Float64[]
+	error_fd2 = Float64[]
+	error_fd4 = Float64[]
+
+	all_h = [10^i for i in -1:-1.0:-14]	
+	for h in all_h
+		diff_fd1 = 1/h   * (g(x₀ + h) - g(x₀))
+		diff_fd2 = 1/2h  * (g(x₀ + h) - g(x₀ - h))
+		diff_fd4 = 1/12h * (g(x₀ -2h) - 8g(x₀-h) + 8g(x₀+h) - g(x₀+2h))
+
+		push!(error_fd1, abs.(diff_fd1 - reference))
+		push!(error_fd2, abs.(diff_fd2 - reference))
+		push!(error_fd4, abs.(diff_fd4 - reference))
+	end
+
+	p = plot(; xaxis=:log, yaxis=:log, mark=:x, lw=2, xflip=true, xlabel=L"h", legend=:bottomright)
+	plot!(p, all_h, error_fd1; label="1st order FD", mark=:x, lw=2)
+	plot!(p, all_h, error_fd2; label="2nd order FD", mark=:x, lw=2,)
+	plot!(p, all_h, error_fd4; label="4th order FD", mark=:x, lw=2)
+
+	vline!(p, [sqrt(eps())], label=L"\sqrt{ε_M}", c=1, ls=:dash)
+	vline!(p, [cbrt(eps())], label=L"ε_M^{1/3}",  c=2, ls=:dash)
+	vline!(p, [eps()^(1/5)], label=L"ε_M^{1/5}",  c=3, ls=:dash)
+
+	yticks!(p, 10. .^ (-14:2:0))
+end
+
+# ╔═╡ 2b940279-24e5-495b-af0c-b0b9e547f33a
+md"""
+**As $h$ shrinks** the **errors** are **initially** dominated by the **truncation error**,
+which dicreases most rapidly for the 4th order formula.
+However, the increasing **round-off error eventually dominates** the behaviour as the truncation error continues to decrease.
+
+**As the order increases** the **crossover point** between truncation error and round-off error **moves further to the left** and further down. Thus **higher-order methods are generally more accurate** as the numerically problematic small $h$ values can be avoided.
+
+The optimal value for $h$ does indeed scale with $\sqrt[p+1]{\epsilon_M}$ .
+However, as a visual inspection of the error plot shows, **this formula does
+only provide a rough orientation**: Sometimes the $h$ with lowest error can
+in fact be smaller or larger.
+In practice finding the best $h$ can still be rather challenging.
+"""
+
 # ╔═╡ 83be5e79-e71c-4f32-95e9-854f2fdc024d
 md"""
 ## Construction of finite difference formulas
 
-Above we introduced three finite difference formulas, which have been motivated directly from the definition of of the derivative itself and all employed only two points. The construction of more involved formulas is feasible and in fact frequently employed to obtain an even higher convergence order.
+As we saw above, the delicate balance between truncation error and
+round-off error implies that --- even when choosing the best $h$ ---
+the **accuracy of low-order finite-difference formulas
+can remain limited**.
+In particular for accuracies beyond $10^{-6}$
+second and higher-order formulas are almost always needed
+and in fact a wide range of such formulas are available in the literature.
 
-We will not discuss all details in this lecture and only sketch two ideas how other finite difference formulas can be obtained in practice. For further discussion and a table of common
+We will not discuss all details in this lecture and only sketch **two ideas how other finite difference formulas can be obtained** in practice.
+For further discussion and a table of common
 finite difference formulas
 see for example [chapter 5.4](https://tobydriscoll.net/fnc-julia/localapprox/finitediffs.html#arbitrary-nodes) Driscoll, Brown: Fundamentals of Numerical Computation.
 """
 
-# ╔═╡ dfd068d8-d8e6-4b66-a51a-7da122a95362
+# ╔═╡ cb27d648-dc8b-4840-925a-b122ce5d4fd5
 md"""
 ### Determination of finite differences coefficients
 The definition (2) of a finite difference formula already
 introduced the general expression
 ```math
-\tilde{D}_h \, f(x) = \frac{1}{h}\, \sum_{i=-m}^n w_i f(x + i h).
+D_h \, f(x) = \frac{1}{h}\, \sum_{i=-m}^n w_i f(x + i h).
 ```
+with nodes
+"""
+
+# ╔═╡ 8ab17ea3-a8e4-4471-9d54-9798a4b01a26
+RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/3720244719e1b0a9299a1675315cc8c5a0fe3e5d/notes/img/finite-difference-nodes.svg", "img/finite-difference-nodes.svg", :width => 600)
+
+# ╔═╡ a16bd249-755b-4b6a-b197-c299d1fd959d
+md"""
 The integers $m$ and $n$ determine the limits of the sum and thus the number of nodes at which one needs to evaluate the function.
 
-Since function evaluation is usually the expensive step, the values for $m$ and $n$ are usually set based on practical limitations (such as the available computational time or the structure of the computational problem). The key unknown is thus to determine the coefficients $w_i$, which can be obtained by matching $\tilde{D}_h\,f(x)$ as closely as possible to $f'(x)$ using Taylor expansions of $f$. We consider an example:
+Since **function evaluation is usually the expensive step**, 
+and such a formula needs around $n + m + 1$ function evaluations,
+the values of $m$ and $n$ should remain small.
+Thus the values for $m$ and $n$ often need to be set due to practical limitations, such as the available computational time or the structure of the computational problem.
 
+Assuming that $n$ and $m$ are given the
+**main unknown** are thus the **coefficients $w_i$**.
+Using a Taylor expansions of $f$
+these can be obtained such that $D_h\,f(x)$ matches
+$f'(x)$ as close as possible.
+We consider an example:
+"""
+
+# ╔═╡ 75f3aa38-57b5-498f-b80e-97e28859316f
+md"""
 !!! warning "Example: m=n=1"
 	We consider the case $m=n=1$, i.e. we want to derive the finite-differences formula using the three nodal points $x-h$, $x$ and $x+h$. For this setting the general formula (2) becomes
 	```math
-	\tag{5}
-	\tilde{D}_h \, f(x) = \frac{1}{h}\left[
+	\tag{8}
+	{D}_h \, f(x) = \frac{1}{h}\left[
 		w_{-1} f(x-h) + w_0 f(x) + w_1 f(x+h)
 	\right].
 	```
 	Expanding $f(x-h)$ and $f(x+h)$ using Taylor series we have
 	```math
 	\begin{aligned}
-	\tilde{D}_h \, f(x) &= \frac{w_{-1}}{h}\left[
+	{D}_h \, f(x) &= \frac{w_{-1}}{h}\left[
 		f(x) - f'(x) h + \frac{f''(x)}{2} h^2 + O(h^3)
 	\right] \\
 	&+ \frac{w_0}{h} f(x) \\
@@ -312,7 +750,7 @@ Since function evaluation is usually the expensive step, the values for $m$ and 
 	```
 	Collecting coefficients we obtain
 	```math
-	\tilde{D}_h \, f(x) = \underbrace{\frac{w_{-1} + w_0 + w_1}{h}}_{=0}\, f(x)
+	{D}_h \, f(x) = \underbrace{\frac{w_{-1} + w_0 + w_1}{h}}_{=0}\, f(x)
 		+ \underbrace{\left(w_1 - w_{-1}\right)}_{=1} \, f'(x)
 		+ \underbrace{\frac{h\, (w_{-1} + w_1)}{2}}_{=0} \,f''(x)
 		+ O(h^2),
@@ -351,34 +789,66 @@ end
 md"""
 !!! warning ""
 	i.e. $w_{-1} = -\frac12$, $w_0 = 0$, $w_1 = \frac12$,
-	which we insert into (5) to obtain
+	which we insert into (8) to obtain
 	```math
 	\tilde{D}_h \, f(x) = \frac{1}{h}\left(\frac{-1}2 f(x-h) + \frac12 f(x+h)\right)
 	= \frac{1}{2h} \Big(f(x+h) - f(x - h)\Big).
 	```
-	We thus recover the central finite differences formula (4) from earlier.
+	We thus **recover the central finite differences formula** (4) from earlier.
 """
 
-# ╔═╡ 85e2c3d5-3e63-460a-83ae-6c4bce19d9d1
+# ╔═╡ 37d7e297-82b4-4c15-b590-34c47cc41bb9
 md"""
 ### Using interpolating polynomials
 
-Similar to the construction of quadrature formulas,
-we can also obtain finite difference formulas based on interpolating polynomials.
+Recall our visualisation of the various finite differences formulas:
+"""
 
-To rationalise this idea recall the forward finite differences formula (1)
+# ╔═╡ 933aada3-991a-4a5c-ba6c-d2b85e5b62e1
+let
+	x₀ = 0.5
+	h  = 0.1
+
+	fdash      = exp(x₀+1) * cos(exp(x₀+1))
+	df_left    = 1/h  * (f(x₀ + h) - f(x₀))
+	df_right   = 1/h  * (f(x₀) - f(x₀ - h))
+	df_central = 1/2h * (f(x₀+h) - f(x₀-h))
+	
+	p = plot(f, xlims=(0.25, 0.75), lw=3, label="f", ylims=(-1.2, -0.7), legend=:bottomleft)		
+	plot!(p, x -> f(x₀) + df_left * (x - x₀);
+		  label="Forward finite differences", lw=1.5, ls=:dash, c=4)
+	plot!(p, x -> f(x₀) + df_right * (x - x₀);
+		  label="Backward finite differences", lw=1.5, ls=:dash, c=3)
+
+	plot!(p, x -> f(x₀) + df_central * (x - x₀) + 0.091;
+		  label="Central finite differences", lw=1.5, ls=:dash, c=5)
+
+	
+	scatter!(p, [x₀],   [f(x₀)],   label="x", c=2)
+	scatter!(p, [x₀-h], [f(x₀-h)], label="x-h", c=3)
+	scatter!(p, [x₀+h], [f(x₀+h)], label="x+h", c=4)
+end
+
+# ╔═╡ e1d3d69d-380c-4dac-ab45-5e3517d542a6
+md"""
+In this image the value of the finite-difference derivative was the slope of the plotted lines. Most notably these lines are interpolating lines between two of the points $\big(x-h, f(x-h)\big)$, $\big(x, f(x)\big)$ or $\big(x+h, f(x+h)\big)$.
+
+For example the forward finite differences formula (1)
 ```math
 D^+_h f(x) = \frac{1}{h} \Big( f(x+h) - f(x) \Big) = \frac{f(x + h) - f(x)}{h}.
 ```
-We already noted that this equation can be interpreted
-as the slope of a line going through the points
+can be interpreted as the slope of a line going through
 $\big(x, f(x)\big)$ and $\big(x+h, f(x+h)\big)$.
-Therefore it is equal to the derivative $p_1'(x)$
-of a (linear) polynomial interpolating
-$\big(x, f(x)\big)$ and $\big(x+h, f(x+h)\big)$
-as can be easily verified.
+To put in another way we can interpret this formula
+as the result of a two-step procedure:
+1. **Interpolate a polynomial** through $\big(x, f(x)\big)$ and $\big(x+h, f(x+h)\big)$, leading to the linear polynomial interpolation $p_1$.
+2. **Take the derivative of this interpolation** $p_1$ at $x$.
+"""
+
+# ╔═╡ 91bc8975-072b-4c98-9e81-311a155acab5
+md"""
 Indeed, using Lagrange polynomials we easily construct
-the interpolating polynomial as
+the interpolating polynomial $p_1$ as
 ```math
 \begin{aligned}
 p_1(\xi) &= f(x) \frac{\xi - (x + h)}{x - (x + h)} + f(x + h) \frac{\xi - x}{x + h - x}\\
@@ -391,12 +861,15 @@ which has derivative
 p_1'(x) = \frac{f(x+h) - f(x)}{h}
 ```
 as required.
+"""
 
-This procedure can be generalised:
-Given the $n+m+1$ nodes $x + ih$ for $i = -m, \ldots, n$
-of a finite differences formula,
-we first construct the $(n+m)$-th degree polynomial $p_{n+m}$
-interpolating the data $\big((x+ih), f(x+ih)\big)$. Then we build the finite differences formula as
+# ╔═╡ a3ddd54a-0171-4e7f-aa65-11224858f8be
+md"""
+This leads to a **natural generalisation** to obtain finite-difference formulas:
+Interpolate a polynomial through $n+m+1$ nodes $\big((x+ih), f(x+ih)\big)$
+for $i = -m, \ldots, n$,
+leading to the $(n+m)$-th degree polynomial $p_{n+m}$.
+Then take its derivative to obtain the finite differences formula as
 ```math
 D_h\, f(x) = p'_{n+m}(x).
 ```
@@ -408,7 +881,7 @@ md"""
 	We apply the procedure again to the case $m=n=1$ with the three nodal points $x-h$, $x$ and $x+h$. Using a Lagrange basis we find the second-degree interpolating
 	polynomial $p_2$ through the points $\big(x-h, f(x-h)\big)$, $\big(x + 0\cdot h, f(x + 0\cdot h)\big)$ and $\big(x+h, f(x+h)\big)$ as
 	```math
-	\tag{6}
+	\tag{9}
 	\begin{aligned}
 	p_2(\xi) &= f(\textcolor{red}{x-h}) \frac{\big(\xi-\textcolor{blue}{x}\big)\big(\xi - \textcolor{green}{(x+h)}\big)}{\big(\textcolor{red}{(x-h)} - \textcolor{blue}{x}\big) \big(\textcolor{red}{(x-h)} - \textcolor{green}{(x+h)}\big)} \\
 			 &\hspace{3em}+ f(\textcolor{blue}{x})   \frac{\big(\xi - \textcolor{red}{(x-h)}\big) \big(\xi - \textcolor{green}{(x+h)}\big)}{\big(x - \textcolor{red}{(x-h)})(\textcolor{blue}{x} - \textcolor{green}{(x+h)}\big)} \\
@@ -439,241 +912,112 @@ md"""
 
 The methods sketched in the aforementioned section also allow us to build finite-difference formulas to build higher-order derivatives.
 
-For example, based on the interpolated polynomial (6) on the nodal points $x-h$, $x$ and $x+h$, we obtain a formula for **approximating the second derivatives** as
+For example, based on the interpolated polynomial (9) on the nodal points $x-h$, $x$ and $x+h$, we obtain a formula for **approximating the second derivatives** as
 ```math
-\tag{7}
+\tag{10}
 D^2_h f(x) = p_2''(x) = \frac{f(x-h) - 2f(x) + f(x+h)}{h^2}.
 ```
 This formula is also of **second order** as can be checked easily using a Taylor series.
 """
-
-# ╔═╡ 19d8b680-6992-4c9f-aaf4-c665600a27ce
-md"""
-## Numerical stability
-
-One of the key principles behind all finite difference formulas we considered was that they approximate the derivative, in the sense that $f'(x) = \lim_{h\to0} D_h \, f(x)$. As a result we would expect results to become more and more accurate as $h$ gets smaller.
-
-Let's check this with the function
-"""
-
-# ╔═╡ ca5b9f56-9494-4720-a861-9c3627761146
-g(x) = exp(-1.3x)
-
-# ╔═╡ 3dbd632b-7330-464e-b3c2-db138daad238
-md"""
-which at $x = 0$ clearly has the derivative $g'(0) = -1.3$.
-Using the forward finite differences formula we compute
-"""
-
-# ╔═╡ 56636368-9ff6-4b45-a3be-8b1e05f6ee20
-begin
-	X = 0.0
-	reference = -1.3  # g'(X) = g'(0)
-	
-	all_h = [10^i for i in -1:-1.0:-14]
-	all_error = Float64[]  # Error of D⁺ₕ
-	for h in all_h
-		D⁺ₕ = 1/h * (g(X + h) - g(X))
-		error = abs(D⁺ₕ - reference)
-		@printf "h=%.1e   D⁺ₕ=%.12f   error=%.6e\n" h D⁺ₕ error
-		push!(all_error, error)
-	end	
-end
-
-# ╔═╡ 1e426a63-f3ea-46e7-b89d-1de6b2a0c421
-md"""Plotting this error graphically yields:"""
-
-# ╔═╡ e165dccd-c909-428f-95d6-9942fc8adce2
-begin
-	plot(all_h, all_error; xaxis=:log, yaxis=:log, mark=:x, lw=2, label="error", xflip=true, xlabel=L"h", ylims=(1e-12, 2), xlims=(1e-14, 1))
-	plot!(all_h, 0.2all_h, label=L"O(h)", lw=1.5, ls=:dash)
-end
-
-# ╔═╡ 6988bfd1-6664-47e9-874c-69437924bec0
-md"""
-We notice that the derivative formula gives a good approximation to the exact derivative $g'(0) = -1.3$ for $h = 10^{-8}$. However, if the node distance $h$ is further descreased the approximation deteriorates. This is a result of the round-off error in the finite-precision floating-point arithmetic of the computer. We take another look at the forward finite difference formula
-```math
-D^+_h f(x) = \frac{f(x+h) - f(x)}{h}.
-```
-In particular computing the difference  $f(x+h) - f(x)$ becomes problematic as $h$ gets smaller, since this implies that the values of $f(x+h)$ and $f(x)$ get more and more similar. As a result the difference $f(x+h) - f(x)$ (and thus the overall numerical derivative $D^+_h f(x)$) become less and less precise.
-
-Let us quantify this effect more precisely. When computing the function $f(x)$ the employed algorithm will always suffer from a small round-off error[^1].
-Instead of evaluating $f(x)$ the computer thus actually evaluates
-```math
-\hat{f}(x) = f(x) (1 + \eta),
-```
-where the round-off error $\eta$ is on the order of $10^{-16}$.
-Note that in standard floating-point formats the round-off
-error is always a *relative error*.
-The precise value of $\eta$ in general depends on $x$,
-but we further have $|\eta| ≤ \epsilon_M$
-where for standard double-precision
-floating-point numbers $\epsilon_M$ is about $2 \cdot 10^{-16}$.
-"""
-
-# ╔═╡ 4ac1b1e3-e570-4c00-93e3-e25fa14cba85
-md"""
-When evaluating the finite-difference
-formula the computer will thus actually evaluate
-```math
-\begin{aligned}
-\widehat{D}^+_h f(x)
-&= \frac{\hat{f}(x+h) - \hat{f}(x)}{h} \\
-&= \frac{f(x+h) (1+\eta_1) - f(x) (1+\eta_2)}{h} \\
-&= \frac{f(x+h) - f(x)}{h} + \frac{\eta_1}{h}f(x+h) - \frac{\eta_2}{h} f(x) \\
-&= f'(x) + \frac{f''(\xi)}{2} h + \frac{\eta_1}{h}f(x+h) - \frac{\eta_2}{h} f(x),
-\end{aligned}
-```
-where $|\eta_1| ≤ \epsilon_M$, $|\eta_2| ≤ \epsilon_M$
-and $\xi \in (x, x+h)$. Collecting everything we obtain the error
-of the computed finite-difference approximation to $f'(x)$ as
-```math
-\tag{8}
-\begin{aligned}
-|f'(x) - \widehat{D}^+_h f(x)|
-&≤ \frac{h}{2} \max_{x \in [a, b]} |f''(x)| + 2 \, \max_{x \in [a, b]} |f(x)| \, \frac{\epsilon_M}{h} \\
-&= \underbrace{\frac{h}{2} \|f''\|_\infty}_{\text{trunc. error}}
-+ \underbrace{\frac{2 \epsilon_M}{h} \|f\|_\infty}_{\text{round-off error}}
-\end{aligned}
-```
-We notice there are two error terms in (8).
-One is proportional to $h$ (finite differences truncation error)
-and one is proportional to $1/h$
-(due to round-off errors).
-As $h\to0$ the first term thus derceases as the finite-difference approximation gets better. However, if $h$ is taken too small the second error growing as $1/h$ will dominate and our approximation will be bad.
-
-A natural question is to ask is which $h$ gives the best sweet spot
-and balances both errors. Utilising equation (8)
-the total error of the approximation is bounded by
-```math
-ε(h) = \frac{h}{2} \|f''\|_\infty + \frac{2 \epsilon_M}{h} \|f\|_\infty.
-```
-This function has a single minimum, which we can compute by
-```math
-0 = \frac{dε}{dh} \qquad \Rightarrow \qquad \frac{\|f''\|_\infty}{2} - \frac{2\, \epsilon_M \, \|f\|_\infty}{h^2} = 0
-```
-The optimal node distance $h_\text{opt}$, which minimises the error, is thus
-```math
-\tag{9}
-h_\text{opt} = \sqrt{\frac{4 \|f\|_\infty}{\|f''\|_\infty}} \, \sqrt{\epsilon_M}.
-```
-In our example we have $\|f\|_\infty ≈ |f(0)| = 1$ and $\|f''\|_\infty ≈ |f''(0)| = 1.69$ and therefore $h_\text{opt}$ is of order $\sqrt{10^{-16}} = 10^{-8}$,
-which we also observed numerically.
-
-[^1]: Note that on top of round-off errors there may be additional error contributions. A typical case is when evaluating $f(\mathbf x)$ involves itself an iterative procedure, e.g. if $f(\mathbf{x}) = \mathbf{z}$ and $\mathbf{z}$ is the solution to a linear systems $\mathbf A \mathbf z = \mathbf x$ computed using a conjugate gradient algorithm. In this case the iterative procedure is rarely solved perfectly, but stopped once a relative residual norm has been reached, which causes additional error contributions.
-"""
-
-# ╔═╡ 7f04041d-1077-4d8a-91ed-a794379e55de
-TODO("Show the theoretical error behaviour in the plot")
-
-# ╔═╡ 31644da8-5501-477b-a65d-54f38c649718
-md"""
-Note that in (8) the $h$ dependence of the first error term (finite difference truncation error) depends on the order of the finite difference formula.
-For an order $p$ method the error will thus have the form
-```math
-ε(h) = C_1 h^p + C_2 {\epsilon_M}{h}
-```
-with appropriate constants $C_1$ and $C_2$,
-which leads to an optimal value of order $\sqrt[p+1]{\epsilon_M}$  .
-We summarise:
-
-!!! info "Observation: Optimal nodal spacing h for finite differences"
-    For computing an approximate derivative with a finite-difference
-	method of order $p$ in the presence of round-off errors in the
-	function evaluations $f$, the optimal spacing of nodes satisfies
-	roughly
-	```math
-	h_\text{opt} \approx \sqrt[p+1]{\epsilon_M}.
-	```
-"""
-
-# ╔═╡ 86d719b4-494b-489d-9c6a-40c8d2477bad
-md"""
-To illustrate this graphically we continue our example of computing the derivative
-of $g(x) = e^{-1.3 x}$ at $x=0$,
-which has the reference result
-"""
-
-# ╔═╡ 08574e94-69f5-4a6e-8ffd-82d8e08be082
-reference
-
-# ╔═╡ 2b940279-24e5-495b-af0c-b0b9e547f33a
-md"""
-We consider three finite difference (FD) formulas, namely
-
-- **1st order:**  $\displaystyle D_1\, g(x) = D_h^+\, g(x) = \frac{g(x+h) - g(x)}{h} \qquad$ (forward finite differences)
-- **2nd order:**  $\displaystyle D_2\, g(x) = D_h^c\, g(x) = \frac{g(x+h) - g(x-h)}{2h} \qquad$ (central finite differences)
-- **4th order:**  $\displaystyle D_4\, g(x) = \frac{g(x-2h) -8\, g(x-h) + 8\, g(x+h) - g(x+2h)}{12h}$
-
-We see that as $h$ shrinks the errors are initially dominated by the truncation error,
-which dicreases most rapidly for the 4th order formula. However, the increasing round-off error eventually dominates the behaviour as the truncation error continues to decrease. As the order increases the crossover point between truncation error and round-off error moves further to the left and further down. Thus higher-order methods are generally more accurate as the numerically problematic small $h$ values can be avoided.
-"""
-
-# ╔═╡ b0c56709-a77e-4417-bd2b-bf4543cb2a13
-let
-	error_fd1 = Float64[]
-	error_fd2 = Float64[]
-	error_fd4 = Float64[]
-	
-	for h in all_h
-		diff_fd1 = 1/h   * (g(X + h) - g(X))
-		diff_fd2 = 1/2h  * (g(X + h) - g(X - h))
-		diff_fd4 = 1/12h * (g(X -2h) - 8g(X-h) + 8g(X+h) - g(X+2h))
-
-		push!(error_fd1, abs.(diff_fd1 - reference))
-		push!(error_fd2, abs.(diff_fd2 - reference))
-		push!(error_fd4, abs.(diff_fd4 - reference))
-	end
-
-	p = plot(; xaxis=:log, yaxis=:log, mark=:x, lw=2, xflip=true, xlabel=L"h", legend=:bottomright)
-	plot!(p, all_h, error_fd1; label="1st order FD", mark=:x, lw=2)
-	plot!(p, all_h, error_fd2; label="2nd order FD", mark=:x, lw=2,)
-	plot!(p, all_h, error_fd4; label="4th order FD", mark=:x, lw=2)
-
-	vline!(p, [sqrt(eps())], label=L"\sqrt{ε_M}", c=1, ls=:dash)
-	vline!(p, [cbrt(eps())], label=L"ε_M^{1/3}",  c=2, ls=:dash)
-	vline!(p, [eps()^(1/5)], label=L"ε_M^{1/5}",  c=3, ls=:dash)
-end
 
 # ╔═╡ 9c8ad9b0-50eb-478e-b63c-26a868765230
 let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 350)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 310)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
+ForwardDiff = "~1.0.1"
 HypertextLiteral = "~0.9.5"
-LaTeXStrings = "~1.3.1"
+LaTeXStrings = "~1.4.0"
 Plots = "~1.40.1"
 PlutoTeachingTools = "~0.2.14"
 PlutoUI = "~0.7.57"
+Symbolics = "~6.38.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.3"
+julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "fb9ad4e648a24a7a716092116a89eafca5cbf7c8"
+project_hash = "9722ec798b822e3ffa8d656da2f354c706fd6116"
+
+[[deps.ADTypes]]
+git-tree-sha1 = "e2478490447631aedba0823d4d7a80b2cc8cdb32"
+uuid = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+version = "1.14.0"
+
+    [deps.ADTypes.extensions]
+    ADTypesChainRulesCoreExt = "ChainRulesCore"
+    ADTypesConstructionBaseExt = "ConstructionBase"
+    ADTypesEnzymeCoreExt = "EnzymeCore"
+
+    [deps.ADTypes.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+    EnzymeCore = "f151be2c-9106-41f4-ab19-57ee4f262869"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
 git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
+
+[[deps.AbstractTrees]]
+git-tree-sha1 = "2d9c9a55f9c93e8887ad391fbae72f8ef55e1177"
+uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+version = "0.4.5"
+
+[[deps.Accessors]]
+deps = ["CompositionsBase", "ConstructionBase", "Dates", "InverseFunctions", "MacroTools"]
+git-tree-sha1 = "3b86719127f50670efe356bc11073d84b4ed7a5d"
+uuid = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
+version = "0.1.42"
+
+    [deps.Accessors.extensions]
+    AxisKeysExt = "AxisKeys"
+    IntervalSetsExt = "IntervalSets"
+    LinearAlgebraExt = "LinearAlgebra"
+    StaticArraysExt = "StaticArrays"
+    StructArraysExt = "StructArrays"
+    TestExt = "Test"
+    UnitfulExt = "Unitful"
+
+    [deps.Accessors.weakdeps]
+    AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
+    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+    LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+    StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
+    Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[[deps.Adapt]]
+deps = ["LinearAlgebra", "Requires"]
+git-tree-sha1 = "f7817e2e585aa6d924fd714df1e2a84be7896c60"
+uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+version = "4.3.0"
+weakdeps = ["SparseArrays", "StaticArrays"]
+
+    [deps.Adapt.extensions]
+    AdaptSparseArraysExt = "SparseArrays"
+    AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -685,6 +1029,38 @@ version = "1.1.3"
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.2"
 
+[[deps.ArrayInterface]]
+deps = ["Adapt", "LinearAlgebra"]
+git-tree-sha1 = "017fcb757f8e921fb44ee063a7aafe5f89b86dd1"
+uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+version = "7.18.0"
+
+    [deps.ArrayInterface.extensions]
+    ArrayInterfaceBandedMatricesExt = "BandedMatrices"
+    ArrayInterfaceBlockBandedMatricesExt = "BlockBandedMatrices"
+    ArrayInterfaceCUDAExt = "CUDA"
+    ArrayInterfaceCUDSSExt = "CUDSS"
+    ArrayInterfaceChainRulesCoreExt = "ChainRulesCore"
+    ArrayInterfaceChainRulesExt = "ChainRules"
+    ArrayInterfaceGPUArraysCoreExt = "GPUArraysCore"
+    ArrayInterfaceReverseDiffExt = "ReverseDiff"
+    ArrayInterfaceSparseArraysExt = "SparseArrays"
+    ArrayInterfaceStaticArraysCoreExt = "StaticArraysCore"
+    ArrayInterfaceTrackerExt = "Tracker"
+
+    [deps.ArrayInterface.weakdeps]
+    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
+    BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
+    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+    CUDSS = "45b445bb-4962-46a0-9369-b4df9d0f772e"
+    ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
+    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+    StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
+    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
+
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 version = "1.11.0"
@@ -692,6 +1068,11 @@ version = "1.11.0"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 version = "1.11.0"
+
+[[deps.Bijections]]
+git-tree-sha1 = "d8b0439d2be438a5f2cd68ec158fe08a7b2595b7"
+uuid = "e2ed5e7c-b2de-5872-ae92-c73ca462fb04"
+version = "0.1.9"
 
 [[deps.BitFlags]]
 git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
@@ -706,27 +1087,37 @@ version = "1.0.9+0"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "009060c9a6168704143100f36ab08f06c2af4642"
+git-tree-sha1 = "2ac646d71d0d24b44f3f8c84da8c9f4d70fb67df"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
-version = "1.18.2+1"
+version = "1.18.4+0"
+
+[[deps.ChainRulesCore]]
+deps = ["Compat", "LinearAlgebra"]
+git-tree-sha1 = "1713c74e00545bfe14605d2a2be1712de8fbcb58"
+uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+version = "1.25.1"
+weakdeps = ["SparseArrays"]
+
+    [deps.ChainRulesCore.extensions]
+    ChainRulesCoreSparseArraysExt = "SparseArrays"
 
 [[deps.CodeTracking]]
 deps = ["InteractiveUtils", "UUIDs"]
-git-tree-sha1 = "7eee164f122511d3e4e1ebadb7956939ea7e1c77"
+git-tree-sha1 = "062c5e1a5bf6ada13db96a4ae4749a4c2234f521"
 uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
-version = "1.3.6"
+version = "1.3.9"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
-git-tree-sha1 = "545a177179195e442472a1c4dc86982aa7a1bef0"
+git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.7.7"
+version = "0.7.8"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
-git-tree-sha1 = "26ec26c98ae1453c692efded2b17e15125a5bea1"
+git-tree-sha1 = "403f2d8e209681fcbd9468a8514efff3ea08452e"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.28.0"
+version = "3.29.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -739,18 +1130,37 @@ deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "Requires", "Statist
 git-tree-sha1 = "a1f44953f2382ebb937d60dafbe2deea4bd23249"
 uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
 version = "0.10.0"
+weakdeps = ["SpecialFunctions"]
 
     [deps.ColorVectorSpace.extensions]
     SpecialFunctionsExt = "SpecialFunctions"
-
-    [deps.ColorVectorSpace.weakdeps]
-    SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "64e15186f0aa277e174aa81798f7eb8598e0157e"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.0"
+
+[[deps.Combinatorics]]
+git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.0.2"
+
+[[deps.CommonSolve]]
+git-tree-sha1 = "0eee5eb66b1cf62cd6ad1b460238e60e4b09400c"
+uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
+version = "0.2.4"
+
+[[deps.CommonSubexpressions]]
+deps = ["MacroTools"]
+git-tree-sha1 = "cda2cfaebb4be89c9084adaca7dd7333369715c5"
+uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
+version = "0.3.1"
+
+[[deps.CommonWorldInvalidations]]
+git-tree-sha1 = "ae52d1c52048455e85a387fbee9be553ec2b68d0"
+uuid = "f70d9fcc-98c5-4d4a-abd7-e4cdeebd8ca8"
+version = "1.0.0"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
@@ -767,16 +1177,46 @@ deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "1.1.1+0"
 
+[[deps.CompositeTypes]]
+git-tree-sha1 = "bce26c3dab336582805503bed209faab1c279768"
+uuid = "b152e2b5-7a66-4b01-a709-34e65c35f657"
+version = "0.1.4"
+
+[[deps.CompositionsBase]]
+git-tree-sha1 = "802bb88cd69dfd1509f6670416bd4434015693ad"
+uuid = "a33af91c-f02d-484b-be07-31d278c5ca2b"
+version = "0.1.2"
+weakdeps = ["InverseFunctions"]
+
+    [deps.CompositionsBase.extensions]
+    CompositionsBaseInverseFunctionsExt = "InverseFunctions"
+
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
-git-tree-sha1 = "f36e5e8fdffcb5646ea5da81495a5a7566005127"
+git-tree-sha1 = "d9d26935a0bcffc87d2613ce14c527c99fc543fd"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
-version = "2.4.3"
+version = "2.5.0"
+
+[[deps.ConstructionBase]]
+git-tree-sha1 = "76219f1ed5771adbb096743bff43fb5fdd4c1157"
+uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+version = "1.5.8"
+weakdeps = ["IntervalSets", "LinearAlgebra", "StaticArrays"]
+
+    [deps.ConstructionBase.extensions]
+    ConstructionBaseIntervalSetsExt = "IntervalSets"
+    ConstructionBaseLinearAlgebraExt = "LinearAlgebra"
+    ConstructionBaseStaticArraysExt = "StaticArrays"
 
 [[deps.Contour]]
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.3"
+
+[[deps.Crayons]]
+git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
+uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
+version = "4.1.1"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
@@ -785,9 +1225,14 @@ version = "1.16.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "1d0a14036acb104d9e89698bd408f63ab58cdc82"
+git-tree-sha1 = "4e1fe97fdaed23e9dc21d4d664bea76b65fc50a0"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.20"
+version = "0.18.22"
+
+[[deps.DataValueInterfaces]]
+git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
+uuid = "e2d170a0-9d28-54be-80f0-106bbe20a464"
+version = "1.0.0"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -796,9 +1241,9 @@ version = "1.11.0"
 
 [[deps.Dbus_jll]]
 deps = ["Artifacts", "Expat_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "fc173b380865f70627d7dd1190dc2fce6cc105af"
+git-tree-sha1 = "473e9afc9cf30814eb67ffa5f2db7df82c3ad9fd"
 uuid = "ee1fde0b-3d02-5ea6-8484-8dfef6360eab"
-version = "1.14.10+0"
+version = "1.16.2+0"
 
 [[deps.DelimitedFiles]]
 deps = ["Mmap"]
@@ -806,16 +1251,71 @@ git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
 
+[[deps.DiffResults]]
+deps = ["StaticArraysCore"]
+git-tree-sha1 = "782dd5f4561f5d267313f23853baaaa4c52ea621"
+uuid = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
+version = "1.1.0"
+
+[[deps.DiffRules]]
+deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
+git-tree-sha1 = "23163d55f885173722d1e4cf0f6110cdbaf7e272"
+uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
+version = "1.15.1"
+
+[[deps.Distributed]]
+deps = ["Random", "Serialization", "Sockets"]
+uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+version = "1.11.0"
+
+[[deps.Distributions]]
+deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
+git-tree-sha1 = "0b4190661e8a4e51a842070e7dd4fae440ddb7f4"
+uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
+version = "0.25.118"
+
+    [deps.Distributions.extensions]
+    DistributionsChainRulesCoreExt = "ChainRulesCore"
+    DistributionsDensityInterfaceExt = "DensityInterface"
+    DistributionsTestExt = "Test"
+
+    [deps.Distributions.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
+    Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
 [[deps.DocStringExtensions]]
-deps = ["LibGit2"]
-git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
+git-tree-sha1 = "e7b7e6f178525d17c720ab9c081e4ef04429f860"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
-version = "0.9.3"
+version = "0.9.4"
+
+[[deps.DomainSets]]
+deps = ["CompositeTypes", "IntervalSets", "LinearAlgebra", "Random", "StaticArrays"]
+git-tree-sha1 = "a7e9f13f33652c533d49868a534bfb2050d1365f"
+uuid = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
+version = "0.7.15"
+
+    [deps.DomainSets.extensions]
+    DomainSetsMakieExt = "Makie"
+
+    [deps.DomainSets.weakdeps]
+    Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 version = "1.6.0"
+
+[[deps.DynamicPolynomials]]
+deps = ["Future", "LinearAlgebra", "MultivariatePolynomials", "MutableArithmetics", "Reexport", "Test"]
+git-tree-sha1 = "9a3ae38b460449cc9e7dd0cfb059c76028724627"
+uuid = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
+version = "0.6.1"
+
+[[deps.EnumX]]
+git-tree-sha1 = "bddad79635af6aec424f53ed8aad5d7555dc6f00"
+uuid = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
+version = "1.0.5"
 
 [[deps.EpollShim_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -835,6 +1335,16 @@ git-tree-sha1 = "d55dffd9ae73ff72f1c0482454dcf2ec6c6c4a63"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
 version = "2.6.5+0"
 
+[[deps.ExprTools]]
+git-tree-sha1 = "27415f162e6028e81c72b82ef756bf321213b6ec"
+uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
+version = "0.1.10"
+
+[[deps.ExproniconLite]]
+git-tree-sha1 = "c13f0b150373771b0fdc1713c97860f8df12e6c2"
+uuid = "55351af7-c7e9-48d6-89ff-24e801d99491"
+version = "0.10.14"
+
 [[deps.FFMPEG]]
 deps = ["FFMPEG_jll"]
 git-tree-sha1 = "53ebe7511fa11d33bec688a9178fac4e49eeee00"
@@ -851,6 +1361,18 @@ version = "4.4.4+1"
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 version = "1.11.0"
 
+[[deps.FillArrays]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "6a70198746448456524cb442b8af316927ff3e1a"
+uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
+version = "1.13.0"
+weakdeps = ["PDMats", "SparseArrays", "Statistics"]
+
+    [deps.FillArrays.extensions]
+    FillArraysPDMatsExt = "PDMats"
+    FillArraysSparseArraysExt = "SparseArrays"
+    FillArraysStatisticsExt = "Statistics"
+
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
 git-tree-sha1 = "05882d6995ae5c12bb5f36dd2ed3f61c98cbb172"
@@ -859,26 +1381,52 @@ version = "0.8.5"
 
 [[deps.Fontconfig_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Zlib_jll"]
-git-tree-sha1 = "21fac3c77d7b5a9fc03b0ec503aa1a6392c34d2b"
+git-tree-sha1 = "301b5d5d731a0654825f1f2e906990f7141a106b"
 uuid = "a3f928ae-7b40-5064-980b-68af3947d34b"
-version = "2.15.0+0"
+version = "2.16.0+0"
 
 [[deps.Format]]
 git-tree-sha1 = "9c68794ef81b08086aeb32eeaf33531668d5f5fc"
 uuid = "1fa38f19-a742-5d3f-a2b9-30dd87b9d5f8"
 version = "1.3.7"
 
+[[deps.ForwardDiff]]
+deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
+git-tree-sha1 = "910febccb28d493032495b7009dce7d7f7aee554"
+uuid = "f6369f11-7733-5829-9624-2563aa707210"
+version = "1.0.1"
+weakdeps = ["StaticArrays"]
+
+    [deps.ForwardDiff.extensions]
+    ForwardDiffStaticArraysExt = "StaticArrays"
+
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "786e968a8d2fb167f2e4880baba62e0e26bd8e4e"
+git-tree-sha1 = "2c5512e11c791d1baed2049c5652441b28fc6a31"
 uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
-version = "2.13.3+1"
+version = "2.13.4+0"
 
 [[deps.FriBidi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "846f7026a9decf3679419122b49f8a1fdb48d2d5"
+git-tree-sha1 = "7a214fdac5ed5f59a22c2d9a885a16da1c74bbc7"
 uuid = "559328eb-81f9-559d-9380-de523a88c83c"
-version = "1.0.16+0"
+version = "1.0.17+0"
+
+[[deps.FunctionWrappers]]
+git-tree-sha1 = "d62485945ce5ae9c0c48f124a84998d755bae00e"
+uuid = "069b7b12-0de2-55c6-9aab-29f3d0a68a2e"
+version = "1.1.3"
+
+[[deps.FunctionWrappersWrappers]]
+deps = ["FunctionWrappers"]
+git-tree-sha1 = "b104d487b34566608f8b4e1c39fb0b10aa279ff8"
+uuid = "77dc65aa-8811-40c2-897b-53d922fa7daf"
+version = "0.1.3"
+
+[[deps.Future]]
+deps = ["Random"]
+uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
+version = "1.11.0"
 
 [[deps.GLFW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll", "libdecor_jll", "xkbcommon_jll"]
@@ -886,17 +1434,23 @@ git-tree-sha1 = "fcb0584ff34e25155876418979d4c8971243bb89"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
 version = "3.4.0+2"
 
+[[deps.GPUArraysCore]]
+deps = ["Adapt"]
+git-tree-sha1 = "83cf05ab16a73219e5f6bd1bdfa9848fa24ac627"
+uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
+version = "0.2.0"
+
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Qt6Wayland_jll", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
-git-tree-sha1 = "9bf00ba4c45867c86251a7fd4cb646dcbeb41bf0"
+git-tree-sha1 = "0ff136326605f8e06e9bcf085a356ab312eef18a"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.73.12"
+version = "0.73.13"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "FreeType2_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt6Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "36d5430819123553bf31dfdceb3653ca7d9e62d7"
+git-tree-sha1 = "9cb62849057df859575fc1dda1e91b82f8609709"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.73.12+0"
+version = "0.73.13+0"
 
 [[deps.Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -911,10 +1465,10 @@ uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.82.4+0"
 
 [[deps.Graphite2_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "01979f9b37367603e2848ea225918a3b3861b606"
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "8a6dbda1fd736d60cc477d99f2e7a042acfa46e8"
 uuid = "3b182d85-2403-5c21-9c21-1e1f0cc25472"
-version = "1.3.14+1"
+version = "1.3.15+0"
 
 [[deps.Grisu]]
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
@@ -923,15 +1477,21 @@ version = "1.0.2"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "PrecompileTools", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "c67b33b085f6e2faf8bf79a61962e7339a81129c"
+git-tree-sha1 = "f93655dc73d7a0b4a368e3c0bce296ae035ad76e"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.10.15"
+version = "1.10.16"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll"]
 git-tree-sha1 = "55c53be97790242c29031e5cd45e8ac296dadda3"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "8.5.0+0"
+
+[[deps.HypergeometricFunctions]]
+deps = ["LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
+git-tree-sha1 = "68c173f4f449de5b438ee67ed0c9c748dc31a2ec"
+uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
+version = "0.3.28"
 
 [[deps.Hyperscript]]
 deps = ["Test"]
@@ -951,21 +1511,52 @@ git-tree-sha1 = "b6d6bfdd7ce25b0f9b2f6b3dd56b2673a66c8770"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "0.2.5"
 
+[[deps.IntegerMathUtils]]
+git-tree-sha1 = "b8ffb903da9f7b8cf695a8bead8e01814aa24b30"
+uuid = "18e54dd8-cb9d-406c-a71d-865a43cbb235"
+version = "0.1.2"
+
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 version = "1.11.0"
+
+[[deps.IntervalSets]]
+git-tree-sha1 = "dba9ddf07f77f60450fe5d2e2beb9854d9a49bd0"
+uuid = "8197267c-284f-5f27-9208-e0e47529a953"
+version = "0.7.10"
+weakdeps = ["Random", "RecipesBase", "Statistics"]
+
+    [deps.IntervalSets.extensions]
+    IntervalSetsRandomExt = "Random"
+    IntervalSetsRecipesBaseExt = "RecipesBase"
+    IntervalSetsStatisticsExt = "Statistics"
+
+[[deps.InverseFunctions]]
+git-tree-sha1 = "a779299d77cd080bf77b97535acecd73e1c5e5cb"
+uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
+version = "0.1.17"
+weakdeps = ["Dates", "Test"]
+
+    [deps.InverseFunctions.extensions]
+    InverseFunctionsDatesExt = "Dates"
+    InverseFunctionsTestExt = "Test"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "e2222959fbc6c19554dc15174c81bf7bf3aa691c"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
 version = "0.2.4"
 
+[[deps.IteratorInterfaceExtensions]]
+git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
+uuid = "82899510-4779-5014-852e-03e436cf321d"
+version = "1.0.0"
+
 [[deps.JLFzf]]
-deps = ["Pipe", "REPL", "Random", "fzf_jll"]
-git-tree-sha1 = "71b48d857e86bf7a1838c4736545699974ce79a2"
+deps = ["REPL", "Random", "fzf_jll"]
+git-tree-sha1 = "1d4015b1eb6dc3be7e6c400fbd8042fe825a6bac"
 uuid = "1019f520-868f-41f5-a6de-eb00f4b6a39c"
-version = "0.1.9"
+version = "0.1.10"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
@@ -979,6 +1570,12 @@ git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.4"
 
+[[deps.Jieko]]
+deps = ["ExproniconLite"]
+git-tree-sha1 = "2f05ed29618da60c06a87e9c033982d4f71d0b6c"
+uuid = "ae98c720-c025-4a4a-838c-29b094483192"
+version = "0.2.1"
+
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "eac1206917768cb54957c65a615460d87b455fc1"
@@ -987,9 +1584,9 @@ version = "3.1.1+0"
 
 [[deps.JuliaInterpreter]]
 deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "a729439c18f7112cbbd9fcdc1771ecc7f071df6a"
+git-tree-sha1 = "872cd273cb995ed873c58f196659e32f11f31543"
 uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.9.39"
+version = "0.9.44"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1016,15 +1613,15 @@ uuid = "dd4b983a-f0e5-5f8d-a1b7-129d4a5fb1ac"
 version = "2.10.3+0"
 
 [[deps.LaTeXStrings]]
-git-tree-sha1 = "50901ebc375ed41dbf8058da26f9de442febbbec"
+git-tree-sha1 = "dda21b8cbd6a6c40d9d02a73230f9d70fed6918c"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
-version = "1.3.1"
+version = "1.4.0"
 
 [[deps.Latexify]]
 deps = ["Format", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
-git-tree-sha1 = "ce5f5621cac23a86011836badfedf664a612cee4"
+git-tree-sha1 = "cd10d2cc78d34c0e2a3a36420ab607b611debfbb"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.16.5"
+version = "0.16.7"
 
     [deps.Latexify.extensions]
     DataFramesExt = "DataFrames"
@@ -1071,23 +1668,11 @@ git-tree-sha1 = "27ecae93dd25ee0909666e6835051dd684cc035e"
 uuid = "e9f186c6-92d2-5b65-8a66-fee21dc1b490"
 version = "3.2.2+2"
 
-[[deps.Libgcrypt_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgpg_error_jll"]
-git-tree-sha1 = "8be878062e0ffa2c3f67bb58a595375eda5de80b"
-uuid = "d4300ac3-e22c-5743-9152-c294e39db1e4"
-version = "1.11.0+0"
-
 [[deps.Libglvnd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll"]
 git-tree-sha1 = "ff3b4b9d35de638936a525ecd36e86a8bb919d11"
 uuid = "7e76a0d4-f3c7-5321-8279-8d96eeed0f29"
 version = "1.7.0+0"
-
-[[deps.Libgpg_error_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "df37206100d39f79b3376afb6b9cee4970041c61"
-uuid = "7add5ba3-2f88-524e-9cd5-f83b8a55f7b8"
-version = "1.51.1+0"
 
 [[deps.Libiconv_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1097,9 +1682,9 @@ version = "1.18.0+0"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "89211ea35d9df5831fca5d33552c02bd33878419"
+git-tree-sha1 = "a31572773ac1b745e0343fe5e2c8ddda7a37e997"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
-version = "2.40.3+0"
+version = "2.41.0+0"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
@@ -1109,9 +1694,9 @@ version = "4.7.1+0"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "e888ad02ce716b319e6bdb985d2ef300e7089889"
+git-tree-sha1 = "321ccef73a96ba828cd51f2ab5b9f917fa73945a"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
-version = "2.40.3+0"
+version = "2.41.0+0"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
@@ -1151,9 +1736,9 @@ uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
 version = "3.1.0"
 
 [[deps.MIMEs]]
-git-tree-sha1 = "1833212fd6f580c20d4291da9c1b4e8a655b128e"
+git-tree-sha1 = "c64d943587f7187e751162b3b84445bbbd79f691"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
-version = "1.0.0"
+version = "1.1.0"
 
 [[deps.MacroTools]]
 git-tree-sha1 = "72aebe0b5051e5143a079a4685a46da330a40472"
@@ -1191,19 +1776,46 @@ version = "1.2.0"
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 version = "1.11.0"
 
+[[deps.Moshi]]
+deps = ["ExproniconLite", "Jieko"]
+git-tree-sha1 = "453de0fc2be3d11b9b93ca4d0fddd91196dcf1ed"
+uuid = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
+version = "0.3.5"
+
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2023.12.12"
 
+[[deps.MultivariatePolynomials]]
+deps = ["ChainRulesCore", "DataStructures", "LinearAlgebra", "MutableArithmetics"]
+git-tree-sha1 = "8d39779e29f80aa6c071e7ac17101c6e31f075d7"
+uuid = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
+version = "0.5.7"
+
+[[deps.MutableArithmetics]]
+deps = ["LinearAlgebra", "SparseArrays", "Test"]
+git-tree-sha1 = "491bdcdc943fcbc4c005900d7463c9f216aabf4c"
+uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
+version = "1.6.4"
+
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
-git-tree-sha1 = "cc0a5deefdb12ab3a096f00a6d42133af4560d71"
+git-tree-sha1 = "9b8215b1ee9e78a293f99797cd31375471b2bcae"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "1.1.2"
+version = "1.1.3"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
+
+[[deps.OffsetArrays]]
+git-tree-sha1 = "a414039192a155fb38c4599a60110f0018c6ec82"
+uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+version = "1.16.0"
+weakdeps = ["Adapt"]
+
+    [deps.OffsetArrays.extensions]
+    OffsetArraysAdaptExt = "Adapt"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1219,7 +1831,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+2"
+version = "0.8.1+4"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -1229,9 +1841,15 @@ version = "1.4.3"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "7493f61f55a6cce7325f197443aa80d32554ba10"
+git-tree-sha1 = "a9697f1d06cc3eb3fb3ad49cc67f2cfabaac31ea"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "3.0.15+3"
+version = "3.0.16+0"
+
+[[deps.OpenSpecFun_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "1346c9208249809840c91b26703912dff463d335"
+uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
+version = "0.5.6+0"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1249,11 +1867,17 @@ deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
 version = "10.42.0+1"
 
+[[deps.PDMats]]
+deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
+git-tree-sha1 = "0e1340b5d98971513bddaa6bbed470670cebbbfe"
+uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
+version = "0.11.34"
+
 [[deps.Pango_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "ed6834e95bd326c52d5675b4181386dfbe885afb"
+git-tree-sha1 = "3b31172c032a1def20c98dae3f2cdc9d10e3b561"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
-version = "1.55.5+0"
+version = "1.56.1+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
@@ -1261,16 +1885,11 @@ git-tree-sha1 = "8489905bcdbcfac64d1daa51ca07c0d8f0283821"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.8.1"
 
-[[deps.Pipe]]
-git-tree-sha1 = "6842804e7867b115ca9de748a0cf6b364523c16d"
-uuid = "b98c9c47-44ae-5843-9183-064241ee97a0"
-version = "1.3.0"
-
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
-git-tree-sha1 = "35621f10a7531bc8fa58f74610b1bfb70a3cfc6b"
+git-tree-sha1 = "db76b1ecd5e9715f3d043cec13b2ec93ce015d53"
 uuid = "30392449-352a-5448-841d-b1acce4e97dc"
-version = "0.43.4+0"
+version = "0.44.2+0"
 
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
@@ -1295,9 +1914,9 @@ version = "1.4.3"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "TOML", "UUIDs", "UnicodeFun", "UnitfulLatexify", "Unzip"]
-git-tree-sha1 = "dae01f8c2e069a683d3a6e17bbae5070ab94786f"
+git-tree-sha1 = "41c9a70abc1ff7296873adc5d768bff33a481652"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.40.9"
+version = "1.40.12"
 
     [deps.Plots.extensions]
     FileIOExt = "FileIO"
@@ -1333,9 +1952,9 @@ version = "0.2.15"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "7e71a55b87222942f0f9337be62e26b1f103d3e4"
+git-tree-sha1 = "d3de2694b52a01ce61a036f18ea9c0f61c4a9230"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.61"
+version = "0.7.62"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
@@ -1348,6 +1967,18 @@ deps = ["TOML"]
 git-tree-sha1 = "9306f6085165d270f7e3db02af26a400d580f5c6"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.4.3"
+
+[[deps.PrettyTables]]
+deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "Reexport", "StringManipulation", "Tables"]
+git-tree-sha1 = "1101cd475833706e4d0e7b122218257178f48f34"
+uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
+version = "2.4.0"
+
+[[deps.Primes]]
+deps = ["IntegerMathUtils"]
+git-tree-sha1 = "25cdd1d20cd005b52fc12cb6be3f75faaf59bb9b"
+uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
+version = "0.5.7"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1383,6 +2014,18 @@ git-tree-sha1 = "729927532d48cf79f49070341e1d918a65aba6b0"
 uuid = "e99dba38-086e-5de3-a5b1-6e4c66e897c3"
 version = "6.7.1+1"
 
+[[deps.QuadGK]]
+deps = ["DataStructures", "LinearAlgebra"]
+git-tree-sha1 = "9da16da70037ba9d701192e27befedefb91ec284"
+uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+version = "2.11.2"
+
+    [deps.QuadGK.extensions]
+    QuadGKEnzymeExt = "Enzyme"
+
+    [deps.QuadGK.weakdeps]
+    Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "StyledStrings", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -1405,6 +2048,34 @@ git-tree-sha1 = "45cf9fd0ca5839d06ef333c8201714e888486342"
 uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 version = "0.6.12"
 
+[[deps.RecursiveArrayTools]]
+deps = ["Adapt", "ArrayInterface", "DocStringExtensions", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
+git-tree-sha1 = "112c876cee36a5784df19098b55db2b238afc36a"
+uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
+version = "3.31.2"
+
+    [deps.RecursiveArrayTools.extensions]
+    RecursiveArrayToolsFastBroadcastExt = "FastBroadcast"
+    RecursiveArrayToolsForwardDiffExt = "ForwardDiff"
+    RecursiveArrayToolsMeasurementsExt = "Measurements"
+    RecursiveArrayToolsMonteCarloMeasurementsExt = "MonteCarloMeasurements"
+    RecursiveArrayToolsReverseDiffExt = ["ReverseDiff", "Zygote"]
+    RecursiveArrayToolsSparseArraysExt = ["SparseArrays"]
+    RecursiveArrayToolsStructArraysExt = "StructArrays"
+    RecursiveArrayToolsTrackerExt = "Tracker"
+    RecursiveArrayToolsZygoteExt = "Zygote"
+
+    [deps.RecursiveArrayTools.weakdeps]
+    FastBroadcast = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
+    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+    Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
+    MonteCarloMeasurements = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
+    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+    StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
+    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
+    Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -1418,25 +2089,85 @@ version = "1.0.1"
 
 [[deps.Requires]]
 deps = ["UUIDs"]
-git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
+git-tree-sha1 = "62389eeff14780bfe55195b7204c0d8738436d64"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
-version = "1.3.0"
+version = "1.3.1"
 
 [[deps.Revise]]
 deps = ["CodeTracking", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "9bb80533cb9769933954ea4ffbecb3025a783198"
+git-tree-sha1 = "5cf59106f9b47014c58c5053a1ce09c0a2e0333c"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.7.2"
+version = "3.7.3"
+weakdeps = ["Distributed"]
 
     [deps.Revise.extensions]
     DistributedExt = "Distributed"
 
-    [deps.Revise.weakdeps]
-    Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+[[deps.Rmath]]
+deps = ["Random", "Rmath_jll"]
+git-tree-sha1 = "852bd0f55565a9e973fcfee83a84413270224dc4"
+uuid = "79098fc4-a85e-5d69-aa6a-4863f24498fa"
+version = "0.8.0"
+
+[[deps.Rmath_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "58cdd8fb2201a6267e1db87ff148dd6c1dbd8ad8"
+uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
+version = "0.5.1+0"
+
+[[deps.RuntimeGeneratedFunctions]]
+deps = ["ExprTools", "SHA", "Serialization"]
+git-tree-sha1 = "04c968137612c4a5629fa531334bb81ad5680f00"
+uuid = "7e49a35a-f44a-4d26-94aa-eba1b4ca6b47"
+version = "0.5.13"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
+
+[[deps.SciMLBase]]
+deps = ["ADTypes", "Accessors", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "Moshi", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "SciMLStructures", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface"]
+git-tree-sha1 = "c4ce89e19f2a220e34c0f377fb41516b642ec899"
+uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+version = "2.83.1"
+
+    [deps.SciMLBase.extensions]
+    SciMLBaseChainRulesCoreExt = "ChainRulesCore"
+    SciMLBaseMLStyleExt = "MLStyle"
+    SciMLBaseMakieExt = "Makie"
+    SciMLBasePartialFunctionsExt = "PartialFunctions"
+    SciMLBasePyCallExt = "PyCall"
+    SciMLBasePythonCallExt = "PythonCall"
+    SciMLBaseRCallExt = "RCall"
+    SciMLBaseZygoteExt = ["Zygote", "ChainRulesCore"]
+
+    [deps.SciMLBase.weakdeps]
+    ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
+    Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+    PartialFunctions = "570af359-4316-4cb7-8c74-252c00c2016b"
+    PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+    PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+    RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
+    Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[[deps.SciMLOperators]]
+deps = ["Accessors", "ArrayInterface", "DocStringExtensions", "LinearAlgebra", "MacroTools"]
+git-tree-sha1 = "1c4b7f6c3e14e6de0af66e66b86d525cae10ecb4"
+uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
+version = "0.3.13"
+weakdeps = ["SparseArrays", "StaticArraysCore"]
+
+    [deps.SciMLOperators.extensions]
+    SciMLOperatorsSparseArraysExt = "SparseArrays"
+    SciMLOperatorsStaticArraysCoreExt = "StaticArraysCore"
+
+[[deps.SciMLStructures]]
+deps = ["ArrayInterface"]
+git-tree-sha1 = "566c4ed301ccb2a44cbd5a27da5f885e0ed1d5df"
+uuid = "53ae85a6-f571-4167-b2af-e1d143709226"
+version = "1.7.0"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -1447,6 +2178,12 @@ version = "1.2.1"
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 version = "1.11.0"
+
+[[deps.Setfield]]
+deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
+git-tree-sha1 = "c5391c6ace3bc430ca630251d02ea9687169ca68"
+uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+version = "1.1.2"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1474,11 +2211,37 @@ deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 version = "1.11.0"
 
+[[deps.SpecialFunctions]]
+deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+git-tree-sha1 = "64cca0c26b4f31ba18f13f6c12af7c85f478cfde"
+uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
+version = "2.5.0"
+weakdeps = ["ChainRulesCore"]
+
+    [deps.SpecialFunctions.extensions]
+    SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
+
 [[deps.StableRNGs]]
 deps = ["Random"]
 git-tree-sha1 = "83e6cce8324d49dfaf9ef059227f91ed4441a8e5"
 uuid = "860ef19b-820b-49d6-a774-d7a799459cd3"
 version = "1.0.2"
+
+[[deps.StaticArrays]]
+deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
+git-tree-sha1 = "0feb6b9031bd5c51f9072393eb5ab3efd31bf9e4"
+uuid = "90137ffa-7385-5640-81b9-e52037218182"
+version = "1.9.13"
+weakdeps = ["ChainRulesCore", "Statistics"]
+
+    [deps.StaticArrays.extensions]
+    StaticArraysChainRulesCoreExt = "ChainRulesCore"
+    StaticArraysStatisticsExt = "Statistics"
+
+[[deps.StaticArraysCore]]
+git-tree-sha1 = "192954ef1208c7019899fbf8049e717f92959682"
+uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
+version = "1.4.3"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra"]
@@ -1502,24 +2265,110 @@ git-tree-sha1 = "29321314c920c26684834965ec2ce0dacc9cf8e5"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.34.4"
 
+[[deps.StatsFuns]]
+deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
+git-tree-sha1 = "35b09e80be285516e52c9054792c884b9216ae3c"
+uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
+version = "1.4.0"
+weakdeps = ["ChainRulesCore", "InverseFunctions"]
+
+    [deps.StatsFuns.extensions]
+    StatsFunsChainRulesCoreExt = "ChainRulesCore"
+    StatsFunsInverseFunctionsExt = "InverseFunctions"
+
+[[deps.StringManipulation]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "725421ae8e530ec29bcbdddbe91ff8053421d023"
+uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
+version = "0.4.1"
+
 [[deps.StyledStrings]]
 uuid = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
 version = "1.11.0"
+
+[[deps.SuiteSparse]]
+deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
+uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [[deps.SuiteSparse_jll]]
 deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
 version = "7.7.0+0"
 
+[[deps.SymbolicIndexingInterface]]
+deps = ["Accessors", "ArrayInterface", "PrettyTables", "RuntimeGeneratedFunctions", "StaticArraysCore"]
+git-tree-sha1 = "7530e17b6ac652b009966f8ad53371a4ffd273f2"
+uuid = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
+version = "0.3.39"
+
+[[deps.SymbolicLimits]]
+deps = ["SymbolicUtils"]
+git-tree-sha1 = "fabf4650afe966a2ba646cabd924c3fd43577fc3"
+uuid = "19f23fe9-fdab-4a78-91af-e7b7767979c3"
+version = "0.2.2"
+
+[[deps.SymbolicUtils]]
+deps = ["AbstractTrees", "ArrayInterface", "Bijections", "ChainRulesCore", "Combinatorics", "ConstructionBase", "DataStructures", "DocStringExtensions", "DynamicPolynomials", "ExproniconLite", "LinearAlgebra", "MultivariatePolynomials", "NaNMath", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicIndexingInterface", "TaskLocalValues", "TermInterface", "TimerOutputs", "Unityper", "WeakValueDicts"]
+git-tree-sha1 = "ca5929df933a8b7272bc7f01dcd14b2d976c56e2"
+uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
+version = "3.25.1"
+
+    [deps.SymbolicUtils.extensions]
+    SymbolicUtilsLabelledArraysExt = "LabelledArrays"
+    SymbolicUtilsReverseDiffExt = "ReverseDiff"
+
+    [deps.SymbolicUtils.weakdeps]
+    LabelledArrays = "2ee39098-c373-598a-b85f-a56591580800"
+    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+
+[[deps.Symbolics]]
+deps = ["ADTypes", "ArrayInterface", "Bijections", "CommonWorldInvalidations", "ConstructionBase", "DataStructures", "DiffRules", "Distributions", "DocStringExtensions", "DomainSets", "DynamicPolynomials", "LaTeXStrings", "Latexify", "Libdl", "LinearAlgebra", "LogExpFunctions", "MacroTools", "Markdown", "NaNMath", "OffsetArrays", "PrecompileTools", "Primes", "RecipesBase", "Reexport", "RuntimeGeneratedFunctions", "SciMLBase", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "SymbolicLimits", "SymbolicUtils", "TermInterface"]
+git-tree-sha1 = "e46dbf646bc3944c22a37745361c2e0a94f81d66"
+uuid = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+version = "6.38.0"
+
+    [deps.Symbolics.extensions]
+    SymbolicsForwardDiffExt = "ForwardDiff"
+    SymbolicsGroebnerExt = "Groebner"
+    SymbolicsLuxExt = "Lux"
+    SymbolicsNemoExt = "Nemo"
+    SymbolicsPreallocationToolsExt = ["PreallocationTools", "ForwardDiff"]
+    SymbolicsSymPyExt = "SymPy"
+
+    [deps.Symbolics.weakdeps]
+    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+    Groebner = "0b43b601-686d-58a3-8a1c-6623616c7cd4"
+    Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
+    Nemo = "2edaba10-b0f1-5616-af89-8c11ac63239a"
+    PreallocationTools = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
+    SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
+
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 version = "1.0.3"
 
+[[deps.TableTraits]]
+deps = ["IteratorInterfaceExtensions"]
+git-tree-sha1 = "c06b2f539df1c6efa794486abfb6ed2022561a39"
+uuid = "3783bdb8-4a98-5b6b-af9a-565f29a5fe9c"
+version = "1.0.1"
+
+[[deps.Tables]]
+deps = ["DataAPI", "DataValueInterfaces", "IteratorInterfaceExtensions", "OrderedCollections", "TableTraits"]
+git-tree-sha1 = "598cd7c1f68d1e205689b1c2fe65a9f85846f297"
+uuid = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
+version = "1.12.0"
+
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 version = "1.10.0"
+
+[[deps.TaskLocalValues]]
+git-tree-sha1 = "d155450e6dff2a8bc2fcb81dcb194bd98b0aeb46"
+uuid = "ed4db957-447d-4319-bfb6-7fa9ae7ecf34"
+version = "0.1.2"
 
 [[deps.TensorCore]]
 deps = ["LinearAlgebra"]
@@ -1527,10 +2376,27 @@ git-tree-sha1 = "1feb45f88d133a655e001435632f019a9a1bcdb6"
 uuid = "62fd8b95-f654-4bbd-a8a5-9c27f68ccd50"
 version = "0.1.1"
 
+[[deps.TermInterface]]
+git-tree-sha1 = "d673e0aca9e46a2f63720201f55cc7b3e7169b16"
+uuid = "8ea1fca8-c5ef-4a55-8b96-4e9afe9c9a3c"
+version = "2.0.0"
+
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 version = "1.11.0"
+
+[[deps.TimerOutputs]]
+deps = ["ExprTools", "Printf"]
+git-tree-sha1 = "f57facfd1be61c42321765d3551b3df50f7e09f6"
+uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
+version = "0.5.28"
+
+    [deps.TimerOutputs.extensions]
+    FlameGraphsExt = "FlameGraphs"
+
+    [deps.TimerOutputs.weakdeps]
+    FlameGraphs = "08572546-2f56-4bcf-ba4e-bab62c3a3f89"
 
 [[deps.TranscodingStreams]]
 git-tree-sha1 = "0c45878dcfdcfa8480052b6ab162cdd138781742"
@@ -1543,9 +2409,9 @@ uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
 version = "0.1.10"
 
 [[deps.URIs]]
-git-tree-sha1 = "67db6cc7b3821e19ebe75791a9dd19c9b1188f2b"
+git-tree-sha1 = "cbbebadbcc76c5ca1cc4b4f3b0614b3e603b5000"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.5.1"
+version = "1.5.2"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -1567,20 +2433,23 @@ deps = ["Dates", "LinearAlgebra", "Random"]
 git-tree-sha1 = "c0667a8e676c53d390a09dc6870b3d8d6650e2bf"
 uuid = "1986cc42-f94f-5a68-af5c-568840ba703d"
 version = "1.22.0"
+weakdeps = ["ConstructionBase", "InverseFunctions"]
 
     [deps.Unitful.extensions]
     ConstructionBaseUnitfulExt = "ConstructionBase"
     InverseFunctionsUnitfulExt = "InverseFunctions"
-
-    [deps.Unitful.weakdeps]
-    ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.UnitfulLatexify]]
 deps = ["LaTeXStrings", "Latexify", "Unitful"]
 git-tree-sha1 = "975c354fcd5f7e1ddcc1f1a23e6e091d99e99bc8"
 uuid = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
 version = "1.6.4"
+
+[[deps.Unityper]]
+deps = ["ConstructionBase"]
+git-tree-sha1 = "25008b734a03736c41e2a7dc314ecb95bd6bbdb0"
+uuid = "a7c27f48-0311-42f6-a7f8-2c11e75eb415"
+version = "0.1.6"
 
 [[deps.Unzip]]
 git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
@@ -1605,35 +2474,34 @@ git-tree-sha1 = "5db3e9d307d32baba7067b13fc7b5aa6edd4a19a"
 uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
 version = "1.36.0+0"
 
+[[deps.WeakValueDicts]]
+git-tree-sha1 = "98528c2610a5479f091d470967a25becfd83edd0"
+uuid = "897b6980-f191-5a31-bcb0-bf3c4585e0c1"
+version = "0.1.0"
+
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
-git-tree-sha1 = "a2fccc6559132927d4c5dc183e3e01048c6dcbd6"
+git-tree-sha1 = "b8b243e47228b4a3877f1dd6aee0c5d56db7fcf4"
 uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
-version = "2.13.5+0"
-
-[[deps.XSLT_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "XML2_jll", "Zlib_jll"]
-git-tree-sha1 = "7d1671acbe47ac88e981868a078bd6b4e27c5191"
-uuid = "aed1982a-8fda-507f-9586-7b0439959a61"
-version = "1.1.42+0"
+version = "2.13.6+1"
 
 [[deps.XZ_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "56c6604ec8b2d82cc4cfe01aa03b00426aac7e1f"
+git-tree-sha1 = "fee71455b0aaa3440dfdd54a9a36ccef829be7d4"
 uuid = "ffd25f8a-64ca-5728-b0f7-c24cf3aae800"
-version = "5.6.4+1"
+version = "5.8.1+0"
 
 [[deps.Xorg_libICE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "326b4fea307b0b39892b3e85fa451692eda8d46c"
+git-tree-sha1 = "a3ea76ee3f4facd7a64684f9af25310825ee3668"
 uuid = "f67eecfb-183a-506d-b269-f58e52b52d7c"
-version = "1.1.1+0"
+version = "1.1.2+0"
 
 [[deps.Xorg_libSM_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libICE_jll"]
-git-tree-sha1 = "3796722887072218eabafb494a13c963209754ce"
+git-tree-sha1 = "9c7ad99c629a44f81e7799eb05ec2746abb5d588"
 uuid = "c834827a-8449-5923-a945-d239c165b7dd"
-version = "1.2.4+0"
+version = "1.2.6+0"
 
 [[deps.Xorg_libX11_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
@@ -1643,9 +2511,9 @@ version = "1.8.6+3"
 
 [[deps.Xorg_libXau_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "e9216fdcd8514b7072b43653874fd688e4c6c003"
+git-tree-sha1 = "aa1261ebbac3ccc8d16558ae6799524c450ed16b"
 uuid = "0c0b7dd1-d40b-584c-a123-a41640f87eec"
-version = "1.0.12+0"
+version = "1.0.13+0"
 
 [[deps.Xorg_libXcursor_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXfixes_jll", "Xorg_libXrender_jll"]
@@ -1655,9 +2523,9 @@ version = "1.2.3+0"
 
 [[deps.Xorg_libXdmcp_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "89799ae67c17caa5b3b5a19b8469eeee474377db"
+git-tree-sha1 = "52858d64353db33a56e13c341d7bf44cd0d7b309"
 uuid = "a3789734-cfe1-5b06-b2d0-1dd0d9d62d05"
-version = "1.1.5+0"
+version = "1.1.6+0"
 
 [[deps.Xorg_libXext_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
@@ -1695,17 +2563,11 @@ git-tree-sha1 = "a490c6212a0e90d2d55111ac956f7c4fa9c277a6"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
 version = "0.9.11+1"
 
-[[deps.Xorg_libpthread_stubs_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "c57201109a9e4c0585b208bb408bc41d205ac4e9"
-uuid = "14d82f49-176c-5ed1-bb49-ad3f5cbd8c74"
-version = "0.1.2+0"
-
 [[deps.Xorg_libxcb_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "XSLT_jll", "Xorg_libXau_jll", "Xorg_libXdmcp_jll", "Xorg_libpthread_stubs_jll"]
-git-tree-sha1 = "1a74296303b6524a0472a8cb12d3d87a78eb3612"
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
+git-tree-sha1 = "bfcaf7ec088eaba362093393fe11aa141fa15422"
 uuid = "c7cfdc94-dc32-55de-ac96-5a1b8d977c5b"
-version = "1.17.0+3"
+version = "1.17.1+0"
 
 [[deps.Xorg_libxkbfile_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
@@ -1763,9 +2625,9 @@ version = "2.39.0+0"
 
 [[deps.Xorg_xtrans_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "6dba04dbfb72ae3ebe5418ba33d087ba8aa8cb00"
+git-tree-sha1 = "a63799ff68005991f9d9491b6e95bd3478d783cb"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
-version = "1.5.1+0"
+version = "1.6.0+0"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
@@ -1774,9 +2636,9 @@ version = "1.2.13+1"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "622cf78670d067c738667aaa96c553430b65e269"
+git-tree-sha1 = "446b23e73536f84e8037f5dce465e92275f6a308"
 uuid = "3161d3a3-bdf6-5164-811a-617609db77b4"
-version = "1.5.7+0"
+version = "1.5.7+1"
 
 [[deps.eudev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "gperf_jll"]
@@ -1839,9 +2701,9 @@ version = "1.18.0+0"
 
 [[deps.libpng_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "055a96774f383318750a1a5e10fd4151f04c29c5"
+git-tree-sha1 = "068dfe202b0a05b8332f1e8e6b4080684b9c7700"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
-version = "1.6.46+0"
+version = "1.6.47+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll", "Pkg"]
@@ -1888,8 +2750,15 @@ version = "1.4.1+2"
 # ╟─4103c9d2-ef89-4c65-be3f-3dab59d1cc47
 # ╠═9688d440-d231-11ee-0510-8db284ccd0c9
 # ╟─e9151d3f-8d28-4e9b-add8-43c713f6f068
-# ╟─d4e538c0-5529-4ec3-bc11-ec797bda8cfc
-# ╟─fe24a732-672f-470d-9174-315df4e4a7ca
+# ╟─bc9f0276-6b7b-4b19-8ef0-6371da964a9c
+# ╠═7b74f71f-a5fa-47ba-b218-c1798fa540f7
+# ╟─80df99a7-3e31-4418-9314-399116831e72
+# ╟─87753dbe-f075-435b-9ac5-75bdcd6019c0
+# ╟─0f0c0f37-f751-4950-9a8e-8dadb038325e
+# ╟─657a065f-738f-4512-9a48-84fc9dae76da
+# ╟─50cb2913-618f-4fd8-93a2-dd4f4411bbe1
+# ╟─1df757af-8d84-429b-8005-b17e9814e48c
+# ╟─0d8522c0-8824-47d5-97d1-d2472e9c1adf
 # ╠═40634b5e-d328-4da0-8274-48f166ffdbba
 # ╟─965625d6-b9da-4279-ad6d-54b2b62f1247
 # ╠═0c3831e6-0353-4dbc-927b-f55521ccd8e4
@@ -1897,41 +2766,63 @@ version = "1.4.1+2"
 # ╠═832c0172-94b0-4298-92fe-071e71f1a1c9
 # ╟─1151c2f5-7dd1-427f-8442-0332efd3f997
 # ╠═16df9d30-879e-4f63-822d-34d57fc28433
-# ╟─1d818a50-65a1-4788-985b-c7a1c9e9e5b0
+# ╟─05022c02-5324-43ec-b86f-6dfa338c7fc4
+# ╟─4d265f09-143c-4cd9-ac5c-aea0aad85bea
+# ╟─977c6fe3-8c0b-4dfc-b354-8fdab0c76884
+# ╟─544bfd07-d57c-45f3-9a1a-37ea0bb7c0e3
 # ╟─10295701-a493-43bc-ae0c-977b27151902
 # ╟─1d853f67-a95b-4ddf-b31d-c00f9fb92787
 # ╟─84595c02-e2bc-4ef7-8a24-eb501c4ef0e9
-# ╟─63f156df-afa5-4f1d-9091-dc5d4e8b1ce2
-# ╠═0e0936aa-d759-4fe7-8375-89b9f7ea37b4
+# ╟─12c00f60-63d6-4be3-9e0b-45934e29e9ca
+# ╟─4e996740-ac6f-4c83-87ed-f0e09aa45e89
+# ╟─2ea81c7f-fd18-48c5-9676-2e460c66e35f
 # ╟─6c316ead-2b3e-47e3-b625-2b33ff410d89
 # ╠═d9649df4-8507-4668-9c21-ab8946de21fc
 # ╟─2f5714fe-187e-4984-889b-fe3855ba390e
 # ╠═9076a083-e044-416b-a183-dc6fa906514a
 # ╟─45126823-9ba8-4f89-a9c5-81789244ed99
 # ╠═e922280b-b0d2-4159-9597-0e1e1b71569d
-# ╟─48442160-36e1-4604-9a7a-c8bc6014494a
+# ╟─dd5220d0-0290-490a-8309-c8b66164d332
+# ╟─7d48ab14-1638-4c03-90bc-188068183391
+# ╟─94e8d3cb-f664-4f26-b234-e955ab3f61cb
 # ╟─d28173db-0465-418f-bbd1-92b8fc64540c
-# ╟─83be5e79-e71c-4f32-95e9-854f2fdc024d
-# ╟─dfd068d8-d8e6-4b66-a51a-7da122a95362
-# ╠═478ad0b4-160c-4134-9ad7-3f93d754b131
-# ╟─99ff07c9-f2f0-474a-8c33-9a26fad3ee92
-# ╟─85e2c3d5-3e63-460a-83ae-6c4bce19d9d1
-# ╟─ca3564d3-059e-40ce-bbcd-a04594e8ac24
-# ╟─56368f98-6f51-49be-8333-6fa1b9c64cf1
-# ╟─19d8b680-6992-4c9f-aaf4-c665600a27ce
-# ╠═ca5b9f56-9494-4720-a861-9c3627761146
-# ╟─3dbd632b-7330-464e-b3c2-db138daad238
+# ╟─c6a94a08-3c8d-43e2-85e1-dc15d4f8b071
+# ╟─0d89e57d-a8e8-405f-8962-e6377ab87842
 # ╠═56636368-9ff6-4b45-a3be-8b1e05f6ee20
 # ╟─1e426a63-f3ea-46e7-b89d-1de6b2a0c421
-# ╠═e165dccd-c909-428f-95d6-9942fc8adce2
-# ╟─6988bfd1-6664-47e9-874c-69437924bec0
-# ╟─4ac1b1e3-e570-4c00-93e3-e25fa14cba85
-# ╠═7f04041d-1077-4d8a-91ed-a794379e55de
+# ╟─e165dccd-c909-428f-95d6-9942fc8adce2
+# ╟─4bc09748-a008-4e62-b3f0-cc401b27af03
+# ╟─77d5c198-ee33-40a4-a6e0-057c2e9c8281
+# ╟─724f7887-9d5b-4b9c-b2fd-70e2a7062782
+# ╠═062f5835-42f5-4c57-a17b-ec3e617b542d
+# ╟─6f4da5cf-9d05-42ec-8c27-1ae20632e94b
+# ╟─4f1ea545-4d37-4e78-b5de-6c8071e09d67
+# ╟─99974a63-9ba9-43c1-95ac-b02d83363e74
+# ╟─896ee051-09d0-4849-8173-6f894ce66357
+# ╟─3cda6ecd-a0a2-452b-8cb6-b36432c0bdda
 # ╟─31644da8-5501-477b-a65d-54f38c649718
 # ╟─86d719b4-494b-489d-9c6a-40c8d2477bad
-# ╠═08574e94-69f5-4a6e-8ffd-82d8e08be082
-# ╟─2b940279-24e5-495b-af0c-b0b9e547f33a
+# ╟─2db471c0-ebfb-4e30-9a95-f281d9467a4f
+# ╟─512f4377-c80a-47da-a195-b63a746fcf75
+# ╠═1469326c-92b1-4fad-a54f-e6397596c39f
+# ╠═c7e410cc-aeba-4630-9ebb-87af7ef093a5
+# ╟─6b30e9a0-b220-49c9-aa31-76c8d24d93b2
 # ╠═b0c56709-a77e-4417-bd2b-bf4543cb2a13
+# ╟─2b940279-24e5-495b-af0c-b0b9e547f33a
+# ╟─83be5e79-e71c-4f32-95e9-854f2fdc024d
+# ╟─cb27d648-dc8b-4840-925a-b122ce5d4fd5
+# ╟─8ab17ea3-a8e4-4471-9d54-9798a4b01a26
+# ╟─a16bd249-755b-4b6a-b197-c299d1fd959d
+# ╟─75f3aa38-57b5-498f-b80e-97e28859316f
+# ╠═478ad0b4-160c-4134-9ad7-3f93d754b131
+# ╟─99ff07c9-f2f0-474a-8c33-9a26fad3ee92
+# ╟─37d7e297-82b4-4c15-b590-34c47cc41bb9
+# ╟─933aada3-991a-4a5c-ba6c-d2b85e5b62e1
+# ╟─e1d3d69d-380c-4dac-ab45-5e3517d542a6
+# ╟─91bc8975-072b-4c98-9e81-311a155acab5
+# ╟─a3ddd54a-0171-4e7f-aa65-11224858f8be
+# ╟─ca3564d3-059e-40ce-bbcd-a04594e8ac24
+# ╟─56368f98-6f51-49be-8333-6fa1b9c64cf1
 # ╟─9c8ad9b0-50eb-478e-b63c-26a868765230
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
