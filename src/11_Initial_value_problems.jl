@@ -25,6 +25,7 @@ begin
 	using DifferentialEquations
 	using ForwardDiff
 	using HypertextLiteral
+	using LinearAlgebra
 end
 
 # ╔═╡ ba9b6172-0234-442c-baaa-876b12f689bd
@@ -41,34 +42,9 @@ md"""
 # Initial value problems
 """
 
-# ╔═╡ e9ef08a6-e823-4f2b-9fcc-e3646171cefb
-TODO(md"Start with example and introduce general definition thereafter.")
-
-# ╔═╡ 6e9b0961-04b7-436b-90f9-9804e06d10f8
+# ╔═╡ ebabe949-5492-4b8b-959d-05c5728da043
 md"""
-In computational science we are often faced with quantitites that change continuously in space or time. For example the temperature profile of a hot body or the population of an animal species over time. Such problems are often modelled by differential equations. If there is only a single indepentent variable $t$ we call the model an **ordinary differential equation**. The usual setup is that for initial value $t = 0$ we have some knowledge about our problem, e.g. by performing a measurement, and the key question is thus how the situation evolves for $t > 0$. Mathematically we call this an **initial value problem**, for example:
-
-!!! info "Definition: Initial-value problem"
-	A scalar, first-order initial value problem (IVP) can be formulated as
-	```math
-	\tag{1}
-	\left\{
-	\begin{aligned}
-	\frac{d u(t)}{d t} &= f(t, u(t)) && a ≤ t ≤ b \\
-	u(a) &= u_0,
-	\end{aligned}\right.
-	```
-	We call $t$ the **indepentent variable**, $u$ the **dependent variable**
-	and $u_0$ the initial conditions.
-
-	A **solution** of an initial-value problem is a differentiable, continuous
-	function $u : \mathbb{R} \to \mathbb{R}$
-	which makes both $u'(t) = f(t, u(t))$ (for all $a ≤ t ≤ b$)
-	and $u(a) = u_0$ true equations.
-
-	For the specific case where $f(t, u) = g(t) + u h(t)$ for two functions $g$ and $h$ the differential equation (1) is called **linear**.
-
-Often (but not always) $t$ plays the role of time and (1) thus models the time-dependence of a quantity $u$. Let us consider an example:
+In computational science we are often faced with quantitites that change continuously in space or time. For example the temperature profile of a hot body or the population of an animal species over time. Such problems are often modelled by differential equations. If there is only a single indepentent variable $t$ we call the model an **ordinary differential equation**. The usual setup is that for initial value $t = 0$ we have some knowledge about our problem, e.g. by performing a measurement, and the key question is thus how the situation evolves for $t > 0$. 
 """
 
 # ╔═╡ 05ef8174-e9a6-4280-8640-08d74635fba2
@@ -127,16 +103,42 @@ let
 	plot(u; xlims=(0, 3), label="b=4, d=0.5, u₀=1", xlabel=L"t", ylabel=L"u", title="Duck population", lw=2)
 end
 
-# ╔═╡ d811efdc-c133-4146-a507-0786cbde68ad
-TODO(md"Avoid introducing DifferentialEquations.jl and the ODEProblem object.")
+# ╔═╡ 1e65223e-9a12-4a4c-8b5e-31bfe4f813ec
+md"""This problem is an example for the a class of problems one calls **initial value problem**, because based on some initial knowledge at $t=0$ one wants to know how a quantity (e.g. here the population) evolves.
+"""
 
-# ╔═╡ c2359767-5256-4403-b6fe-0ded5ba41efa
+# ╔═╡ 64fe575e-0d47-4949-a9e8-2056ddee45df
+md"""
+!!! info "Definition: Initial-value problem"
+	A scalar, first-order initial value problem (IVP) can be formulated as
+	```math
+	\tag{1}
+	\left\{
+	\begin{aligned}
+	\frac{d u(t)}{d t} &= f(t, u(t)) && a ≤ t ≤ b \\
+	u(a) &= u_0,
+	\end{aligned}\right.
+	```
+	We call $t$ the **indepentent variable**, $u$ the **dependent variable**
+	and $u_0$ the initial conditions.
+
+	A **solution** of an initial-value problem is a differentiable, continuous
+	function $u : \mathbb{R} \to \mathbb{R}$
+	which makes both $u'(t) = f(t, u(t))$ (for all $a ≤ t ≤ b$)
+	and $u(a) = u_0$ true equations.
+
+	For the specific case where $f(t, u) = g(t) + u h(t)$ for two functions $g$ and $h$ the differential equation (1) is called **linear**.
+
+Often (but not always) $t$ plays the role of time and (1) thus models the time-dependence of a quantity $u$.
+"""
+
+# ╔═╡ 1dbe5d72-17d9-4f20-b365-ad913cd607c3
 md"""
 ## Numerical solution in DifferentialEquations.jl
-For such simple examples analytic solutions can still be found with a little practice. However, for more involved cases analytical solutions can be more tricky or impossible and we will discuss numerical techniques to solve such equations. 
-Before we discuss a few simple methods in detail, we first consider the [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) Julia package, which provides a range of production-grade numerical solvers for ODE problems and will serve us as the reference method in our discussion.
-
-As an example we consider the more involved initial value problem
+For simple examples like the Duck problem above
+analytic solutions can still be found with a little practice.
+However, initial value problems quickly become more involved.
+For example consider the problem
 ```math
 \tag{2}
 \left\{
@@ -146,26 +148,40 @@ u(0) &= -1,
 \end{aligned}\right.
 ```
 for which an analytical solution is not so easy to obtain.
-To solve it using DifferentialEquations
-we first construct an `ODEProblem` object,
-which is essentially a Julia representation of (2):
 """
 
-# ╔═╡ e3c3abaf-0a17-4d84-945d-a1bf9bdfc0de
+# ╔═╡ 6c2f1cd1-e79a-4790-9871-0a8825b5c02e
+md"""
+Before we introduce a few key ideas how to solve such problems,
+we first need a reference technique to compare against.
+Here the [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) Julia package provides a range of production-grade numerical solvers for ODE problems.
+
+We first translate our problem (2) into Julia code.
+"""
+
+# ╔═╡ 8f159939-4bf4-4151-bd3e-a84c5e1493db
 begin
-	f = (u, p, t) -> sin((t + u)^2)  # defines du/dt, must include p argument
-	u₀ = -1.0                        # initial value
-	tspan = (0.0, 4.0)               # t interval 
-	ivp = ODEProblem(f, u₀, tspan)
+	f(u, t) = sin((t + u)^2)  # defines du/dt
+	u₀ = -1.0                 # initial value
+	tstart = 0.0              # Start time
+	tend   = 4.0              # Final time
+end;
+
+# ╔═╡ 9b71f2b6-34bb-416a-947d-6e009f565bf4
+md"""This we can now solve using `DifferentialEquations`, the details of which is beyond the scope of this course and hidden in the function `solve_reference`.
+"""
+
+# ╔═╡ 3f59bd74-1bb0-41df-bea2-bf5990a2b89a
+function solve_reference(f, u₀, tstart, tend; kwargs...)
+	# Construct ODEProblem object
+	ivp = ODEProblem((u, p, t) -> f(u, t), u₀, (tstart, tend))
+
+	# Solve problem using the Tsit5() algortihm, a pretty good default.
+	solve(ivp, Tsit5(); kwargs...)
 end
 
-# ╔═╡ 49d045f8-a510-4f7b-a8c9-21ed3b4e0e6c
-md"""
-A good default solver for such problems is the `Tsit5` method, which can be employed as follows:
-"""
-
-# ╔═╡ 0f37dc8a-fb6b-424c-84aa-0e46ef89437b
-sol = solve(ivp, Tsit5());
+# ╔═╡ 9cb5fd8e-d923-434e-b543-a0c987a5b5a7
+sol = solve_reference(f, u₀, tstart, tend);
 
 # ╔═╡ 5d2886f2-87a5-43ae-9064-448478f957ca
 md"The obtained solution can easily be visualised:"
@@ -176,12 +192,9 @@ plot(sol, label="solution", lw=2, xlabel="t", ylabel=L"u(t)",
 
 # ╔═╡ 6b4ba69d-0a70-4c66-b4bc-63b717348471
 md"""
-## Optional: Existence and uniqueness of solutions
+## Existence and uniqueness of solutions
 
-Before we discuss some numerical techniques for solving initial value problems
-in detail, a quick reminder that in general such an IVP can by itself not be solvable or admit more than one solution.
-
-First consider the case where the **existence** of a solution to problem (1) is not guaranteed for all $t$ with $a ≤ t ≤ b$. For example consider the problem
+Let us remark that the **existence** of a solution to problem (1) is not guaranteed for all $t$ with $a ≤ t ≤ b$. For example consider the problem
 ```math
 \frac{d u(t)}{dt} = \left(u(t)\right)^2,\, 0≤t≤2, \qquad u(0) = 1,
 ```
@@ -191,26 +204,34 @@ When attempting a numerical solution beyond $t=1$ of such a problem we are faced
 
 # ╔═╡ 7a0fa3cd-a270-4947-b7ba-d30110139795
 let
-	f  = (u, p, t) -> u^2
-	u₀ = 1.0
-	tspan = (0, 10)
+	f(u, t) = u^2
+	u₀      = 1.0
+	tstart  = 0
+	tend    = 10
 	
-	ivp = ODEProblem(f, u₀, tspan)
-	sol = solve(ivp,Tsit5())
-	
+	sol = solve_reference(f, u₀, tstart, tend)
 	plot(sol; lw=2, label="", xlabel=L"t", yaxis=:log, ylabel=L"u(t)", xlims=(0, 2))
 end
 
-# ╔═╡ 0025be9a-6320-415a-b2ac-70f24bb0d12b
+# ╔═╡ c94d264b-ad1b-47fd-8b58-fd434cfe0f11
 md"""
 A second issue is that the solution may not necessarily be **unique**. Consider for example the equation
 ```math
 \frac{d u(t)}{dt} = \sqrt{u(t)}, \, t>0, \qquad u(0) = 0,
 ```
-which has the two solutions $u_1(t) = 0$ and $u_2(t) = \frac14 t^2$. 
+which has the two solutions $u_1(t) = 0$ and $u_2(t) = \frac14 t^2$.
+"""
 
-Both cases cause additional difficulties to numerical techniques, which we do not want to discuss here. Instead we thus recall the following result ensuring the existence of a unique solution to (1):
+# ╔═╡ 3dc8b41f-3ba0-4c0a-b017-731fd0958920
+md"""
+Both cases cause additional difficulties to numerical techniques, which we do not want to discuss here. For the scope of the course **we will assume that all IVP problems we consider, have a unique solution.**
 
+If you are curious, the precise conditions for existence and uniqueness are given below:
+"""
+
+# ╔═╡ bc840e8d-77d9-4a4a-a908-3e9b4a8d253b
+Foldable("Optional: Theorem governing Existence and uniquens of first-order ODEs",
+md"""
 !!! info "Theorem 1: Existence and uniquens of first-order ODEs"
 	Given $f : \mathbb{R} \times \mathbb{R} \to \mathbb{R}$ a continuous function
 	with respect to both arguments and **Lipschitz-continuous** with respect to its second argument, i.e. there exists a constant $L>0$ such that
@@ -219,9 +240,7 @@ Both cases cause additional difficulties to numerical techniques, which we do no
 	```
 	Then the ODE problem (1) has a unique solution $u(t)$ defined for all
 	$a ≤ t ≤ b$ and $u$ is moreover continuously differentiable.
-
-For the rest of this chaper we will always assume this condition to be satisfied.
-"""
+""")
 
 # ╔═╡ 66affc7b-f0b0-48f4-b8bd-a1ff16d0357e
 md"""
@@ -300,11 +319,11 @@ values $u^{(n)} ≈ u(t_n)$.
 """
 
 # ╔═╡ 9b0581c3-6fa8-44d8-8ebb-d2fda2841230
-function forward_euler(ivp, N)
-	a, b = ivp.tspan   # Extract time interval [a, b]
-	u₀   = ivp.u0      # Initial condition
-	f    = ivp.f       # Derivatve function f
-	p    = ivp.p       # Further parameters (not used in our implementation)
+function forward_euler(f, u₀, a, b, N)
+	# f:  Derivative function
+	# u0: Initial value
+	# a:  Start of the time interval
+	# b:  End of the time interval
 
 	# Discrete time nodes to consider:
     h = (b - a) / N
@@ -316,7 +335,7 @@ function forward_euler(ivp, N)
 	# Time integration
 	u[1] = u₀
     for i in 1:N
-		u[i+1] = u[i] + h * f(u[i], p, t[i])
+		u[i+1] = u[i] + h * f(u[i], t[i])
     end
 
     (; t, u)
@@ -332,11 +351,17 @@ Let us compare this approach to the test problem (2)
 u(a) &= 1,
 \end{aligned}\right.
 ```
-which we solved previously using `DifferentialEquations`. The `ivp` object already contains a setup of this initial value problem
+which we solved previously using `DifferentialEquations`. The variables `f`, `u₀`, `tstart` and `tend` already contains a setup of this initial value problem
 """
 
-# ╔═╡ 5374c9db-6b90-4775-a3f0-4c226111d7d5
-ivp
+# ╔═╡ 6052f3cf-8a1e-4755-8724-a3f885702d62
+f
+
+# ╔═╡ 90a2176f-7986-4140-8e34-555993070324
+u₀
+
+# ╔═╡ 15e135e3-e95f-4494-8a20-2c571c4019f2
+(tstart, tend)
 
 # ╔═╡ 14edb601-ab10-4228-81a1-d27bb16ea202
 md"""
@@ -350,11 +375,11 @@ md"and plot the result:"
 md"- Number of subintervals: `Neuler = ` $(@bind Neuler Slider(5:1:50; show_value=true, default=20)) "
 
 # ╔═╡ 50007ba8-8160-48c1-b5c1-27a9332c1d58
-res_euler = forward_euler(ivp, Neuler);
+res_euler = forward_euler(f, u₀, tstart, tend, Neuler);
 
 # ╔═╡ 65807ddc-0c8b-4b88-bbc2-4ff3c7a1d2f8
 let
-	res_euler = forward_euler(ivp, Neuler)
+	res_euler = forward_euler(f, u₀, tstart, tend, Neuler)
 
 	plot(sol, label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 0))
@@ -472,7 +497,7 @@ Naively one might think that simply adding all local error contributions provide
 
 # ╔═╡ 6d73f60b-0ccf-492f-9700-09d0bbf15124
 let
-	res_euler = forward_euler(ivp, 7)
+	res_euler = forward_euler(f, u₀, tstart, tend, 7)
 	plot(sol, label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 1))
 	plot!(res_euler.t, res_euler.u; label=L"Euler $N=7$", mark=:o, lw=2, ls=:dash)
@@ -609,12 +634,12 @@ One could paraphrase Theorem 2 by saying if the local truncation error $τ^{(n)}
 let
 	# Obtain extremely tight solution using DifferentialEquations.jl
 	# Note, that ivp still contains the ODEProblem (2)
-	u_exact = solve(ivp, Tsit5(); reltol=1e-14, abstol=1e-14)
+	u_exact = solve_reference(f, u₀, tstart, tend; reltol=1e-14, abstol=1e-14)
 
 	Ns = [ round(Int, 5 * 10^k) for k in 0:0.5:3 ]
 	errors = Float64[]
 	for N in Ns
-		res_euler = forward_euler(ivp, N)
+		res_euler = forward_euler(f, u₀, tstart, tend, N)
 		u = res_euler.u
 		t = res_euler.t
 
@@ -626,8 +651,7 @@ let
 	end
 	
 	plot(Ns, errors; mark=:o, label="Errors", lw=2, xaxis=:log, yaxis=:log,
-		xlabel=L"N
-		", ylabel="Largest global error",
+		xlabel=L"N", ylabel="Largest global error",
 		title="Convergence of Forward Euler")
 
 	# Add line for perfect 1st order convergence:
@@ -765,11 +789,11 @@ we obtain an implementation of the midpoint method as:
 """
 
 # ╔═╡ 76978387-3b7b-4644-a27e-246f84186eb9
-function midpoint(ivp, N)
-	a, b = ivp.tspan   # Extract time interval [a, b]
-	u₀   = ivp.u0      # Initial condition
-	f    = ivp.f       # Derivatve function f
-	p    = ivp.p       # Further parameters (not used in our implementation)
+function midpoint(f, u₀, a, b, N)
+	# f:  Derivative function
+	# u0: Initial value
+	# a:  Start of the time interval
+	# b:  End of the time interval
 
 	# Discrete time nodes to consider:
     h = (b - a) / N
@@ -781,8 +805,8 @@ function midpoint(ivp, N)
 	# Time integration ... this is what changes over forward_euler
 	u[1] = u₀
     for i in 1:N
-		uhalf  = u[i] + h/2 * f(u[i],  p, t[i]      )
-		u[i+1] = u[i] + h   * f(uhalf, p, t[i] + h/2)
+		uhalf  = u[i] + h/2 * f(u[i],  t[i]      )
+		u[i+1] = u[i] + h   * f(uhalf, t[i] + h/2)
     end
 
     (; t, u)
@@ -794,8 +818,8 @@ md"""In comparison with Forward Euler we notice this method to be clearly more a
 # ╔═╡ 2c3ad400-acdd-41bb-ac40-16cdc4b6fb07
 let
 	N = 9
-	res_euler    = forward_euler(ivp, N)
-	res_midpoint = midpoint(ivp, N)
+	res_euler    = forward_euler(f, u₀, tstart, tend, N)
+	res_midpoint = midpoint(f, u₀, tstart, tend, N)
 	plot(sol, label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 0.5))
 	plot!(res_euler.t, res_euler.u; label=L"Euler $N=9$", mark=:o, lw=2, ls=:dash)
@@ -850,11 +874,11 @@ An implementation of RK4 is given by:
 """
 
 # ╔═╡ 5f7562f6-4329-4c1e-b5d4-74c9b1980346
-function rk4(ivp, N)
-	a, b = ivp.tspan   # Extract time interval [a, b]
-	u₀   = ivp.u0      # Initial condition
-	f    = ivp.f       # Derivatve function f
-	p    = ivp.p       # Further parameters (not used in our implementation)
+function rk4(f, u₀, a, b, N)
+	# f:  Derivative function
+	# u0: Initial value
+	# a:  Start of the time interval
+	# b:  End of the time interval
 
 	# Discrete time nodes to consider:
     h = (b - a) / N
@@ -866,10 +890,10 @@ function rk4(ivp, N)
 	# Time integration ... this is what changes over forward_euler
 	u[1] = u₀
     for i in 1:N
-		v₁ = h * f(u[i],        p, t[i]      )
-		v₂ = h * f(u[i] + v₁/2, p, t[i] + h/2)
-		v₃ = h * f(u[i] + v₂/2, p, t[i] + h/2)
-		v₄ = h * f(u[i] + v₃,   p, t[i] + h  )
+		v₁ = h * f(u[i],        t[i]      )
+		v₂ = h * f(u[i] + v₁/2, t[i] + h/2)
+		v₃ = h * f(u[i] + v₂/2, t[i] + h/2)
+		v₄ = h * f(u[i] + v₃,   t[i] + h  )
 
 		u[i+1] = u[i] + (v₁/6 + v₂/3 + v₃/3 + v₄/6)
     end
@@ -885,9 +909,9 @@ Let us compare all methods we saw in this chapter:
 
 # ╔═╡ f9e8c1ec-3bc6-40d3-b7e3-f465bd53ecab
 let
-	res_euler    = forward_euler(ivp, N)
-	res_midpoint = midpoint(ivp, N)
-	res_rk4      = rk4(ivp, N)
+	res_euler    = forward_euler(f, u₀, tstart, tend, N)
+	res_midpoint = midpoint(f, u₀, tstart, tend, N)
+	res_rk4      = rk4(f, u₀, tstart, tend, N)
 	plot(sol, label="reference", lw=2, ylabel=L"u(t)", xlabel="",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 0.5), titlefontsize=12)
 	plot!(res_euler.t, res_euler.u; label="Euler", mark=:o, lw=2, ls=:dash, markersize=3)
@@ -914,7 +938,7 @@ RK4 converges faster than the other two methods. As the name suggests it is inde
 begin
 	# Obtain extremely tight solution using DifferentialEquations.jl
 	# Note, that ivp still contains the ODEProblem (2)
-	u_exact = solve(ivp, Tsit5(); reltol=1e-14, abstol=1e-14)
+	u_exact = solve_reference(f, u₀, tstart, tend; reltol=1e-14, abstol=1e-14)
 
 	# Function to compute the global error
 	function global_error(t, u, u_exact)
@@ -927,13 +951,13 @@ begin
 	errors_midpoint = Float64[]
 	errors_rk4 = Float64[]
 	for N in Ns
-		result_euler = forward_euler(ivp, N)
+		result_euler = forward_euler(f, u₀, tstart, tend, N)
 		push!(errors_euler, global_error(result_euler.t, result_euler.u, u_exact))
 		
-		result_midpoint = midpoint(ivp, N)
+		result_midpoint = midpoint(f, u₀, tstart, tend, N)
 		push!(errors_midpoint, global_error(result_midpoint.t, result_midpoint.u, u_exact))
 		
-		res_rk4 = rk4(ivp, N)
+		res_rk4 = rk4(f, u₀, tstart, tend, N)
 		push!(errors_rk4, global_error(res_rk4.t, res_rk4.u, u_exact))
 	end
 
@@ -992,7 +1016,7 @@ md"""... and try it on our previously implemented methods:"""
 
 # ╔═╡ 1f1af0d4-3c5d-4e38-9eda-c307100bd61f
 md"""
-- `logC = `: $(@bind logC Slider(-4:0.2:1; show_value=true, default=0.8))
+- `C = `: $(@bind C Slider(10 .^ (-4:0.2:1); show_value=true, default=10^0.8))
 - `Ndecay = `: $(@bind Ndecay Slider(15:5:50; show_value=true, default=15))
 """
 
@@ -1004,51 +1028,54 @@ Let us consider the innocent looking initial value problem
 ```math
 \left\{
 \begin{aligned}
-\frac{d u(t)}{d t} &= -10^\textrm{logC} && t > 0 \\
+\frac{d u(t)}{d t} &= -C && t > 0 \\
 u(0) &= 10.
 \end{aligned}\right.
 ```
-This model governs for example the decay of a radioactive species with initial concentration $10$ over time. The rate of decay is $10^\textrm{logC}$ ≈  $(round(10^logC; sigdigits=3)).
+This model governs for example the decay of a radioactive species with initial concentration $10$ over time. The rate of decay is $C$ ≈  $(round(C; sigdigits=3)).
 
 By simple integration we find the exact solution of this problem as:
 """
 
 # ╔═╡ 5348acce-d58b-4b33-97ad-44f44717e1fe
-u(t) = 10 * exp(-10^logC * t)
+u(t) = 10 * exp(-C * t)
 
 # ╔═╡ f2bde123-95b7-4370-9914-577985c4efeb
-plot(u; xlims=(0, 10), lw=2, title="du/dx = $(round(-10^logC; sigdigits=3))", titlefontsize=12, label="Reference", xlabel=L"t", ylabel=L"u(t)")
+plot(u; xlims=(0, 10), lw=2, title="du/dx = $(round(-C; sigdigits=3))", titlefontsize=12, label="Reference", xlabel=L"t", ylabel=L"u(t)")
 
 # ╔═╡ af8f49e2-a876-4bb9-8036-46c1f510f369
-decay = let
-	f  = (u, p, t) -> -10^logC * u
-	u₀ = 10.0
-	tspan = (0.0, 10.0)
-	decay = ODEProblem(f, u₀, tspan)
-end
+begin
+	dcy_f(u, t) = -C * u
+	dcy_u₀      = 10.0
+	dcy_tstart  =  0.0
+	dcy_tend    = 10.0
+end;
 
 # ╔═╡ e4fa9b2d-8a81-4439-84ff-8529a7421ae9
 let
-	h = 10 / Ndecay  # Stepsize of our numerical methods
+	h = (dcy_tend - dcy_tstart) / Ndecay  # Stepsize of our numerical methods
 	
-	soln_euler    = forward_euler(decay, Ndecay);
-	soln_midpoint = midpoint(decay, Ndecay);
-	soln_rk4      = rk4(decay, Ndecay);
+	soln_euler    = forward_euler(dcy_f, dcy_u₀, dcy_tstart, dcy_tend, Ndecay)
+	soln_midpoint = midpoint(dcy_f, dcy_u₀, dcy_tstart, dcy_tend, Ndecay)
+	soln_rk4      = rk4(dcy_f, dcy_u₀, dcy_tstart, dcy_tend, Ndecay)
 
-	p = plot(u; lw=2, title="du/dx = $(round(-10^logC; sigdigits=3))", titlefontsize=12, label="Reference", xlabel=L"t", ylabel=L"u(t)", xlims=(-0.1, 10.1))
-
-	if h ≥ 2/10^logC  # See discussion below to understand
-	                  # why this formula appears here
+	p = plot(u; lw=2, title="du/dx = $(round(-C; sigdigits=3))", titlefontsize=12, label="Reference", xlabel=L"t", ylabel=L"u(t)", xlims=(-0.1, 10.1))
+	
+	if h ≥ 2/C  # See discussion below to understand
+	            # why this formula appears here
 		ylims!(p, (-1_000, 10_000))
 	end
 
-	plot!(p, soln_euler.t, soln_euler.u; mark=:o, c=2, lw=2, markersize=3, ls=:dash, label="Forward Euler")
-	plot!(p, soln_midpoint.t, soln_midpoint.u; mark=:o, c=3, lw=2, markersize=3, ls=:dash, label="Midpoint")
-	plot!(p, soln_rk4.t, soln_rk4.u; mark=:o, c=4, lw=2, markersize=3, ls=:dash, label="RK4")
+	plot!(p, soln_euler.t, soln_euler.u;
+		  mark=:o, c=2, lw=2, markersize=3, ls=:dash, label="Forward Euler")
+	plot!(p, soln_midpoint.t, soln_midpoint.u;
+		  mark=:o, c=3, lw=2, markersize=3, ls=:dash, label="Midpoint")
+	plot!(p, soln_rk4.t, soln_rk4.u;
+		  mark=:o, c=4, lw=2, markersize=3, ls=:dash, label="RK4")
 end
 
 # ╔═╡ 60a34642-3824-4a3f-a11c-e76039c91e4a
-md"""We notice for too few nodal points or too large decay constants $10^\textrm{logC}$ our numerical methods **all fail** to recover the decay behaviour.
+md"""We notice for too few nodal points or too large decay constants $C$ our numerical methods **all fail** to recover the decay behaviour.
 In other words while the exact solution satisfies $\lim_{t\to\infty} u(t) = 0$,
 the numerical methods are **all qualitatively wrong**:
 instead of the reproducing the correct long-time limit numerically,
@@ -1072,14 +1099,14 @@ Without going into further details the property we ask for is called **stability
 
 	Then a numerical method is called **absolutely stable** for a fixed stepsize $h$ if
 	```math
-	\lim_{n\to\infty} u^{(n)} = u_\ast \qquad \forall u_0.
+	\lim_{n\to\infty} u^{(n)} = u_\ast \qquad \text{for any } u_0.
 	```
 
 	A method is further called **unconditionally absolutely stable** if it is stable for all $h > 0$.
 
 In the case of our decay problem, one can show for example that the forward Euler method is absolutely stable if
 ```math
-h < \frac{2}{10^{\textrm{logC}}}
+h < \frac{2}{C}
 ```
 --- which explains the condition we chose to switch the axis limits in the plot above.
 
@@ -1235,33 +1262,32 @@ md"""
 
 which is identical to Algorithm 1, just with all quantities replaced by their vector-valued analogues. In fact even the implementations of `forward_euler` can just be used without changing a single line of code as we will demonstrate now.
 
-First we setup the HO model as an `ODEProblem`:
+First we setup the HO model function and parameters:
 """
 
 # ╔═╡ f35f9be4-74ae-4a05-ab6a-55aa799d98a2
 k = 2  # Force constant
 
 # ╔═╡ 01e9b24f-7819-4e72-9463-2a6aca835d22
-ho = let
+begin
 	# To setup f we assume u is a vector of size 2 and return a vector of size 2
-	f = (u, p, t) -> [     u[2];
-				      -k * u[1]]
+	ho_f(u, t) = [     u[2];
+				  -k * u[1]]
 
 	# As the initial value again we supply a vector of size 2
-	u₀ = [0.0;
-		  1.0]
+	ho_u₀ = [0.0;
+		     1.0]
 
-	# And we are interested in the behaviour from 0 to tend (defined below)
-	tspan = (0.0, 10.0)
-
-	ho = ODEProblem(f, u₀, tspan)
+	# and we are interested in the behaviour from 0 to tend (defined below)
+	ho_tstart =  0.0
+	ho_tend   = 10.0
 end
 
 # ╔═╡ 3834116a-be19-4690-a4be-542d7824f410
 md"""Then running the dynamics just takes a call to `forward_euler` as before:"""
 
 # ╔═╡ 612e93db-322b-4b7c-a13e-cfd18058178a
-ho_euler = forward_euler(ho, 50);
+ho_euler = forward_euler(ho_f, ho_u₀, ho_tstart, ho_tend, 50);
 
 # ╔═╡ 94a39f52-0653-4f01-a08a-ee9bc887da7d
 let
@@ -1282,12 +1308,13 @@ md"""
 # ╔═╡ 828d31d2-6816-47fa-8789-fe370e1deb06
 let
 	# Find a reference solution using Tsit5():
-	reference = solve(ho, Tsit5(); abstol=1e-14, reltol=1e-14);
+	reference = solve_reference(ho_f, ho_u₀, ho_tstart, ho_tend;
+								abstol=1e-14, reltol=1e-14);
 	
 	# Solve the problem using all our implemented RK methods
-	soln_euler    = forward_euler(ho, Nho)
-	soln_midpoint = midpoint(ho, Nho)
-	soln_rk4      = rk4(ho, Nho)
+	soln_euler    = forward_euler(ho_f, ho_u₀, ho_tstart, ho_tend, Nho)
+	soln_midpoint = midpoint(ho_f, ho_u₀, ho_tstart, ho_tend, Nho)
+	soln_rk4      = rk4(ho_f, ho_u₀, ho_tstart, ho_tend, Nho)
 	
 	# Function to compute the pointwise error in the positions
 	function compute_error(solution)
@@ -1297,8 +1324,9 @@ let
 	end
 	
 	# HO plot x versus t
+	xlims = (ho_tstart, ho_tend)
 	p = plot(t -> reference(t)[1];  # plot only position
-	         lw=2, label="reference", ylabel=L"x(t)", xlims=ho.tspan,
+	         lw=2, label="reference", ylabel=L"x(t)", xlims,
 		     title=L"\frac{d^2 x}{d t^2} = -k x", titlefontsize=12, ylims=(-3, 3),
 			 legend=:bottomleft)
 	plot!(p, soln_euler.t, [u[1] for u in soln_euler.u];
@@ -1310,7 +1338,7 @@ let
 
 	# Total energy plots
 	q = plot(; legend=false, xlabel=L"t", title="Error", titlefontsize=10,
-	           yaxis=:log, ylims=(1e-5, 10), xlims=ho.tspan)
+	           yaxis=:log, ylims=(1e-5, 10), xlims)
 	
 	plot!(q, soln_euler.t, compute_error(soln_euler); label="Euler", lw=2, ls=:dash, c=2)
 	plot!(q, soln_midpoint.t, compute_error(soln_midpoint); label="Midpoint", lw=2, ls=:dash, c=3)
@@ -1322,60 +1350,54 @@ end
 # ╔═╡ 366477ed-5532-44fa-97e0-fc0ab564fabe
 md"""## Appendix"""
 
-# ╔═╡ 448d1e06-c4b2-4954-978e-00c2ed274ae0
-function fixed_point_iterations(g, xstart; tol=1e-6, maxiter=100)
-	# g:      Fixed-point function
-	# xstart: Initial guess
-	# tol:    Tolerance
-
-	history_x = [float(xstart)]
-	history_r = empty(history_x)
-	
-	r⁽ᵏ⁾ = Inf  # For initial pass in while loop
-	k  = 0
-	while k < maxiter && abs(r⁽ᵏ⁾) ≥ tol
-		x⁽ᵏ⁾ = last(history_x)  # Take out the most recent point from the history
-		x⁽ᵏ⁺¹⁾ = g(x⁽ᵏ⁾)
-		r⁽ᵏ⁾   = x⁽ᵏ⁺¹⁾ - x⁽ᵏ⁾
-		push!(history_r, r⁽ᵏ⁾)
-
-		k = k + 1  # Update k
-		push!(history_x, x⁽ᵏ⁺¹⁾)  # Push next point to the history
-	end
-
-	# Return results as a named tuple
-	(; fixed_point=last(history_x), residual=r⁽ᵏ⁾, n_iter=k, history_x, history_r)
-end
-
-# ╔═╡ be538898-0493-45dc-b2ac-5d079981ef3b
-function newton(f, df, xstart; maxiter=100, tol=1e-6)
+# ╔═╡ d3855794-f57d-4fc5-bf97-63ce44582139
+function newton(f, df, xstart; maxiter=40, tol=1e-6)
 	# f:  Function of which we seek the roots
 	# df: Function, which evaluates its derivatives
 	# xstart: Start of the iterations
 	# maxiter: Maximal number of iterations
 	# tol: Convergence tolerance
 
-	# Define the fixed-point function g_Newton using f and df
-	g_Newton(x) = x - f(x) / df(x)
+	history_x = [float(xstart)]
+	history_r = empty(history_x)
 
-	# Solve for its fixed point:
-	fixed_point_iterations(g_Newton, xstart; tol, maxiter)
+	r = Inf  # Dummy to enter the while loop
+	k = 0
+
+	# Keep running the loop when the residual norm is beyond the tolerance
+	# and we have not yet reached maxiter
+	while norm(r) ≥ tol && k < maxiter
+		k = k + 1
+		
+		# Pick most recent entry from history_x (i.e. current iterate)
+		x = last(history_x)
+
+		# Evaluate function, gradient and residual
+		r = - f(x) / df(x)
+		
+		push!(history_r, r)      # Push residual and
+		push!(history_x, x + r)  # next iterate to history
+	end
+
+	(; root=last(history_x), n_iter=k, history_x, history_r)
 end
 
 # ╔═╡ 7867834d-e5d5-4ae5-946b-8ea6ec6a91c9
 function fixed_point_newton(g, dg, xstart; maxiter=40, tol=1e-6)
 	f(x)  = g(x)  - x
 	df(x) = dg(x) - 1
-	newton(f, df, xstart; maxiter, tol)
+	(; root, n_iter, history_x, history_r) = newton(f, df, xstart; maxiter, tol)
+	(; fixed_point=root, n_iter, history_x, history_r)
 end
 
 # ╔═╡ 58f37900-0e6a-4d00-adb3-ec82cbfbcf4c
-function backward_euler(ivp, N; tol=1e-10)
-	a, b = ivp.tspan   # Extract time interval [a, b]
-	u₀   = ivp.u0      # Initial condition
-	f    = ivp.f       # Derivatve function f
-	p    = ivp.p       # Further parameters (not used in our implementation)
-
+function backward_euler(f, u₀, a, b, N; tol=1e-10)
+	# f:  Derivative function
+	# u₀: Initial value
+	# a:  Start of the time interval
+	# b:  End of the time interval
+	
+	
 	# Discrete time nodes to consider:
     h = (b - a) / N
     t = [a + i * h for i in 0:N]
@@ -1386,7 +1408,7 @@ function backward_euler(ivp, N; tol=1e-10)
 	# Time integration
 	u[1] = u₀
     for i in 1:N
-		g(x)   = u[i] + h * f(x, p, t[i+1])
+		g(x)   = u[i] + h * f(x, t[i+1])
 		dg(x)  = ForwardDiff.derivative(g, x)
 		u[i+1] = fixed_point_newton(g, dg, u[i]; tol).fixed_point
     end
@@ -1396,10 +1418,10 @@ end
 
 # ╔═╡ cceb1700-55fc-4e5a-a2f2-81137fad5c1f
 let
-	soln_euler    = forward_euler(decay,  Nbw)
-	soln_bw_euler = backward_euler(decay, Nbw)
+	soln_euler    = forward_euler(dcy_f, dcy_u₀, dcy_tstart, dcy_tend, Nbw)
+	soln_bw_euler = backward_euler(dcy_f, dcy_u₀, dcy_tstart, dcy_tend, Nbw)
 
-	p = plot(u; lw=2, title="du/dx = $(round(-10^logC; sigdigits=3))", titlefontsize=12, label="Reference", xlabel=L"t", ylabel=L"u(t)", xlims=(-0.1, 10.1), ylims=(-1, 25))
+	p = plot(u; lw=2, title="du/dx = $(round(-C; sigdigits=3))", titlefontsize=12, label="Reference", xlabel=L"t", ylabel=L"u(t)", xlims=(-0.1, 10.1), ylims=(-1, 25))
 
 	plot!(p, soln_euler.t, soln_euler.u; mark=:o, c=2, lw=2, markersize=3, ls=:dash, label="Forward Euler")
 	plot!(p, soln_bw_euler.t, soln_bw_euler.u; mark=:o, c=3, lw=2, markersize=3, ls=:dash, label="Backward Euler")
@@ -1410,7 +1432,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 570)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 500)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1420,6 +1442,7 @@ DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
@@ -1440,7 +1463,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "fd2234ab74645bd44071d1cfd20b8cb5aa3279ba"
+project_hash = "073d0fedb2bdd79c9801f78082bc44acadfdc9ec"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e2478490447631aedba0823d4d7a80b2cc8cdb32"
@@ -4133,27 +4156,33 @@ version = "1.4.1+2"
 # ╠═8197b6f0-00b7-11ef-2142-4b7cbbaefd90
 # ╟─d8406b01-e36f-4953-a5af-cd563005c2a1
 # ╟─692aa6e2-21a9-4dad-a719-9d8ad88bd467
-# ╠═e9ef08a6-e823-4f2b-9fcc-e3646171cefb
-# ╟─6e9b0961-04b7-436b-90f9-9804e06d10f8
+# ╟─ebabe949-5492-4b8b-959d-05c5728da043
 # ╟─05ef8174-e9a6-4280-8640-08d74635fba2
 # ╠═31332dd6-1ef2-4181-a638-35980f470552
-# ╠═d811efdc-c133-4146-a507-0786cbde68ad
-# ╟─c2359767-5256-4403-b6fe-0ded5ba41efa
-# ╠═e3c3abaf-0a17-4d84-945d-a1bf9bdfc0de
-# ╟─49d045f8-a510-4f7b-a8c9-21ed3b4e0e6c
-# ╠═0f37dc8a-fb6b-424c-84aa-0e46ef89437b
+# ╟─1e65223e-9a12-4a4c-8b5e-31bfe4f813ec
+# ╟─64fe575e-0d47-4949-a9e8-2056ddee45df
+# ╟─1dbe5d72-17d9-4f20-b365-ad913cd607c3
+# ╟─6c2f1cd1-e79a-4790-9871-0a8825b5c02e
+# ╠═8f159939-4bf4-4151-bd3e-a84c5e1493db
+# ╟─9b71f2b6-34bb-416a-947d-6e009f565bf4
+# ╟─3f59bd74-1bb0-41df-bea2-bf5990a2b89a
+# ╠═9cb5fd8e-d923-434e-b543-a0c987a5b5a7
 # ╟─5d2886f2-87a5-43ae-9064-448478f957ca
 # ╠═82321d1e-50b9-4362-afc5-d256a506bed7
 # ╟─6b4ba69d-0a70-4c66-b4bc-63b717348471
 # ╠═7a0fa3cd-a270-4947-b7ba-d30110139795
-# ╟─0025be9a-6320-415a-b2ac-70f24bb0d12b
+# ╟─c94d264b-ad1b-47fd-8b58-fd434cfe0f11
+# ╟─3dc8b41f-3ba0-4c0a-b017-731fd0958920
+# ╟─bc840e8d-77d9-4a4a-a908-3e9b4a8d253b
 # ╟─66affc7b-f0b0-48f4-b8bd-a1ff16d0357e
 # ╠═f60ecd21-fda2-4925-ba86-ac5ad5b7c7d0
 # ╟─41cc0b76-5e30-41dd-a648-5491e1b4bd22
 # ╟─c641cdf2-aabf-45e7-bb12-83d73a93b5b7
 # ╠═9b0581c3-6fa8-44d8-8ebb-d2fda2841230
 # ╟─f0164280-14fd-48a5-9ae8-8b31f4580da8
-# ╠═5374c9db-6b90-4775-a3f0-4c226111d7d5
+# ╠═6052f3cf-8a1e-4755-8724-a3f885702d62
+# ╠═90a2176f-7986-4140-8e34-555993070324
+# ╠═15e135e3-e95f-4494-8a20-2c571c4019f2
 # ╟─14edb601-ab10-4228-81a1-d27bb16ea202
 # ╠═50007ba8-8160-48c1-b5c1-27a9332c1d58
 # ╟─fb38ada2-26ce-42e9-bfdc-e4c677f8c501
@@ -4184,9 +4213,9 @@ version = "1.4.1+2"
 # ╟─f0f756fc-f7fe-459c-8419-4e60c741fce5
 # ╟─f9e8c1ec-3bc6-40d3-b7e3-f465bd53ecab
 # ╟─bdb783bc-1648-43f0-b706-462d2a5d6dcf
-# ╠═99922f12-34b6-4a9d-b3af-2b61708725fa
+# ╟─99922f12-34b6-4a9d-b3af-2b61708725fa
 # ╟─0bd09a85-2fe9-491d-b6f9-f2d74872e195
-# ╠═f5c8f93c-c09a-4c4f-b6c4-18b12ff56878
+# ╟─f5c8f93c-c09a-4c4f-b6c4-18b12ff56878
 # ╟─591d6a3a-fc71-4bde-b499-db10637e0945
 # ╟─85b121ef-9f4c-483e-a04b-a49c1c6c4624
 # ╠═5348acce-d58b-4b33-97ad-44f44717e1fe
@@ -4218,8 +4247,7 @@ version = "1.4.1+2"
 # ╠═828d31d2-6816-47fa-8789-fe370e1deb06
 # ╟─366477ed-5532-44fa-97e0-fc0ab564fabe
 # ╠═7867834d-e5d5-4ae5-946b-8ea6ec6a91c9
-# ╠═be538898-0493-45dc-b2ac-5d079981ef3b
-# ╠═448d1e06-c4b2-4954-978e-00c2ed274ae0
-# ╟─403993d0-1613-4ac1-a527-9362993e28e6
+# ╠═d3855794-f57d-4fc5-bf97-63ce44582139
+# ╠═403993d0-1613-4ac1-a527-9362993e28e6
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
