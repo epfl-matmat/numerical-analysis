@@ -372,7 +372,7 @@ Therefore central finite differences is of second order:
     ```math
 	\left| f'(x) - D^c_h f(x)\right| \leq C h^2
 	```
-	with constant $C = \frac16 \|f'''\|_\infty = \frac16 \max_{x\in [a, b]} |f'''(x)|$.
+	with constant $C = \frac13 \|f'''\|_\infty = \frac13 \max_{x\in [a, b]} |f'''(x)|$.
 
 """
 
@@ -584,7 +584,7 @@ Note that in (6) the $h$ dependence of the **first error term** (finite differen
 
 For an order $p$ method the error will thus have the form
 ```math
-\text{error}(h) = C_1 h^p + C_2 {\epsilon_M}{h}
+\text{error}(h) = C_1 h^p + C_2 \frac{\epsilon_M}{h}
 ```
 with appropriate constants $C_1$ and $C_2$.
 By a similar argument to minimise this error wrt. $h$
@@ -2817,7 +2817,7 @@ version = "1.4.1+2"
 # ╠═1469326c-92b1-4fad-a54f-e6397596c39f
 # ╠═c7e410cc-aeba-4630-9ebb-87af7ef093a5
 # ╟─6b30e9a0-b220-49c9-aa31-76c8d24d93b2
-# ╠═b0c56709-a77e-4417-bd2b-bf4543cb2a13
+# ╟─b0c56709-a77e-4417-bd2b-bf4543cb2a13
 # ╟─2b940279-24e5-495b-af0c-b0b9e547f33a
 # ╟─83be5e79-e71c-4f32-95e9-854f2fdc024d
 # ╟─cb27d648-dc8b-4840-925a-b122ce5d4fd5

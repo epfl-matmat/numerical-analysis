@@ -336,6 +336,9 @@ end
 # ╔═╡ 7d1c24b3-c3b1-4de5-bd24-c7b946562661
 TODO(md"Motivation of the degree of exactness by integrating exactly terms of the Taylor expansion with increasing power in $x$.")
 
+# ╔═╡ d9ff7b23-7e90-4f9f-a9f5-a4c429a07a8b
+TODO("Maybe make degree of exactness stuff optional and rather talk about extrapolation techniques instead.")
+
 # ╔═╡ 535f473e-eb64-4cc9-b47d-47c220ee31ae
 md"""
 ## Error analysis
@@ -2259,6 +2262,7 @@ version = "1.4.1+2"
 # ╟─a255138c-74bd-4aad-b49a-0a16746f3bda
 # ╠═df5373cc-b997-4a80-906a-9bde0689c84b
 # ╠═7d1c24b3-c3b1-4de5-bd24-c7b946562661
+# ╠═d9ff7b23-7e90-4f9f-a9f5-a4c429a07a8b
 # ╟─535f473e-eb64-4cc9-b47d-47c220ee31ae
 # ╟─1c5167d5-0475-4522-bc5f-28df2f806d6b
 # ╠═d5ec2619-3a6a-44f5-87af-63bcdc9b64d9
