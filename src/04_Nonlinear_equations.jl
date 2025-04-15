@@ -84,15 +84,7 @@ Recall the circuit diagram of the diode model
 # ╔═╡ 4170d04a-063f-4f79-bd57-67e5cfd2af63
 RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/09d365542432dc652a9ed1ce5c5f54075590aebd/notes/img/circuit.png", "img/circuit.png")
 
-# ╔═╡ 941fa7db-20ee-4900-a193-80ac0b45df5b
-begin
-	i0 = 1.0
-	v0 = 0.1
-	R = 1.0
-	V = 1.0
-end;
-
-# ╔═╡ 6bc129ec-2485-480e-b8c8-3e167562581e
+# ╔═╡ ecffc0f9-7400-45ac-9013-96e104862ef3
 md"""
 where we had the relationships
 ```math
@@ -104,7 +96,10 @@ i &= i_0 (e^{v_D / v_0} - 1) \qquad \text{(Shockley diode model)}
 \end{aligned}
 ```
 and wanted to solve for the diode voltage $v_D$. We consider two iterative methods to find it, motivated from the physical setting.
+"""
 
+# ╔═╡ 0efc87e1-8504-41f1-985d-6050e5a3c524
+md"""
 **Method 1**
 
 - In many physical settings one often already has a good general idea about what $v_D$ should be like. In this case a reasonable starting point would be to assume that the diode is open and thus the voltage across the diode is zero, thus we set $v_D^{(0)} = 0$.
@@ -125,7 +120,18 @@ and wanted to solve for the diode voltage $v_D$. We consider two iterative metho
   ```math
   \lim_{k\to\infty} v^{(k)}_D = v_D  \qquad \text{(hopefully)}
   ```
+"""
 
+# ╔═╡ 941fa7db-20ee-4900-a193-80ac0b45df5b
+begin
+	i0 = 1.0
+	v0 = 0.1
+	R = 1.0
+	V = 1.0
+end;
+
+# ╔═╡ 4147fc77-d3a8-42b0-9111-96bafaf14d2f
+md"""
 Mathematically, the voltage estimate obtained in the $k$-th iteration is given by
 ```math
 v^{(k+1)}_D = g_\text{log}(v^{(k)}_D) \qquad \text{for $k = 1, 2, \ldots$},
@@ -550,19 +556,19 @@ function fixed_point_iterations_simple(g, xstart; tol=1e-6)
 	# xstart: Initial guess
 	# tol:    Tolerance
 
-	r⁽ᵏ⁾ = Inf
-	x⁽ᵏ⁾ = xstart
+	rᵏ = Inf
+	xᵏ = xstart
 	k  = 0
-	while abs(r⁽ᵏ⁾) ≥ tol
-		x⁽ᵏ⁺¹⁾ = g(x⁽ᵏ⁾)
-		r⁽ᵏ⁾   = x⁽ᵏ⁺¹⁾ - x⁽ᵏ⁾
+	while abs(rᵏ) ≥ tol
+		xᵏ⁺¹ = g(xᵏ)
+		rᵏ   = xᵏ⁺¹ - xᵏ
 
-		k    = k + 1  # Update k
-		x⁽ᵏ⁾ = x⁽ᵏ⁺¹⁾ # Update x⁽ᵏ⁾ accordingly
+		k  = k + 1  # Update k
+		xᵏ = xᵏ⁺¹   # Update xᵏ accordingly
 	end
 
 	# Return results as a named tuple
-	(; fixed_point=x⁽ᵏ⁾, residual=r⁽ᵏ⁾, n_iter=k)
+	(; fixed_point=xᵏ, residual=rᵏ, n_iter=k)
 end
 
 # ╔═╡ 072cdb08-b279-4583-b98b-4a28433b5b8d
@@ -592,23 +598,24 @@ function fixed_point_iterations(g, xstart; tol=1e-6, maxiter=100)
 	# xstart: Initial guess
 	# tol:    Tolerance
 
-	history_x = [float(xstart)]
+	history_x = [xstart]
 	history_r = empty(history_x)
-	
-	r⁽ᵏ⁾ = Inf  # For initial pass in while loop
-	k  = 0
-	while k < maxiter && abs(r⁽ᵏ⁾) ≥ tol
-		x⁽ᵏ⁾ = last(history_x)  # Take out the most recent point from the history
-		x⁽ᵏ⁺¹⁾ = g(x⁽ᵏ⁾)
-		r⁽ᵏ⁾   = x⁽ᵏ⁺¹⁾ - x⁽ᵏ⁾
-		push!(history_r, r⁽ᵏ⁾)
 
-		k = k + 1  # Update k
-		push!(history_x, x⁽ᵏ⁺¹⁾)  # Push next point to the history
+	rᵏ = Inf     # For initial pass in while loop
+	xᵏ = xstart  # Starting point of iterations
+	k  = 0
+	while k < maxiter && abs(rᵏ) ≥ tol
+		xᵏ⁺¹ = g(xᵏ)
+		rᵏ   = xᵏ⁺¹ - xᵏ
+		push!(history_r, rᵏ)
+
+		k  = k + 1  # Update k
+		xᵏ = xᵏ⁺¹   # Update xᵏ accordingly
+		push!(history_x, xᵏ)  # Push next point to the history
 	end
 
 	# Return results as a named tuple
-	(; fixed_point=last(history_x), residual=r⁽ᵏ⁾, n_iter=k, history_x, history_r)
+	(; fixed_point=xᵏ, residual=rᵏ, n_iter=k, history_x, history_r)
 end
 
 # ╔═╡ 54f314c1-d1cf-41f1-96e5-5aca90d82b95
@@ -875,23 +882,23 @@ function bisection_method(f, a, b; tol=1e-6)
 	@assert f(a) * f(b) < 0  # Otherwise the assumptions are not true
 
 	# Initialise
-	k = 0
-	x⁽ᵏ⁾ = (a + b) / 2
+	k  = 0
+	xᵏ = (a + b) / 2
 	
 	history_x = Float64[]  # Empty Array, but only for Float64 numbers
 	while abs(b - a) / 2 ≥ tol
 		k = k + 1
-		if f(x⁽ᵏ⁾) * f(a) < 0
-			b = x⁽ᵏ⁾  # New interval [a, x⁽ᵏ⁾]
+		if f(xᵏ) * f(a) < 0
+			b = xᵏ  # New interval [a, xᵏ]
 		else
-			a = x⁽ᵏ⁾  # New interval [x⁽ᵏ⁾, b]
+			a = xᵏ  # New interval [xᵏ, b]
 		end
 
-		x⁽ᵏ⁾ = (a + b) / 2
-		push!(history_x, x⁽ᵏ⁾)
+		xᵏ = (a + b) / 2
+		push!(history_x, xᵏ)
 	end
 
-	(; root=x⁽ᵏ⁾, history_x, n_iter=k)
+	(; root=xᵏ, history_x, n_iter=k)
 end
 
 # ╔═╡ 54ff2cfe-6d22-4451-a496-f8f87e8bb1d7
@@ -1215,25 +1222,26 @@ function newton(f, df, xstart; maxiter=40, tol=1e-6)
 	history_x = [float(xstart)]
 	history_r = empty(history_x)
 
-	r = Inf  # Dummy to enter the while loop
+	r = Inf     # Dummy to enter the while loop
+	x = xstart  # Initial iterate
 	k = 0
 
 	# Keep running the loop when the residual norm is beyond the tolerance
 	# and we have not yet reached maxiter
 	while norm(r) ≥ tol && k < maxiter
 		k = k + 1
-		
-		# Pick most recent entry from history_x (i.e. current iterate)
-		x = last(history_x)
 
 		# Evaluate function, gradient and residual
 		r = - f(x) / df(x)
+
+		# Evaluate next iterate
+		x = x + r
 		
-		push!(history_r, r)      # Push residual and
-		push!(history_x, x + r)  # next iterate to history
+		push!(history_r, r)  # Push residual and
+		push!(history_x, x)  # next iterate to history
 	end
 
-	(; root=last(history_x), n_iter=k, history_x, history_r)
+	(; root=x, n_iter=k, history_x, history_r)
 end
 
 # ╔═╡ ecd71729-ea89-40f6-86c8-598e42cd787d
@@ -1397,7 +1405,7 @@ of Driscoll, Brown: *Fundamentals of Numerical Computation*.
 
 """
 
-# ╔═╡ 9eb4a16f-899c-4b9b-be88-ff11f6c293f8
+# ╔═╡ 9f2255c8-afe8-4333-9701-de3e242805c4
 md"""
 ## Non-linear equation systems
 
@@ -1426,7 +1434,10 @@ f_n(x_1, \ldots, x_n)
 \end{array}\right),
 ```
 we can define the multi-dimensional version of the root-finding problem:
+"""
 
+# ╔═╡ d35d42d9-0133-4fba-9bc7-edeafce78278
+md"""
 !!! info "Definition: Multidimensional root-finding problem"
     Given a continuous vector-valued function
     $\textbf{f} : \mathbb{R}^n \to \mathbb{R}^n$
@@ -1438,7 +1449,10 @@ is much more involved. Even establishing basic mathematical
 properties, such as the existance or uniqueness of solutions
 is typically quite difficult, let alone solving such equation
 systems analytically.
+"""
 
+# ╔═╡ 4e3ba905-31dd-4d29-9e45-4a77228efea0
+md"""
 !!! warning "Running example: Definition"
 	As the running example in this section we will consider the problem 
 	$\textbf{f}(\textbf{x}) = \textbf{0}$
@@ -1580,21 +1594,22 @@ function newtonsys(f, jac, xstart; maxiter=40, tol=1e-8)
 	history_x = [float(xstart)]
 	history_r = empty(history_x)
 
-	r = Inf  # Dummy to enter the while loop
+	r = Inf     # Dummy to enter the while loop
+	x = xstart  # Initial iterate
 	k = 0
 	while norm(r) ≥ tol && k < maxiter
 		k = k + 1
 		
-		x = last(history_x)
 		y = f(x)      # Function value
 		A = jac(x)    # Jacobian
 		r = -(A \ y)  # Newton step
+		x = x + r     # Form next iterate
 		
-		push!(history_r, r)      # Push newton step and
-		push!(history_x, x + r)  # next iterate to history
+		push!(history_r, r)  # Push newton step and
+		push!(history_x, x)  # next iterate to history
 	end
 
-	(; root=last(history_x), n_iter=k, history_x, history_r)
+	(; root=x, n_iter=k, history_x, history_r)
 end
 
 # ╔═╡ f1850ccb-e682-40db-91f1-ca2c4f60b3f3
@@ -1722,7 +1737,7 @@ PlutoUI = "~0.7.55"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.3"
+julia_version = "1.11.4"
 manifest_format = "2.0"
 project_hash = "48728d14071e58de9f09326dc3a99600cb737f60"
 
@@ -2304,7 +2319,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+2"
+version = "0.8.1+4"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -3000,7 +3015,9 @@ version = "1.4.1+2"
 # ╟─126314f4-8488-4338-a419-fc87e8965ee3
 # ╟─fe49686f-d5b2-4601-88b5-88c3d8d5fe5b
 # ╟─4170d04a-063f-4f79-bd57-67e5cfd2af63
-# ╟─6bc129ec-2485-480e-b8c8-3e167562581e
+# ╟─ecffc0f9-7400-45ac-9013-96e104862ef3
+# ╟─0efc87e1-8504-41f1-985d-6050e5a3c524
+# ╟─4147fc77-d3a8-42b0-9111-96bafaf14d2f
 # ╟─941fa7db-20ee-4900-a193-80ac0b45df5b
 # ╠═99be8b53-7c56-4a9b-8fb2-cb5be7a6c8a2
 # ╟─657e28a9-0e6c-4b99-9122-50cae4b5670a
@@ -3080,7 +3097,9 @@ version = "1.4.1+2"
 # ╟─04cbf165-4786-4980-8055-5efca14dfa3f
 # ╟─a0390836-e86b-46fb-bb42-fe6e5b09bd64
 # ╟─bdff9554-58b6-466e-9c93-6b1367262b50
-# ╟─9eb4a16f-899c-4b9b-be88-ff11f6c293f8
+# ╟─9f2255c8-afe8-4333-9701-de3e242805c4
+# ╟─d35d42d9-0133-4fba-9bc7-edeafce78278
+# ╟─4e3ba905-31dd-4d29-9e45-4a77228efea0
 # ╟─0449d301-0896-4c2e-952c-0d380e60c0b9
 # ╟─4cf5f022-4047-49f1-8fc5-86eda6d61e30
 # ╟─7e3558c8-b16d-47a4-87ea-d2af5614ea2e

@@ -138,20 +138,23 @@ An implementation of Algorithm 1 in Julia is given by
 
 # ╔═╡ 94a56970-0c97-4bc4-bbd5-d297cd54823e
 function richardson(A, b, P; x=zero(b), tol=1e-6, maxiter=100)
-	history = Float64[]  # Track relative residual norm
+	history  = [float(x)]  # Keep history of xs
+	relnorms = Float64[]   # Track relative residual norm
 	for k in 1:maxiter
 		r = b - A * x
 
 		relnorm = norm(r) / norm(b)
-		push!(history, relnorm)
+		push!(relnorms, relnorm)
 		if relnorm < tol
 			break
 		end
 		
 		u = P \ r
-		x = x + u
+		x = x + u 
+
+		push!(history, x)
 	end
-	(; x, history)  # Return current iterate and history
+	(; x, relnorms, history)  # Return current iterate and history
 end
 
 # ╔═╡ 76dcdc97-b0e3-4f3f-8ebd-615df0cea57f
@@ -195,7 +198,7 @@ end
 
 # ╔═╡ 0b374ba9-24af-43a2-86cb-c3a4cf5d999c
 let
-	plot(richardson_result.history;
+	plot(richardson_result.relnorms;
 	     yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||",
 	     title="Richardson convergence", label=L"$P = \textrm{Diagonal(}A\textrm{)}$")
 end
@@ -401,11 +404,11 @@ let
 	richardson_diagonal = richardson(A, b, P; tol=1e-10, maxiter=30)
 	richardson_no_preconditioner = richardson(A, b, I; tol=1e-10, maxiter=30)
 	
-	plot(richardson_diagonal.history;
+	plot(richardson_diagonal.relnorms;
 	     yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||",
 	     label=L"$P = \textrm{Diagonal(}A\textrm{)}$", legend=:bottomright,
 		 ylims=(1e-10, 1e5))
-	plot!(richardson_no_preconditioner.history;
+	plot!(richardson_no_preconditioner.relnorms;
 	      label=L"$P = I$", lw=2, mark=:o)
 end
 
@@ -608,7 +611,8 @@ for all $i = 1, \ldots, n$ and as long as $A_{ii} \neq 0$.
 
 # ╔═╡ 77f1c8d5-8058-47cb-a0b5-436b4259aec9
 function jacobi(A, b; x=zero(b), tol=1e-6, maxiter=100)
-	history = Float64[]  # Track relative residual norm
+	history  = [float(x)]  # History of iterates
+	relnorms = Float64[]   # Track relative residual norm
 	
 	n  = length(x)
 	xᵏ = x
@@ -625,14 +629,15 @@ function jacobi(A, b; x=zero(b), tol=1e-6, maxiter=100)
 		end  # Loop i
 		
 		relnorm_rᵏ = norm(b - A * xᵏ⁺¹) / norm(b)  # Relative residual norm
-		push!(history, relnorm_rᵏ)  # Push to history
-		if relnorm_rᵏ < tol         # Check convergence
+		push!(relnorms, relnorm_rᵏ)  # Push to history
+		if relnorm_rᵏ < tol          # Check convergence
 			break
 		end
 
 		xᵏ = xᵏ⁺¹
+		push!(history, xᵏ)
 	end  # Loop k
-	(; x=xᵏ, history)
+	(; x=xᵏ, relnorms, history)
 end
 
 # ╔═╡ 96352c57-7f86-4af8-ae6c-a3c20f190461
@@ -685,7 +690,8 @@ Notice that Gauss-Seidel is very similar to Jacobi's method, just with the small
 
 # ╔═╡ d376fb74-6ebd-4b07-9c5c-c34e7e16c25a
 function gauss_seidel(A, b; x=zero(b), tol=1e-6, maxiter=100)
-	history = Float64[]  # Track relative residual norm
+	history  = [float(x)]  # History of iterates
+	relnorms = Float64[]   # Track relative residual norm
 	
 	n  = length(x)
 	xᵏ = x
@@ -703,14 +709,15 @@ function gauss_seidel(A, b; x=zero(b), tol=1e-6, maxiter=100)
 		end  # Loop i
 		
 		relnorm_rᵏ = norm(b - A * xᵏ⁺¹) / norm(b)  # Relative residual norm
-		push!(history, relnorm_rᵏ)  # Push to history
-		if relnorm_rᵏ < tol         # Check convergence
+		push!(relnorms, relnorm_rᵏ)  # Push to history
+		if relnorm_rᵏ < tol          # Check convergence
 			break
 		end
 
 		xᵏ = xᵏ⁺¹
+		push!(history, xᵏ)
 	end  # Loop k
-	(; x=xᵏ, history)
+	(; x=xᵏ, relnorms, history)
 end
 
 # ╔═╡ de24e92e-faab-41fe-afc2-287835b1e015
@@ -746,10 +753,10 @@ let
 	richardson_diagonal = richardson(A, b, P; tol=1e-6, maxiter=30)
 	richardson_no_preconditioner = richardson(A, b, I; tol=1e-6, maxiter=30)
 	
-	plot(result_jacobi.history;
+	plot(result_jacobi.relnorms;
 	     yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||",
 	     label="Jacobi", legend=:topright)
-	plot!(result_gauss_seidel.history;
+	plot!(result_gauss_seidel.relnorms;
 	      label="Gauss Seidel", lw=2, mark=:o)
 end
 
@@ -1049,13 +1056,14 @@ An implementation of this algorithm is given by the following function:
 
 # ╔═╡ 0159a195-627c-4e07-834e-222248665da8
 function steepest_descent_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
-	resnorms = Float64[]  # Track relative residual norm
-	history = [x]
-	
+	history  = [float(x)]  # History of iterates
+	relnorms = Float64[]   # Track relative residual norm
+
+	x = x
 	r = b - A * x
 	for k in 1:maxiter
 		relnorm = norm(r) / norm(b)
-		push!(resnorms, relnorm)
+		push!(relnorms, relnorm)
 		if relnorm < tol
 			break
 		end
@@ -1067,7 +1075,7 @@ function steepest_descent_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
 
 		push!(history, x)
 	end
-	(; x, history, resnorms)
+	(; x, history, relnorms)
 end
 
 # ╔═╡ c330ec39-bcce-4b97-b5c9-11c13967de56
@@ -1161,7 +1169,7 @@ rate_steep_desc = (cond(Aₛ) - 1) / (cond(Aₛ) + 1)
 let
 	descent = steepest_descent_simple(Aₛ, bₛ; tol=1e-6, maxiter=40)
 	
-	plot(descent.resnorms;
+	plot(descent.relnorms;
 		yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||", ylims=(5e-2, 1.3),
 		title="Steepest descent convergence", label="Observed convergence", c=2)
 	
@@ -1218,12 +1226,14 @@ Without going into many details, we remark that there are a few subtleties that 
 
 # ╔═╡ fdbe3ba7-d1a3-43b0-bd56-ad0bc6f2200d
 function steepest_descent(A, b, P; x=zero(b), tol=1e-6, maxiter=100)
-	resnorms = Float64[]
-	
+	history  = [float(x)]  # History of iterates
+	relnorms = Float64[]   # Track relative residual norm
+
+	x = x
 	r = b - A * x
 	for k in 1:maxiter
 		relnorm = norm(r) / norm(b)
-		push!(resnorms, relnorm)
+		push!(relnorms, relnorm)
 		if relnorm < tol
 			break
 		end
@@ -1234,8 +1244,10 @@ function steepest_descent(A, b, P; x=zero(b), tol=1e-6, maxiter=100)
 		α = dot(r, r) / dot(r, Az)
 		x = x + α * r
 		r = r - α * r
+
+		push!(history, x)
 	end
-	(; x, resnorms)
+	(; x, relnorms, history)
 end
 
 # ╔═╡ bf028cd7-c911-4329-86b0-442061a8e8c8
@@ -1244,11 +1256,11 @@ let
     descent_diagonal = steepest_descent(Aₛ, bₛ, P; tol=1e-6, maxiter=30)
     descent_no_preconditioner = steepest_descent_simple(Aₛ, bₛ; tol=1e-6, maxiter=30)
        
-    plot(descent_diagonal.resnorms;
+    plot(descent_diagonal.relnorms;
          yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||",
          label=L"$P = \textrm{Diagonal(}A\textrm{)}$", legend=:bottomright,
          title="Steepest descent convergence", ylims=(1e-4, 1.3))
-    plot!(descent_no_preconditioner.resnorms;
+    plot!(descent_no_preconditioner.relnorms;
           label=L"$P = I$", lw=2, mark=:o)
 end
 
@@ -1349,14 +1361,14 @@ A (non-optimised) CG implementation is:
 
 # ╔═╡ 5291c5f3-7d79-42b4-b704-24697fcc9782
 function conjugate_gradient_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
-	resnorms = Float64[]  # Track relative residual norm
+	relnorms = Float64[]  # Track relative residual norm
 	history  = [x]
 	
 	r = b - A * x
 	p = r
 	for k in 1:maxiter
 		relnorm = norm(r) / norm(b)
-		push!(resnorms, relnorm)
+		push!(relnorms, relnorm)
 		if relnorm < tol
 			break
 		end
@@ -1374,7 +1386,7 @@ function conjugate_gradient_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
 
 		push!(history, x)
 	end
-	(; x, resnorms, history)
+	(; x, relnorms, history)
 end
 
 # ╔═╡ 2ad6d547-88d0-4ad2-b9d5-09719212b0cc
@@ -1402,10 +1414,10 @@ let
 	descent_no_preconditioner = steepest_descent_simple(Aₛ, bₛ; tol=1e-6, maxiter=40)
 	cg_no_preconditioner = conjugate_gradient_simple(Aₛ, bₛ; tol=1e-6, maxiter=40)
 	
-	plot(descent_no_preconditioner.resnorms;
+	plot(descent_no_preconditioner.relnorms;
 	     yaxis=:log, mark=:o, lw=2, ylabel=L"||r|| / ||b||",
 	     label="Steepest descent", legend=:bottomleft, c=2,  ylims=(1e-4, 1.3))
-	plot!(cg_no_preconditioner.resnorms; label="CG", lw=2, mark=:o, c=1)
+	plot!(cg_no_preconditioner.relnorms; label="CG", lw=2, mark=:o, c=1)
 
 
 	plot!(1:40, x -> 0.15rate_steep_desc^x, lw=2, ls=:dash, label="Rate steep. desc.", c=2)
