@@ -917,7 +917,17 @@ For example, based on the interpolated polynomial (9) on the nodal points $x-h$,
 \tag{10}
 D^2_h f(x) = p_2''(x) = \frac{f(x-h) - 2f(x) + f(x+h)}{h^2}.
 ```
-This formula is also of **second order** as can be checked easily using a Taylor series.
+This formula is also of **second order** as can be checked using a Taylor series:
+!!! exercise
+    Prove that $D_h^2f(x)$ approximates the second derivative of $f$ to second order.
+"""
+
+# ╔═╡ 2adfac60-ec91-4c70-ae0c-f460f47d37dc
+md"""
+!!! error
+    Do not confuse the **derivation order** (how many times we differentiate) and the **approximation order** (the leading power of $h$ in the approximation error).
+
+    In this case, we are approximating a second derivative, so the derivation order is 2, and it turns out that this formula has an approximation error in $\mathcal O (h^2)$ so the approximation order is also 2.
 """
 
 # ╔═╡ 9c8ad9b0-50eb-478e-b63c-26a868765230
@@ -2823,6 +2833,7 @@ version = "1.4.1+2"
 # ╟─a3ddd54a-0171-4e7f-aa65-11224858f8be
 # ╟─ca3564d3-059e-40ce-bbcd-a04594e8ac24
 # ╟─56368f98-6f51-49be-8333-6fa1b9c64cf1
+# ╟─2adfac60-ec91-4c70-ae0c-f460f47d37dc
 # ╟─9c8ad9b0-50eb-478e-b63c-26a868765230
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
