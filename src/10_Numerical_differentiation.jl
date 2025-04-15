@@ -924,7 +924,7 @@ This formula is also of **second order** as can be checked using a Taylor series
 
 # ╔═╡ 2adfac60-ec91-4c70-ae0c-f460f47d37dc
 md"""
-!!! warning
+!!! error
     Do not confuse the **derivation order** (how many times we differentiate) and the **approximation order** (the leading power of $h$ in the approximation error).
 
     In this case, we are approximating a second derivative, so the derivation order is 2, and it turns out that this formula has an approximation error in $\mathcal O (h^2)$ so the approximation order is also 2.
