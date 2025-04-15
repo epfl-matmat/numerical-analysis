@@ -524,6 +524,8 @@ of the computed finite-difference approximation to $f'(x)$ as
 \tag{6}
 \begin{aligned}
 |f'(x) - \widetilde{D}^+_h f(x)|
+&= \left|\frac{f''(\xi)}{2} h + \frac{ϵ_1}{h}f(x+h) - \frac{ϵ_2}{h} f(x)\right| \\
+&≤ \frac{h}{2} |f''(\xi)| + \frac{|ϵ_1|}{h} |f(x+h)| + \frac{|ϵ_2|}{h} |f(x)| \\
 &≤ \frac{h}{2} \max_{x \in [a, b]} |f''(x)| + 2 \, \max_{x \in [a, b]} |f(x)| \, \frac{\epsilon_M}{h} \\
 &= \underbrace{\frac{h}{2} \|f''\|_\infty}_{\text{trunc. error}}
 + \underbrace{\frac{2 \epsilon_M}{h} \|f\|_\infty}_{\text{round-off error}}
@@ -924,7 +926,7 @@ This formula is also of **second order** as can be checked using a Taylor series
 
 # ╔═╡ 2adfac60-ec91-4c70-ae0c-f460f47d37dc
 md"""
-!!! error
+!!! danger
     Do not confuse the **derivation order** (how many times we differentiate) and the **approximation order** (the leading power of $h$ in the approximation error).
 
     In this case, we are approximating a second derivative, so the derivation order is 2, and it turns out that this formula has an approximation error in $\mathcal O (h^2)$ so the approximation order is also 2.
