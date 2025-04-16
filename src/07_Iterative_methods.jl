@@ -1361,8 +1361,8 @@ A (non-optimised) CG implementation is:
 
 # ╔═╡ 5291c5f3-7d79-42b4-b704-24697fcc9782
 function conjugate_gradient_simple(A, b; x=zero(b), tol=1e-6, maxiter=100)
-	relnorms = Float64[]  # Track relative residual norm
-	history  = [x]
+	history  = [float(x)]  # History of iterates
+	relnorms = Float64[]   # Track relative residual norm
 	
 	r = b - A * x
 	p = r
