@@ -245,44 +245,64 @@ md"""
 # ╔═╡ 66affc7b-f0b0-48f4-b8bd-a1ff16d0357e
 md"""
 ## Forward Euler
-"""
 
-# ╔═╡ f60ecd21-fda2-4925-ba86-ac5ad5b7c7d0
-TODO(md"Mention the general idea of solving the problem: Knowing an approximation to the solution at some time $t_n$ we want to understand how we can find the solution at some later time $t_{n+1}$.")
-
-# ╔═╡ 41cc0b76-5e30-41dd-a648-5491e1b4bd22
-md"""
-
-Let's assume we want to solve the IVP (1) in the interval $[a, b]$, i.e.
+Let us return to the question how to solve the IVP (1)
 ```math
 \tag{3}
 \left\{
 \begin{aligned}
 \frac{d u(t)}{d t} &= f(t, u(t)) && a ≤ t ≤ b \\
 u(a) &= u_0,
-\end{aligned}\right.
+\end{aligned}\right. 
 ```
-A natural idea is to divide this interval into $N$ subintervals $[t_n, t_{n+1}]$ of uniform length $h$, i.e.
+where the time derivative $f$ is a known function, e.g. $f(t, u) = C\,u$ in the case of the duck population. Our goal is thus to trace how how the intial condition $u_0$ (at $t = a$) evolves in time until the final time $t = b$ is reached.
+"""
+
+# ╔═╡ 4454973b-81f7-4b05-9ad8-d85ce97d8d9e
+md"""
+Since the entire time interval $[a, b]$ could be large,
+we will not attempt to solve this problem in one step.
+Instead we will perform a **time discretisation**.
+That is we  split this time interval even further into smaller subintervals $[t_n, t_{n+1}]$ with
+```math
+a = t_0 < t_1 < \cdots < t_n < t_{n+1} < \cdots t_N = b
+```
+and consider algorithms, which **propagate the solution** across one such interval $[t_n, t_{n+1}]$, i.e. which take the solution **at time $t_n$ to the solution at $t_{n+1}$**.
+"""
+
+# ╔═╡ 95b843d1-c445-413e-a474-6241111923da
+md"""
+Here, for simplicity we only consider a discretisation using
+**intervals of equal length** $h$, i.e.
 ```math
 \tag{4}
 t_n = a + n\, h \quad n = 0, \ldots, N  \qquad h = \frac{b-a}{N},
 ```
-where $h$ is also called the **stepsize**.
-At time $t_n$ we thus need to satisfy
+such that $t_0 = a$ and $t_N = b$.
+The parameter $h$ is often called the **stepsize**.
+At time $t_n$ we need to satisfy
 ```math
 \frac{d\, u(t_n)}{dt} = f(t_n, u(t_n)),
 ```
-where both $u(t_n)$ are unknown as well as the derivative on the LHS are unknown.
-To reduce this to a single unknown we replace the derivative by one of the finite differences formulas discussed in the previous chapter on numerical differentiation. 
+where we assume that we know $u(t_n)$, the solution at $t_n$,
+but the derivative $\frac{d\, u(t_n)}{dt}$ is unknown.
+Our task is to find $u(t_{n+1})$.
+"""
 
-The simplest approach is the **forward Euler method** in which one approximates
-$\frac{d\, u(t_n)}{d t}$ by forward finite differences, i.e.
+# ╔═╡ 8fdd4e24-cfa9-4c41-868d-1069e99074bf
+md"""
+We make progress by approximating the dervative of $u$
+using one of the finite differences formulas
+discussed in the chapter on [Numerical differentiation](https://teaching.matmat.org/numerical-analysis/10_Numerical_differentiation.html).
+
+The simplest approach is to employ forward finite differences, i.e.
 ```math
 \tag{5}
 \frac{d\, u(t_n)}{d t} ≈ D^+_h u(t_n) =\frac{1}{h} \Big( u(t_n+h) - u(t_n) \Big)
-= \frac{1}{h} \Big( u(t_{n+1}) - u(t_n) \Big).
+= \frac{1}{h} \Big( u(t_{n+1}) - u(t_n) \Big)
 ```
-If by $u^{(n)}$ we denote an approximation to $u(t_n)$ and similarly for $u(t_{n+1})$ we obtain from (3):
+Introducing a short-hand notation $u^{(n)}$ for $u(t_n)$
+and $u^{(n+1)}$ for $u(t_{n+1})$ we obtain from (3):
 ```math
 \tag{6}
 \left\{
@@ -291,8 +311,17 @@ If by $u^{(n)}$ we denote an approximation to $u(t_n)$ and similarly for $u(t_{n
 u^{(0)} = u(a) &= u_0
 \end{aligned}\right.
 ```
-This defines a numerical scheme:
+Notably the first line can be rearranged to
+$u^{(n+1)} = u^{(n)} + h\, f(t_n, u^{(n)})$,
+thus providing us with a numerical scheme
+how to obtain $u^{(n+1)}$ --- an approximation to the solution at $t_{n+1}$ ---
+from $u^{(n)}$ --- an approximation to the solution at $t_n$.
 
+This scheme is known as the **forward Euler method**:
+"""
+
+# ╔═╡ 0f2b87f4-8bc0-459c-a60d-29d523e60844
+md"""
 !!! info "Algorithm 1: Forward Euler method"
 	Given an initial value problem $\frac{d u}{d t} = f(u, t)$, $u(0) = u_0$
 	with $t \in [a, b]$ and nodes $t_n = a+n\, h$, $h = \frac{b-a}{N}$
@@ -302,26 +331,27 @@ This defines a numerical scheme:
 	u^{(n+1)} = u^{(n)} + h\, f(t_n, u^{(n)})\qquad \forall n = 0, \ldots, N-1.
 	```
 	Then $u^{(n)}$ is *approximately* the solution $u$ at $t = t_n$.
+"""
 
-Notice, that the replacement of the derivative $\frac{d\, u(t_n)}{d t}$ in (6) by the  forward finite difference approximation implies that the computed points $(u^{(0)}, u^{(1)}, \ldots, u^{(N)})$ are **not equal to** the function values of the exact solution $u$.
+# ╔═╡ be01cdbc-1e85-4ae5-bd41-c95a9b606920
+md"""
+!!! danger "u⁽ⁿ⁾ ≠ u(tₙ)"
+	Notice, that the replacement of the derivative $\frac{d\, u(t_n)}{d t}$ in (6) by the  forward finite difference approximation implies that the computed points $u^{(0)}, u^{(1)}, \ldots, u^{(N)}$ are **not equal to** the function values of the exact solution $u(t_0), u(t_1), \ldots, u(t_N)$.
 """
 
 # ╔═╡ c641cdf2-aabf-45e7-bb12-83d73a93b5b7
 md"""
 A basic implementation of Euler's method is shown below.
-It expects the number of time intervals $N$
-as well as the IVP --- in form of an `ODEProblem`.
-All other problem parameters ($a$, $b$, $f$, ...) are then extract from
-the latter object.
+It expects the definition of the derivative (`f`), the initial value (`u₀`),
+the time interval $[a,b]$ and the number of time intervals $N$.
 The output is the vector of nodes $t_n$ and the vector of approximate solution
 values $u^{(n)} ≈ u(t_n)$.
-
 """
 
 # ╔═╡ 9b0581c3-6fa8-44d8-8ebb-d2fda2841230
 function forward_euler(f, u₀, a, b, N)
 	# f:  Derivative function
-	# u0: Initial value
+	# u₀: Initial value
 	# a:  Start of the time interval
 	# b:  End of the time interval
 
@@ -343,12 +373,12 @@ end
 
 # ╔═╡ f0164280-14fd-48a5-9ae8-8b31f4580da8
 md"""
-Let us compare this approach to the test problem (2)
+Let us apply this approach to the test problem (2)
 ```math
 \left\{
 \begin{aligned}
 \frac{d u(t)}{d t} &= \sin\left[(u+t)^2\right] && 0 ≤ t ≤ 4 \\
-u(a) &= 1,
+u(0) &= -1,
 \end{aligned}\right.
 ```
 which we solved previously using `DifferentialEquations`. The variables `f`, `u₀`, `tstart` and `tend` already contains a setup of this initial value problem
@@ -389,110 +419,129 @@ end
 
 # ╔═╡ ecb868c3-44a2-4f95-bafe-b3324770ee6b
 md"""
-We observe that the approximated solution becomes more and more accurate as we increase the number of sub-intervals $N$ and as the step size $h$ decreases.
+We observe that the approximated solution becomes **more and more accurate** as we **increase the number of sub-intervals $N$** and as the step size $h$ decreases.
+We obtain **linear convergence** (see plot below).
 
-But we also observe that for too small values of $N$ (e.g. $N=9$) that the Euler solution notably deviates from the reference.
+But we also observe that for **too small values** of $N$ (e.g. $N=9$) that the Euler **solution notably deviates** from the reference.
 """
+
+# ╔═╡ 9962303e-1f7a-4569-bb09-e4998f481c6e
+p_cvg_fw_euler = let
+	# Obtain extremely tight solution using DifferentialEquations.jl
+	# Note, that ivp still contains the ODEProblem (2)
+	u_exact = solve_reference(f, u₀, tstart, tend; reltol=1e-14, abstol=1e-14)
+
+	Ns = [ round(Int, 5 * 10^k) for k in 0:0.5:3 ]
+	hs = [ (tend - tstart) / N for N in Ns ]
+	errors = Float64[]
+	for N in Ns
+		res_euler = forward_euler(f, u₀, tstart, tend, N)
+		u = res_euler.u
+		t = res_euler.t
+
+		# Compute global errors in each node tₙ
+		global_error = [abs(u_exact(t[n]) - u[n]) for n in 1:length(u)]
+
+		# Push the largest error to the array for plotting
+		push!(errors, maximum(global_error))
+	end
+	
+	plot(hs, errors; mark=:o, label="Errors", lw=2, xaxis=:log, yaxis=:log,
+		xlabel=L"h", ylabel="Largest global error", xflip=true,
+		title="Convergence of Forward Euler")
+
+	# Add line for perfect 1st order convergence:
+	plot!(hs, 0.1 .* hs, ls=:dash, lw=2, label=L"O(h)")
+end
 
 # ╔═╡ 667fbe5a-dbee-43a3-bb93-0160b61cf31e
 md"""
-Forward Euler is just one example of a broader class of numerical algorithms for initial value problems:
+Forward Euler is just one example of a broader class of so-called **explicit numerical methods** for initial value problems, which broadly speaking differ by the operations performed to obtain $u^{(n+1)}$ from $u^{(n)}$. We denote
 
-!!! info "Definition: One-step methods for initial value problems"
-	A **one-step method** to solve (1) is a method of the form
+!!! info "Explicit methods for solving initial value problems"
+	An **explicit method** to solve (1) is a method of the form
 	```math
 	\tag{8}
-	u^{(n+1)} = u^{(n)} + h\, \phi_f (u^{(n)}, t_n, h)
+	u^{(n+1)} = P_f(u^{(n)}, t_n, h)
 	\qquad \text{for $n=0, 1, \ldots, N-1$},
 	```
-	where $\phi_f(u, t, h)$ is a real-valued function
-	and $u^{(0)} = u₀$.
+	where $P_f(u, t, h)$ is a real-valued function
+	and $u^{(0)} = u_0$.
 
-!!! warning "Examples"
-	- For **Forward Euler** we have $\phi_f(u^{(n)}, t_n, h) = f(t_n, u^{(n)})$
-	- More involved methods exist. For example the [**midpoint method**](https://en.wikipedia.org/wiki/Midpoint_method), which we will discuss below, 	employs $\phi_f(u^{(n)}, t_n, h) = f\left(t_n + \frac{h}{2}, u^{(n)} + \frac{h}{2} f(t_n, u^{(n)})\right)$.
+For forward Euler we simply have $P_f(u^{(n)}, t_n, h) = u^{(n)} + h f(t_n, u^{(n)})$.
 """
 
 # ╔═╡ 46f8284f-7751-4c1e-a617-386d86e7f4d0
 md"""
 ## Error analysis
 
-As discussed above applying Forward Euler to an initial value problem (1) with $N$ subintervals leads to a sequence of computed points $u^{(0)}, u^{(1)}, \ldots, u^{(N)}$, which approximate $u(t_0), u(t_1), \ldots, u(t_N)$ --- the solution $u$ evaluated at the nodes $\{t_i\}_{i=0}^N$. In this section our goal is to quantify the error
+As discussed above applying Forward Euler to an initial value problem (1) with $N$ subintervals leads to a sequence of computed points $u^{(0)}, u^{(1)}, \ldots, u^{(N)}$, which approximate $u(t_0), u(t_1), \ldots, u(t_N)$ --- the solution $u$ evaluated at the nodes $\{t_i\}_{i=0}^N$. Our goal is to **quantify the error**
 ```math
 \tag{9}
 |e^{(n)}| = |u(t_n) - u^{(n)}| \qquad \text{for $n = 0, 1, \ldots, N$}
 ```
 between the computed points and the exact values of the solution.
 
-A notable feature of Forward Euler (Algorithm 1) is that the expression for computing $u^{(n+1)}$ results from two approximations:
-1. Instead of evaluating the exact derivative $\frac{d\, u(t_n)}{d t}$ we employ a finite differences formula in (5).
-1. Instead of using the exact value $u(t_n)$ to compute $u^{(n+1)}$ in (6) we employ the *approximation* $u^{(n)}$.
+In employing the Forward Euler scheme (Algorithm 1) we actually make **two approximations**, namely:
+1. Instead of evaluating the exact derivative $\frac{d\, u(t_n)}{d t}$ we employ a **finite differences formula** in (5). This error contribution is usually called the **local truncation error**.
+2. When computing $u^{(n+1)}$ in (6) we cannot employ $u(t_n)$ --- the exact value of the solution at time $t_n$ --- since this value is unknown to us. Instead we **employ $u^{(n)}$ as an approximation to $u(t_n)$**. 
+
 Both approximations contribute to the total error (9).
 """
 
-# ╔═╡ 9385fd22-95f4-42b6-83ca-d4abbfe83a30
+# ╔═╡ 701250c5-3856-4720-b125-31eaede052a0
 md"""
 ### Local truncation error
-We first want to understand the error due to employing the finite difference formula
-instead of the exact derivative.
-To isolate this contribution let us assume that we do  have access to the *exact* values $u(t_n)$.
-We than follow a Forward Euler step (7), just replacing the approximation $u^{(n)}$ by the exact $u(t_n)$.
-This leads to the quantity 
-```math
-\tilde{u}^{(n+1)} = u(t_n) + h f(t_n, u(t_n)),
-```
-which thus isolates the error due to employing the finite difference formula.
-We investigate the error of this quantity using a Taylor series
-```math
-\begin{aligned}
-u(t_{n+1}) - \tilde{u}^{(n+1)}
-&= u(t_n + h) - \Big[ u(t_n) + h\, \underbrace{f(t_n, u(t_n))}_{=u'(t_n)} \Big] \\
-&= u(t_n) + h u'(t_n) + \frac12 h^2 u''(t_n) + O(h^3) - u(t_n) - h u'(t_n)\\
-&= \frac12 h^2 u''(t_n) + O(h^3),
-\end{aligned}
-```
-where we used the fact that $u$ satisfies the differential equation.
-This expression only describes the error of a single step,
-which advances us by a stepsize $h$ in going from $a$ to $b$.
-To make the scaling of errors comparable as $h\to0$
-it is usually more convenient ot investigate its size relative to the
-chosen stepsize $h$, i.e.
- ```math
-\tag{10}
-\frac{u(t_{n+1}) - \tilde{u}^{(n+1)}}{h} = \frac{u(t_{n+1}) - u(t_n)}{h} - f(t_n, u(t_n)) = \frac12 h\, u''(t_n) + O(h^2).
-```
-This last expression is the so-called **local truncation error** of forward Euler.
+We want to isolate the error in the Forward Euler scheme
+introduced by employing the finite difference formula
+from the other error contribution.
+For this let us assume for a second that we actually had access to the exact solution values $u(t_n)$, which we could use as part of a Forward Euler step (7).
 
-Generalising towards the general class of one-step methods we define:
+The error of the Euler step is then simply $u(t_{n+1}) - P_f(u(t_n), t_n, h)$.
+To make the scaling of errors comparable as $h\to0$
+it is usually more convenient ot investigate the size of this value
+relative to the chosen stepsize $h$, leading to the following definition:
+
+!!! info "Definition: Local truncation error"
+	The **local truncation error** of an explicit method (8) is the quantity
+	```math
+	\tag{10}
+	\tau^{(n)}_h
+	= \frac{u(t_{n+1}) - P_f(\textcolor{red}{u(t_n)}, t_n, h)}{h}
+	```
 """
 
-# ╔═╡ 266c5a9a-8cd5-4dc0-a7de-492d64306aab
+# ╔═╡ d898d0ca-f49e-4216-8197-950a2bc07762
 md"""
-!!! info "Definition: Local truncation error"
-	The **local truncation error** of a one-step method (8) is the quantity
-	```math
-	\tag{11}
-	\tau^{(n)}_h = \frac{u(t_{n+1}) - u(t_n)}{h} - \phi_f\big(u(t_n), t_n, h\big)
-	```
-
-There are two ways to interpret the local truncation error $\tau^{(n)}_h$:
-- As we discussed above (10) with respect to the Forward Euler method,
-  it measures the **error of the numerical scheme** going from step $n$
-  to $n+1$, provided that we start from the exact $u(t_n)$.
-- From definition (9) we can also view  $τ^{(n)}_h$ as the (relative)
-  **residual of the numerical method** when replacing the numerical solution 
-  $u^{(n)}$ by the exact solution $u(t_n)$.
+Making reference to (1) we first note for Forward Euler:
+```math
+P_f(u(t_n), t_n, h) = u(t_n) + h\, f(t_n, u(t_n))= u(t_n) + h\, u'(t_n)
+```
+while a Taylor expansion of $u(t_{n+1}) = u(t_n + h)$ around $t_n$ yields
+```math
+u(t_{n+1}) = u(t_n + h) = u(t_n) + h u'(t_n) + \frac12 h^2 u''(t_n) + O(h^3)
+```
+such that the **local truncation error of Forward Euler** can be obtained as
+```math
+\tag{11}
+\tau^{(n)}_h = \frac12 h \, u''(t_n) + O(h^2)
+```
 """
 
 # ╔═╡ d7150f04-e3e8-41f7-a173-9d458f72cdde
 md"""
 ### Global error
-As the name suggests the local truncation error $\tau^{(n)}$ only makes a statement about the error committed in a single isolated time step. However, what we were after was estimating the *global* error
+We return to the question of estimating the error
 ```math
 |e^{(n)}| = |u(t_n) - u^{(n)}| \qquad \text{for $n = 0, 1, \ldots, N$}.
 ```
+In contrast to the *local* truncation error $\tau^{(n)}_h$
+--- which really only estimates the error committed in a single time step ---
+the error $e^{(n)}$ is a **global error**,
+since it *accumulates* all error contributions up to the $n$-th timestep.
 
-Naively one might think that simply adding all local error contributions provides an estimate for this global error. However, this neglects something important. Namely, due to the algorithmic structure of one-step methods (8), where one obtains $u^{(n+1)}$ by adding to the approximation $u^{(n)}$, the error of step $n$ *propagates* to step $n+1$. In particular for small values of $N$ this can cause the error $|u(t_n) - u^{(n)}|$ in later time steps to grow signifficantly over the earlier ones. For example consider:
+Naively one might think that simply adding all local error contributions $\tau^{(k)}_h$ with $k \leq n$ provides an estimate for this global error $e^{(n)}$. However, this neglects something important. Namely, that in our explicit algorithms (8), the *already erroneous estimate* $u^{(n)}$ is used to estimate $u^{(n+1)}$. **The error of step $n$ *propagates* to step $n+1$**.
+For small values of $N$ this can cause the error $|u(t_n) - u^{(n)}|$ in later time steps $n$ to grow *exponentially*. For example consider:
 """
 
 # ╔═╡ 6d73f60b-0ccf-492f-9700-09d0bbf15124
@@ -503,14 +552,32 @@ let
 	plot!(res_euler.t, res_euler.u; label=L"Euler $N=7$", mark=:o, lw=2, ls=:dash)
 end
 
-# ╔═╡ 80748b7b-2546-4c4c-b60d-fdf7df98c8a7
+# ╔═╡ bcfd9254-c471-4e52-8259-aad01646fb4b
 md"""
-where from time step 5 the solution is qualitatively wrong.
+More precisely one can formulate:
 
-We therefore need to account for the propagation of error from one step to the next on top of the local error measured by $τ^{(n)}_h$. This is the subject of the following theorem:
+!!! info "Theorem 2 (Convergence of explicit methods, simple version)"
+	If one has an explicit method with local truncation error satisfying
+	```math
+	|τ^{(n)}_h| ≤ C \, h^p,
+	```
+	as $h\to0$ then as $h\to0$ the global error satisfies
+	```math
+	|e^{(n)}| = |u(t_n) - u^{(n)}| ≤ \frac{C h^p}{L} \left(e^{L (t_n-a)} -1 \right)
+	```
+	where $C > 0$ and $L > 0$ are constants.
 
+We note:
+- If the local truncation error $τ^{(n)}_h$ converges with order $p$, then the one-step methods also converges globally with order $p$.
+- However, the global error has an **additional prefactor** $(e^{L (t_n-a)} -1)$, which **grows exponentially in time**. This is an effect of the accumulation of error from one time step to the next. In particular if $b \gg a$ or results can get rather inaccurate **even for higher-order methods** beyond Forward Euler where $p > 1$. This point we will pick up in the section on *Stability and implicit methods* below.
+- For Theorem 2 to hold there are a few more details to consider (e.g. problem (1) should have  a unique solution). More information can be unfolded below.
+"""
+
+# ╔═╡ 5ac4eca2-0372-4b2d-add6-2347ce9461a3
+details("Optional: More details on Theorem 2",
+md"""
 !!! info "Theorem 2"
-	Given a one-step method (8) with local truncation error satisfying
+	Given a explicit method (8) for solving IVPs (1) with local truncation error satisfying
 	```math
 	\tag{12}
 	|τ^{(n)}_h| ≤ C \, h^p
@@ -520,6 +587,7 @@ We therefore need to account for the propagation of error from one step to the n
 	\tag{13}
 	\frac{\partial \phi_f(u, t, h)}{\partial u} ≤ L \qquad \text{for all $t \in [a, b]$ and all $h>0$}.
 	```
+	where $ϕ_f$ is defined such that $P_f(u, t, h) = u + h\,  ϕ_f(u, t, h)$.
 	Then the global error satisfies
 	for all $n = 0, 1, \ldots, N$
 	```math
@@ -528,24 +596,29 @@ We therefore need to account for the propagation of error from one step to the n
 	```
 	as $h\to 0$,
 	that is the numerical method (8) is **convergent with order $p$**.
-"""
 
-# ╔═╡ 5ac4eca2-0372-4b2d-add6-2347ce9461a3
-details("Show the proof",
-md"""
+[^1]: This result can also be proven with minor modifications
+	under the conditions of Theorem 1, i.e. that
+	$|\phi_f(u, t, h) - \phi_f(v, t, h)| \leq L |u-v|$ for all $u,v \in \mathbb{R}$,
+	all $h>0$ and $a ≤ t ≤ b$.
+		
 > **Proof:**
-> Based on $e^{(n)} = u(t_n) - u^{(n)}$ we obtain
+> First note that $u^{(n+1)} - u^{(n)} = P_f(u^{(n)}, t_n, h) - u^{(n)} = h\,  ϕ_f(u^{(n)}, t_n, h)$.
+> Based on $e^{(n)} = u(t_n) - u^{(n)}$ we then obtain
 > ```math
 > \begin{aligned}
 > e^{(n+1)} - e^{(n)} &= [u(t_{n+1}) - u^{(n+1)}] - [u(t_n) - u^{(n)}] \\
 > &= [u(t_{n+1}) - u(t_n)] - [u^{(n+1)} - u^{(n)}] \\
-> &\stackrel{(8)}{=} [u(t_{n+1}) - u(t_n)] - h\, \phi_f (u^{(n)}, t_n, h).
+> &= [u(t_{n+1}) - u(t_n)] - h\, \phi_f (u^{(n)}, t_n, h).
 > \end{aligned}
 > ```
 > By adding and subtracting $h\,\phi_f \big(u(t_n), t_n, h\big)$ we develop this to
 > ```math
 > \begin{aligned}
-> e^{(n+1)} = e^{(n)} &+ \overbrace{\left[u(t_{n+1}) - u(t_n) - h\,\phi_f \big(u(t_n), t_n, h\big)\right]}^{=h\, τ^{(n)}_h}\\
+> e^{(n+1)} 
+> = e^{(n)} &+ \left[u(t_{n+1}) - u(t_n) - h\,\phi_f \big(u(t_n), t_n, h\big)\right]\\
+> &+ h \left[ \phi_f \big(u(t_n), t_n, h\big) - \phi_f \big(u^{(n)}, t_n, h\big) \right]\\
+> = e^{(n)} &+ \overbrace{\left[u(t_{n+1}) - P_f\big(u(t_n), t_n, h\big)\right]}^{=h\, τ^{(n)}_h}\\
 > &+ h \left[ \phi_f \big(u(t_n), t_n, h\big) - \phi_f \big(u^{(n)}, t_n, h\big) \right]
 > \end{aligned}
 > ```
@@ -598,65 +671,19 @@ md"""
 
 """)
 
-# ╔═╡ 74a4bb06-d784-423c-9658-3cb9e4f545ae
-md"""
-[^1]: This result can also be prooven with minor modifications
-	  under the conditions of Theorem 1, i.e. that
-      $|\phi_f(u, t, h) - \phi_f(v, t, h)| \leq L |u-v|$ for all $u,v \in \mathbb{R}$,
-      all $h>0$ and $a ≤ t ≤ b$.
-"""
-
 # ╔═╡ 285cbf5b-7097-47c0-950c-0c84d69a65bd
 md"""
-**Remark:**
-One could paraphrase Theorem 2 by saying if the local truncation error $τ^{(n)}_h$ converges with order $p$, then the one-step methods also converges globally with order $p$. However, when thinking about the theorem in this way one should not forget the prefactor $(e^{L (t_n-a)} -1)$ in (14), which grows *exponentially in time*. Thus if we use a one-step method even for a higher order method our results may well deterioriate if $b \gg a$ ! This point we will pick up in the section on *Stability and implicit methods* below.
+!!! info "Observation: Convergence of Forward Euler"
+	As discussed in (11) Forward Euler has local truncation error
+	$\tau^{(n)}_h = \frac12 h\, u''(t_n) + O(h^2)$. Therefore
+	$|\tau^{(n)}_h| ≤ \frac12 \max_{t\in[t_n,t_{n+1}]} |u''(t)| \, h$
+	and by using Theorem 2 we conclude that **Forward Euler converges linearly**.
 
-!!! warning "Example: Convergence of Forward Euler"
-	As discussed in (10) for Forward Euler has local truncation error
-	$\tau^{(n)}_h = \frac12 h\, u''(t_n) + O(h^2)$, such that 
-	```math
-	|\tau^{(n)}_h| ≤ \frac12 \max_{t\in[t_n,t_{n+1}]} |u''(t)| \, h
-	```
-	and using Theorem 2 we conclude that **Forward Euler converges linearly**.
-
-	Let us verify this graphically on the test problem (2)
-	```math
-	\left\{
-	\begin{aligned}
-	\frac{d u(t)}{d t} &= \sin\left[(u+t)^2\right] && 0 ≤ t ≤ 4 \\
-	u(0) &= -1,
-	\end{aligned}\right.
-	```
-	which is contained in the variable `ivp` from before.
+This is demonstrated graphically below:
 """
 
 # ╔═╡ 20096950-17ef-4d60-8059-dc7f00265349
-let
-	# Obtain extremely tight solution using DifferentialEquations.jl
-	# Note, that ivp still contains the ODEProblem (2)
-	u_exact = solve_reference(f, u₀, tstart, tend; reltol=1e-14, abstol=1e-14)
-
-	Ns = [ round(Int, 5 * 10^k) for k in 0:0.5:3 ]
-	errors = Float64[]
-	for N in Ns
-		res_euler = forward_euler(f, u₀, tstart, tend, N)
-		u = res_euler.u
-		t = res_euler.t
-
-		# Compute global errors in each node tₙ
-		global_error = [abs(u_exact(t[n]) - u[n]) for n in 1:length(u)]
-
-		# Push the largest error to the array for plotting
-		push!(errors, maximum(global_error))
-	end
-	
-	plot(Ns, errors; mark=:o, label="Errors", lw=2, xaxis=:log, yaxis=:log,
-		xlabel=L"N", ylabel="Largest global error",
-		title="Convergence of Forward Euler")
-
-	# Add line for perfect 1st order convergence:
-	plot!(Ns, 0.5 ./ Ns, ls=:dash, lw=2, label=L"O(n^{-1})")
-end
+p_cvg_fw_euler
 
 # ╔═╡ 38a5d61d-aff7-44dd-90e2-e690cd2643f7
 md"""
@@ -667,7 +694,7 @@ Similar to the previous chapters we now ask the question: How can we improve the
 We start with a second-order RK method, namely the midpoint method.
 """
 
-# ╔═╡ 04b3c441-a527-4b15-99e1-042479c4fdf2
+# ╔═╡ 2a464c17-2711-477a-90cd-bdc37a04ce5a
 md"""
 ### Optional: Midpoint method
 The goal of the midpoint method is to construct a 
@@ -679,11 +706,15 @@ second-order method for solving the IVP (1)
 u(a) &= u_0.
 \end{aligned}\right.
 ```
-We stay within the framework of one-step methods, i.e. we iterate
+We stay within our general framework of (8), i.e. we want to iterate
 for $n=0, 1, \ldots, N-1$
 ```math
-u^{(n+1)} = u^{(n)} + h\, \phi_f (u^{(n)}, t_n, h).
+u^{(n+1)} = P_f (u^{(n)}, t_n, h).
 ```
+"""
+
+# ╔═╡ 34ddbbe2-69bb-41a4-93e3-b721d88b480e
+md"""
 The ideal method would obtain the exact $u(t_{n+1})$ from the exact $u(t_{n})$,
 implying a local truncation error $τ^{(n)}_h = 0$. To build such a method
 we expand
@@ -721,6 +752,10 @@ u(t_{n+1}) = u(t_{n} + h)
 \right] + O(h^3).
 \end{aligned}
 ```
+"""
+
+# ╔═╡ 8f4bca61-8fa8-45a3-a728-92604bc319a2
+md"""
 Since computing and implementing the partial derivatives $\frac{\partial f}{\partial t}$ and $\frac{\partial f}{\partial u}$ can in general become ticky,
 we will also approximate these further.
 Expanding $f$ in a multi-dimensional Taylor series we observe
@@ -753,13 +788,17 @@ This is the **midpoint method** we mentioned earlier:
 	with $t \in [a, b]$ and nodes $t_n = a+n\, h$, $h = \frac{b-a}{N}$
 	iteratively compute the sequence
 	```math
-	u^{(n+1)} = u^{(n)} + h\, \phi_f(u^{(n)}, t_n, h)\qquad \forall n = 0, \ldots, N-1.
+	u^{(n+1)} = P_f(u^{(n)}, t_n, h)\qquad \forall n = 0, \ldots, N-1.
 	```
-	with $\phi_f(u^{(n)}, t_n, h) = f\left(t_n + \frac{h}{2}, \textcolor{green}{u^{(n)} + \frac{h}{2} f(t_n, u^{(n)}})\right)$
-
-From our derivation the local trucnation error for the midpoint method can be identified as
+	with
+	```math
+	P_f(u^{(n)}, t_n, h) = u^{(n)} + h \left[
+	f\left(t_n + \frac{h}{2}, \textcolor{green}{u^{(n)} + \frac{h}{2} f(t_n, u^{(n)}})\right)
+	\right]
+	```
+From our derivation the local truncation error for the midpoint method can be identified as
 ```math
-\tau^{(n)}_h = \frac{u(t_{n+1}) - u(t_n)}{h} - \phi_f\big(u(t_n), t_n, h\big)
+\tau^{(n)}_h = \frac{u(t_{n+1}) - P_f(\textcolor{red}{u(t_n)}, t_n, h)}{h}
 = \frac{1}{h} O(h^3 + h ζ^2 + h |ζξ| + h ξ^2) = O(h^2).
 ```
 From Theorem 2 we observe that the **midpoint method is** indeed **a second-order method**.
@@ -784,14 +823,13 @@ from the first stage in the computation of $f$.
 
 This interpretation also explains why the method is called **midpoint method**.
 
-Employing again the `ODESystem` to supply the setup of our problem,
-we obtain an implementation of the midpoint method as:
+We obtain an implementation of the midpoint method as:
 """
 
 # ╔═╡ 76978387-3b7b-4644-a27e-246f84186eb9
 function midpoint(f, u₀, a, b, N)
 	# f:  Derivative function
-	# u0: Initial value
+	# u₀: Initial value
 	# a:  Start of the time interval
 	# b:  End of the time interval
 
@@ -1009,7 +1047,7 @@ md"This function rapidly decays to zero as $t \to \infty$:"
 # ╔═╡ a09b8d7b-9687-487d-940d-93c6957b027c
 md"""Applying our numerical methods from the previous sections, we would expect to recover this behaviour. So let's check this.
 
-We first set up the `ODEProblem`:"""
+We first set up the problem in a bunch of variables prefixed by `dcy_`:"""
 
 # ╔═╡ d57e6a62-cc98-4dbc-b471-b21448c0343e
 md"""... and try it on our previously implemented methods:"""
@@ -1074,14 +1112,17 @@ let
 		  mark=:o, c=4, lw=2, markersize=3, ls=:dash, label="RK4")
 end
 
-# ╔═╡ 60a34642-3824-4a3f-a11c-e76039c91e4a
+# ╔═╡ c064f18b-c70c-4192-b1ea-0a1503ffceef
 md"""We notice for too few nodal points or too large decay constants $C$ our numerical methods **all fail** to recover the decay behaviour.
 In other words while the exact solution satisfies $\lim_{t\to\infty} u(t) = 0$,
 the numerical methods are **all qualitatively wrong**:
 instead of the reproducing the correct long-time limit numerically,
 i.e. $\lim_{n\to\infty} u^{(n)} = 0$,
 the numerical solution actually grows over time.
+"""
 
+# ╔═╡ 32eca5ea-5f0f-49ef-ae5f-b9e47e3d8dce
+md"""
 Recall that in Theorem 2 we found that the global error satisfies
 ```math
 |e^{(n)}| ≤ \frac{C h^p}{L} \left(e^{L (t_n-a)} -1 \right)
@@ -1089,8 +1130,11 @@ Recall that in Theorem 2 we found that the global error satisfies
 ```
 In the limit of infinite time,
 i.e. $n\to \infty$, the upper bound on the RHS thus grows exponentially.
-This bound is in general pessimistic, i.e. not all numerical methods may actually reproduce the exponentially increasing error behaviour, but it clearly shows that unless one demands additional properties from a method for IVPs, one may fail to reproduce a limiting behaviour like $\lim_{t\to\infty} u(t) = 0$.
+This bound is in general pessimistic, i.e. not all numerical methods may actually reproduce the exponentially increasing error behaviour, but it clearly shows that unless one demands additional properties from a method for solving IVPs, one may fail to reproduce a limiting behaviour like $\lim_{t\to\infty} u(t) = 0$.
+"""
 
+# ╔═╡ d0d3e3c4-244a-4224-a7ce-8bd12f461989
+md"""
 Without going into further details the property we ask for is called **stability**:
 
 !!! info "Definition: Absolute stability"
@@ -1106,14 +1150,14 @@ Without going into further details the property we ask for is called **stability
 
 In the case of our decay problem, one can show for example that the forward Euler method is absolutely stable if
 ```math
-h < \frac{2}{C}
+h < \frac{2}{C},
 ```
---- which explains the condition we chose to switch the axis limits in the plot above.
+which explains the condition we chose to switch the axis limits in the plot above.
 
-In particular we also observe that none of our methods is unconditionally absolutely stable.
+We also observe that **none of our explicit methods is unconditionally absolutely stable**.
 """
 
-# ╔═╡ 2263c105-7d59-43a9-9196-b4762a53b1b0
+# ╔═╡ 87e9f852-ab54-4b89-9342-7e7ec3c4603d
 md"""
 ### Backward Euler
 
@@ -1133,9 +1177,13 @@ such that in each interval we needed to solve the problem
 \tag{20}
 \frac{d\, u(t_n)}{dt} = f(t_n, u(t_n)).
 ```
+"""
+
+# ╔═╡ 54953db0-2b39-4231-b800-e846db8d58eb
+md"""
 Instead of employing the forward finite differences formula,
 leading to the Forward Euler method (7),
-we now instead employ the backward finite differences, leading to
+we now instead employ the **backward finite differences**, leading to
 ```math
 \tag{21}
 \frac{d\, u(t_{n+1})}{d t} ≈ D^-_h u(t_{n+1}) = \frac{1}{h} \Big( u(t_{n+1}) - u(t_{n+1}-h) \Big)
@@ -1143,23 +1191,30 @@ we now instead employ the backward finite differences, leading to
 ```
 Following the same idea as before,
 i.e. to employ for $u(t_{n+1})$ the approximation $u^{(n+1)}$
-of the $n+1$-st time step and instead of $u(t_n)$ employ $u^{(n)}$
+of the $(n+1)$-st time step and instead of $u(t_n)$ employ $u^{(n)}$
 we obtain from (20) and (21):
 ```math
 \tag{22}
 \frac{u^{(n+1)} - u^{(n)}}{h} = f(t_{n+1}, u^{(n+1)}), \qquad\forall n = 0, \ldots, N-1,
 ```
 which is the **Backwards Euler method**.
-Notice, that in contrast to the case of Forward Euler we cannot immediately deduce an explicit update formula like (7) from this expression, since the dependency on $u^{(n+1)}$ is both on the LHS as well as in $f$. This is why such methods are called **implicit methods** as $u^{(n+1)}$ is only implicitly defined.
+"""
 
-To obtain $u^{(n+1)}$ from $u^{(n)}$ one needs to solve (22) iteratively:
+# ╔═╡ ce7556eb-55b4-4188-b058-6c2c595c2ec8
+md"""
+Notice, that in contrast to the case of Forward Euler we cannot immediately deduce an explicit update formula like (7) from this expression, since the **dependency on $u^{(n+1)}$ is both on the LHS as well as in $f$**. This is why such methods are called **implicit methods** as $u^{(n+1)}$ is only implicitly defined.
+"""
+
+# ╔═╡ 378d9f4f-7e11-44f8-a0e0-847945ce6774
+md"""
+To obtain $u^{(n+1)}$ from $u^{(n)}$ one **needs to solve (22) iteratively**:
 For this we introduce the map
 ```math
 \tag{23}
 x = g^{(n)}(x) = u^{(n)} + h \, f(t_{n+1}, x)
 ```
 and notice that its fixed-point $x_\ast = g^{(n)}(x_\ast)$ is exactly $u^{(n+1)}$.
-For each time step $n$ we thus need to solve a fixed-point problem using one of the methods we described in chapter 4.
+For each time step $n$ we thus need to solve a fixed-point problem using one of the methods we described in [Root finding and fixed-point problems](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.html).
 
 In summary our algorithm becomes:
 
@@ -1196,11 +1251,11 @@ Consider the setting of a mass $m$ hanging on a spring from the ceiling:
 """
 
 # ╔═╡ 6b5ac847-ea65-4d44-9379-5cc755908521
-TODO("Image")
+# TODO("Image")
 
 # ╔═╡ d8e1eb69-9f8f-47c3-a3f8-bf7f725959de
 md"""
-In its rest position show above, gravity is exactly cancelled by the upward force excerted by the spring, such that we can ignore gravity for our discussion. Now displacing the mass by a length $x$ leads to a restoring force $- k x$ where $k$ is the spring constant of the spring. By Newton's law this accelerates the mass by $- k/m x$. Employing $m=1$ for simplicity this leads to the **second-order ODE**
+In its rest position show above, gravity is exactly cancelled by the upward force excerted by the spring, such that we can ignore gravity for our discussion. Now displacing the mass by a length $x$ leads to a restoring force $- k x$ where $k$ is the spring constant of the spring. By Newton's law this accelerates the mass by $- \frac{k}{m} x$. Employing $m=1$ for simplicity this leads to the **second-order ODE**
 ```math
 \left\{
 \begin{aligned}
@@ -1418,6 +1473,8 @@ end
 
 # ╔═╡ cceb1700-55fc-4e5a-a2f2-81137fad5c1f
 let
+	C = 6.5
+	
 	soln_euler    = forward_euler(dcy_f, dcy_u₀, dcy_tstart, dcy_tend, Nbw)
 	soln_bw_euler = backward_euler(dcy_f, dcy_u₀, dcy_tstart, dcy_tend, Nbw)
 
@@ -1432,7 +1489,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 500)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 465)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -4175,8 +4232,11 @@ version = "1.4.1+2"
 # ╟─3dc8b41f-3ba0-4c0a-b017-731fd0958920
 # ╟─bc840e8d-77d9-4a4a-a908-3e9b4a8d253b
 # ╟─66affc7b-f0b0-48f4-b8bd-a1ff16d0357e
-# ╠═f60ecd21-fda2-4925-ba86-ac5ad5b7c7d0
-# ╟─41cc0b76-5e30-41dd-a648-5491e1b4bd22
+# ╟─4454973b-81f7-4b05-9ad8-d85ce97d8d9e
+# ╟─95b843d1-c445-413e-a474-6241111923da
+# ╟─8fdd4e24-cfa9-4c41-868d-1069e99074bf
+# ╟─0f2b87f4-8bc0-459c-a60d-29d523e60844
+# ╟─be01cdbc-1e85-4ae5-bd41-c95a9b606920
 # ╟─c641cdf2-aabf-45e7-bb12-83d73a93b5b7
 # ╠═9b0581c3-6fa8-44d8-8ebb-d2fda2841230
 # ╟─f0164280-14fd-48a5-9ae8-8b31f4580da8
@@ -4189,19 +4249,21 @@ version = "1.4.1+2"
 # ╟─65807ddc-0c8b-4b88-bbc2-4ff3c7a1d2f8
 # ╟─98f64da0-0d01-4c7e-8782-3d97dcf4c950
 # ╟─ecb868c3-44a2-4f95-bafe-b3324770ee6b
+# ╟─9962303e-1f7a-4569-bb09-e4998f481c6e
 # ╟─667fbe5a-dbee-43a3-bb93-0160b61cf31e
 # ╟─46f8284f-7751-4c1e-a617-386d86e7f4d0
-# ╟─9385fd22-95f4-42b6-83ca-d4abbfe83a30
-# ╟─266c5a9a-8cd5-4dc0-a7de-492d64306aab
+# ╟─701250c5-3856-4720-b125-31eaede052a0
+# ╟─d898d0ca-f49e-4216-8197-950a2bc07762
 # ╟─d7150f04-e3e8-41f7-a173-9d458f72cdde
 # ╟─6d73f60b-0ccf-492f-9700-09d0bbf15124
-# ╟─80748b7b-2546-4c4c-b60d-fdf7df98c8a7
+# ╟─bcfd9254-c471-4e52-8259-aad01646fb4b
 # ╟─5ac4eca2-0372-4b2d-add6-2347ce9461a3
-# ╟─74a4bb06-d784-423c-9658-3cb9e4f545ae
 # ╟─285cbf5b-7097-47c0-950c-0c84d69a65bd
 # ╟─20096950-17ef-4d60-8059-dc7f00265349
 # ╟─38a5d61d-aff7-44dd-90e2-e690cd2643f7
-# ╟─04b3c441-a527-4b15-99e1-042479c4fdf2
+# ╟─2a464c17-2711-477a-90cd-bdc37a04ce5a
+# ╟─34ddbbe2-69bb-41a4-93e3-b721d88b480e
+# ╟─8f4bca61-8fa8-45a3-a728-92604bc319a2
 # ╟─4d20e43b-ba3d-4eab-adfc-f3a7c6feeb0e
 # ╟─3430cee3-d5ac-4f7d-99ce-713008cd3553
 # ╠═76978387-3b7b-4644-a27e-246f84186eb9
@@ -4225,9 +4287,14 @@ version = "1.4.1+2"
 # ╠═af8f49e2-a876-4bb9-8036-46c1f510f369
 # ╟─d57e6a62-cc98-4dbc-b471-b21448c0343e
 # ╟─1f1af0d4-3c5d-4e38-9eda-c307100bd61f
-# ╠═e4fa9b2d-8a81-4439-84ff-8529a7421ae9
-# ╟─60a34642-3824-4a3f-a11c-e76039c91e4a
-# ╟─2263c105-7d59-43a9-9196-b4762a53b1b0
+# ╟─e4fa9b2d-8a81-4439-84ff-8529a7421ae9
+# ╟─c064f18b-c70c-4192-b1ea-0a1503ffceef
+# ╟─32eca5ea-5f0f-49ef-ae5f-b9e47e3d8dce
+# ╟─d0d3e3c4-244a-4224-a7ce-8bd12f461989
+# ╟─87e9f852-ab54-4b89-9342-7e7ec3c4603d
+# ╟─54953db0-2b39-4231-b800-e846db8d58eb
+# ╟─ce7556eb-55b4-4188-b058-6c2c595c2ec8
+# ╟─378d9f4f-7e11-44f8-a0e0-847945ce6774
 # ╟─5075f5e4-af28-4a93-b8e6-d71f96cf2b89
 # ╠═58f37900-0e6a-4d00-adb3-ec82cbfbcf4c
 # ╟─37bb847f-aa6b-4efe-8538-e580159d2892
@@ -4244,10 +4311,10 @@ version = "1.4.1+2"
 # ╠═94a39f52-0653-4f01-a08a-ee9bc887da7d
 # ╟─823685fd-221a-40c3-855a-20825fda7bf3
 # ╟─e195e04c-fd23-4f92-8241-235d69404d8e
-# ╠═828d31d2-6816-47fa-8789-fe370e1deb06
+# ╟─828d31d2-6816-47fa-8789-fe370e1deb06
 # ╟─366477ed-5532-44fa-97e0-fc0ab564fabe
 # ╠═7867834d-e5d5-4ae5-946b-8ea6ec6a91c9
 # ╠═d3855794-f57d-4fc5-bf97-63ce44582139
-# ╠═403993d0-1613-4ac1-a527-9362993e28e6
+# ╟─403993d0-1613-4ac1-a527-9362993e28e6
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
