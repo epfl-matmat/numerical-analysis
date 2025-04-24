@@ -172,12 +172,12 @@ md"""This we can now solve using `DifferentialEquations`, the details of which i
 """
 
 # ╔═╡ 3f59bd74-1bb0-41df-bea2-bf5990a2b89a
-function solve_reference(f, u₀, tstart, tend; kwargs...)
+function solve_reference(f, u₀, tstart, tend; abstol=1e-6, reltol=1e-6, kwargs...)
 	# Construct ODEProblem object
 	ivp = ODEProblem((u, p, t) -> f(u, t), u₀, (tstart, tend))
 
 	# Solve problem using the Tsit5() algortihm, a pretty good default.
-	solve(ivp, Tsit5(); kwargs...)
+	solve(ivp, Tsit5(); abstol, reltol, kwargs...)
 end
 
 # ╔═╡ 9cb5fd8e-d923-434e-b543-a0c987a5b5a7
@@ -187,7 +187,7 @@ sol = solve_reference(f, u₀, tstart, tend);
 md"The obtained solution can easily be visualised:"
 
 # ╔═╡ 82321d1e-50b9-4362-afc5-d256a506bed7
-plot(sol, label="solution", lw=2, xlabel="t", ylabel=L"u(t)",
+plot(sol.t, sol.u; label="solution", lw=2, xlabel="t", ylabel=L"u(t)",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)")
 
 # ╔═╡ 6b4ba69d-0a70-4c66-b4bc-63b717348471
@@ -210,7 +210,7 @@ let
 	tend    = 10
 	
 	sol = solve_reference(f, u₀, tstart, tend)
-	plot(sol; lw=2, label="", xlabel=L"t", yaxis=:log, ylabel=L"u(t)", xlims=(0, 2))
+	plot(sol.t, sol.u; lw=2, label="", xlabel=L"t", yaxis=:log, ylabel=L"u(t)", xlims=(0, 2))
 end
 
 # ╔═╡ c94d264b-ad1b-47fd-8b58-fd434cfe0f11
@@ -411,7 +411,7 @@ res_euler = forward_euler(f, u₀, tstart, tend, Neuler);
 let
 	res_euler = forward_euler(f, u₀, tstart, tend, Neuler)
 
-	plot(sol, label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
+	plot(sol.t, sol.u; label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 0))
 
 	plot!(res_euler.t, res_euler.u; label="Euler N=$Neuler", mark=:o, lw=2, ls=:dash)
@@ -547,7 +547,7 @@ For small values of $N$ this can cause the error $|u(t_n) - u^{(n)}|$ in later t
 # ╔═╡ 6d73f60b-0ccf-492f-9700-09d0bbf15124
 let
 	res_euler = forward_euler(f, u₀, tstart, tend, 7)
-	plot(sol, label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
+	plot(sol.t, sol.u, label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 1))
 	plot!(res_euler.t, res_euler.u; label=L"Euler $N=7$", mark=:o, lw=2, ls=:dash)
 end
@@ -858,7 +858,7 @@ let
 	N = 9
 	res_euler    = forward_euler(f, u₀, tstart, tend, N)
 	res_midpoint = midpoint(f, u₀, tstart, tend, N)
-	plot(sol, label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
+	plot(sol.t, sol.u; label="reference", lw=2, xlabel="t", ylabel=L"u(t)",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 0.5))
 	plot!(res_euler.t, res_euler.u; label=L"Euler $N=9$", mark=:o, lw=2, ls=:dash)
 	plot!(res_midpoint.t, res_midpoint.u; label=L"Midpoint $N=9$", mark=:o, lw=2, ls=:dash)
@@ -906,7 +906,7 @@ often called **RK4**, which is the most commonly used IVP approach:
 	\end{aligned}
 	```
 
-Let us mention in passing, that our reference method `Tsit5()` is also based on a  Runge-Kutta scheme.
+Let us mention in passing, that our reference solution routine `solve_reference` is using a method called `Tsit5()`, which is also based on a  Runge-Kutta scheme.
 
 An implementation of RK4 is given by:
 """
@@ -950,7 +950,7 @@ let
 	res_euler    = forward_euler(f, u₀, tstart, tend, N)
 	res_midpoint = midpoint(f, u₀, tstart, tend, N)
 	res_rk4      = rk4(f, u₀, tstart, tend, N)
-	plot(sol, label="reference", lw=2, ylabel=L"u(t)", xlabel="",
+	plot(sol.t, sol.u; label="reference", lw=2, ylabel=L"u(t)", xlabel="",
 	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 0.5), titlefontsize=12)
 	plot!(res_euler.t, res_euler.u; label="Euler", mark=:o, lw=2, ls=:dash, markersize=3)
 	plot!(res_midpoint.t, res_midpoint.u; label="Midpoint", mark=:o, lw=2, ls=:dash, markersize=3)
@@ -1362,7 +1362,7 @@ md"""
 
 # ╔═╡ 828d31d2-6816-47fa-8789-fe370e1deb06
 let
-	# Find a reference solution using Tsit5():
+	# Find a reference solution:
 	reference = solve_reference(ho_f, ho_u₀, ho_tstart, ho_tend;
 								abstol=1e-14, reltol=1e-14);
 	
@@ -4255,7 +4255,7 @@ version = "1.4.1+2"
 # ╟─701250c5-3856-4720-b125-31eaede052a0
 # ╟─d898d0ca-f49e-4216-8197-950a2bc07762
 # ╟─d7150f04-e3e8-41f7-a173-9d458f72cdde
-# ╟─6d73f60b-0ccf-492f-9700-09d0bbf15124
+# ╠═6d73f60b-0ccf-492f-9700-09d0bbf15124
 # ╟─bcfd9254-c471-4e52-8259-aad01646fb4b
 # ╟─5ac4eca2-0372-4b2d-add6-2347ce9461a3
 # ╟─285cbf5b-7097-47c0-950c-0c84d69a65bd

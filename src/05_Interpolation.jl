@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -887,7 +887,7 @@ md"""
 As we increase polynomial order and noise, we see larger discrepancies for the interpolation based on equispaced points then for the Chebyshev points.
 """
 
-# ╔═╡ 2cefad7d-d734-4342-8039-aefdc33c2edd
+# ╔═╡ 1b5c69ef-1c35-44ab-b392-47a06263ebba
 md"""
 ## Piecewise linear interpolation
 *Note:* We will only discuss the high-level ideas of this part in the lecture. You can expect that there will not be any detailed exam questions on Jacobi and Gauss-Seidel  without providing you with the formulas and algorithms.
@@ -909,7 +909,10 @@ i.e. just connecting the dots of each data point by a straight line.
     p_{1,h}(x) = y_i + \frac{y_{i+1} - y_i}{x_{i+1} - x_i} (x - x_i)
     \qquad \text{for $x\in [x_i, x_{i+1}]$}
     ```
+"""
 
+# ╔═╡ b2b03297-08b9-4b9c-8323-a071eb98902f
+md"""
 Instead of using this definition to implement piecewise polynomial interpolation,
 a more practical approach is to follow the idea of equation (1)
 and construct an appropriate set of basis functions
@@ -3316,7 +3319,8 @@ version = "1.4.1+2"
 # ╟─d5de3b11-7781-4100-8a63-d26426685bbc
 # ╟─4a4540a3-b4cf-47fd-a615-a5280505333f
 # ╟─50a3face-5831-4ef5-b6a5-225b8b7c46a0
-# ╟─2cefad7d-d734-4342-8039-aefdc33c2edd
+# ╟─1b5c69ef-1c35-44ab-b392-47a06263ebba
+# ╟─b2b03297-08b9-4b9c-8323-a071eb98902f
 # ╠═611541de-927a-44fd-bdf6-bedec2befa01
 # ╟─1af1365e-de88-4140-861d-ca527ae67db7
 # ╠═0b21dd78-bdd1-453b-92c5-4b5918cfed85

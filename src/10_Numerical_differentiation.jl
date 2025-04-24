@@ -83,7 +83,7 @@ md"""
 
 Given a regular function $f : [a, b] \to \mathbb{R}$ our goal is to **approximate numerically its derivative** $f'$ in a point $x \in [a, b]$. We will allow ourselves **only to perform $n$ pointwise evaluations** $f(t_i)$ with $t_i \in [a, b]$ and $i = 1, \ldots, n$ and **take linear combinations of these results**. That is we work towards approximations of the form
 ```math
-    f'(x) = \sum_{i=1}^m α_i f(x_i),
+    f'(x) ≈ \sum_{i=1}^m α_i f(x_i),
 ```
 where $x_i$ are points around $x$ and $α_i$ some coefficients,
 with details how to choose these points and coefficients to be specified.
