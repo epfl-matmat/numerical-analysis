@@ -39,11 +39,27 @@ TableOfContents()
 md"""
 # Boundary value problems
 
-In the previous chapter we considered initial value problems, in which one wishes to understand the behaviour of a quantity in a continious variable --- usually time. Starting from the knowledge $u(a)$ at the starting point $t = a$ the methods we discussed allowed us to approximate $u(t)$ over the entire time span $t \in [a, b]$. This class of problems already covers a number of important physical phaenomena
-(e.g. population growth, chemical reactions, dynamics of particle systems).
-However, in many cases the quantity of interest not only depends on time, but also on space, such that we are effectively seeking a solution function $u(x, t)$.
+The goal of boundary value problems is to reconstruct the function values $u(x, t)$
+of a function $u$ on an entire domain $x \in [a, b]$ 
+and for all times $t$ knowing only two things
+- The behaviour of (some) derivatives of $u$ and
+- Some information about $u$ at the boundary $x=a$ and $x=b$
+  for the initial time $t=0$. For example we may know
+  the values $u(a, 0)$ and $u(b, 0)$.
 
-Out of this class of problems we will consider a classical example, namely the heat equation, for which the unknown $u(x, t)$ is the temperature of a system at position $x$ and time $t$.
+Classic examples of boundary value problems include
+- the [heat equation](https://en.wikipedia.org/wiki/Heat_equation),
+  where $u(x, t)$ is the temperature at time $t$ and position $x$
+  of a material, or
+- [Poisson's equation](https://en.wikipedia.org/wiki/Poisson%27s_equation)
+  where $u(x, t)$ is the electrostatic potential at position $x$ and time $t$
+  corresponding to a given time-dependent density of electronic charges, or
+- the [diffusion equation](https://en.wikipedia.org/wiki/Diffusion_equation)
+  where $u(x, t)$ is the concentration of some solute at time $t$
+  at position $x$ in the solution.
+
+In this lecture, to simplify matters and to make this more concrete,
+we will only consider one example, namely the **heat equation**.
 """
 
 # ╔═╡ cf1055db-a773-4dc2-bd66-0ae840c656a4
@@ -51,14 +67,18 @@ md"""
 ## Stationary heat equation in one dimension
 """
 
-# ╔═╡ c26a4a32-1776-4cd3-99c9-c7311454745b
-TODO("Image")
+# ╔═╡ 93b28014-c767-4f40-b27c-4646f63faa89
+RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/master/notes/img/node-doubling.svg", "img/heat-equation.svg", :width => 500)
 
-# ╔═╡ d06e11da-6ec0-485e-ae16-0d6d59f3685a
+# ╔═╡ f1b662de-b4cf-4a73-9c00-580a2ea8a428
 md"""
-We consider a metal bar extending over the interval $[0, L]$. For a given moment in time $t$ we denote the **temperature** at a point $x \in [0, L]$ by $u(x, t)$. The heat flux we fruther denote by $\phi(x, t)$ and allow for an external source of heat $f(x)$, e.g. by one more more heat guns pointed at the metal bar.
+We consider a metal bar extending over the interval $[0, L]$. For a given moment in time $t$ we denote the **temperature** at a point $x \in [0, L]$ by $u(x, t)$. The **heat flux** we fruther denote by $\phi(x, t)$ and allow for an **external source of heat** $f(x)$, e.g. by one more more heat guns pointed at the metal bar.
+"""
 
-The rate of change of the internal heat $\frac{\partial Q}{\partial t}$
+# ╔═╡ b5c3ed4b-3c4d-40d5-9171-94187416b363
+md"""
+The **rate of change of the internal heat**
+$\frac{\partial Q}{\partial t}$
 at point $x$ of the rod
 is proportional to the change in temperature $\frac{\partial u}{\partial t}$,
 that is
@@ -66,15 +86,20 @@ that is
 \frac{\partial Q}{\partial t} = c ρ \, \frac{\partial u}{\partial t}(x, t)
 ```
 where proportionality constants are the heat capacity $c$ and the mass density $ρ$.
-Due to conservation of energy the change of internal heat of a slice $[x, x+δx]$ is equal to the incoming heat $f(x)\,δx + \phi(x, t)$ minus the outgoing heat $\phi(x + δx, t)$, such that we obtain
+
+Due to **conservation of energy** the change of internal heat of a slice $[x, x+δx]$ is equal to the incoming heat $f(x)\,δx + \phi(x, t)$ minus the outgoing heat $\phi(x + δx, t)$, such that we obtain
 ```math
 \frac{\partial Q}{\partial t} δx = \phi(x, t) + f(x)\, δx - \phi(x + δx, t).
 ```
-Dividing by $δx$ and taking the limit $δx\to 0$ thus yields
+Dividing by $δx$ and **taking the limit** $δx\to 0$ thus yields
 ```math
 \frac{\partial Q}{\partial t} = - \frac {\partial \phi}{\partial x}(x, t) + f(x).
 ```
-Combining with Fourier's law
+"""
+
+# ╔═╡ 226a30be-f721-4f3d-8d49-abddca22f661
+md"""
+Combining with **Fourier's law**
 ```math
 \phi(x, t) = -k \frac{\partial u}{\partial x} (x, t)
 ```
@@ -83,19 +108,29 @@ where $k$ is the thermal conductivity, we obtain the equation
 c ρ \, \frac{\partial u}{\partial t}(x, t) = k \frac{\partial^2 u}{\partial x^2}(x, t) + f(x) \qquad x \in (0, L), \ t > 0
 ```
 which is the **heat equation** in one dimension,
-a partial differential equation.
-The heat equation describes the evolution of the temperature in a system (here the metal bar) and has as its unknown the temperature distribution $u(x, t)$ at any location at any point in time.
+a **partial differential equation**.
+The heat equation describes the **evolution of the temperature in a system**
+(here the metal bar) and has as its unknown the temperature distribution $u(x, t)$ at any location at any point in time.
 """
 
-# ╔═╡ 11d0a713-a4d8-472f-ad42-8968d2151783
+# ╔═╡ 59f11469-c86e-4dc4-9eed-039101aaa058
 md"""
 To simplify matters in this lecture 
-we restrict ourselves to the case of the *stationary* heat equation, i.e. the case where we assume the temperature $u(x, t)$ to be in a state where it no longer changes with time, i.e. $\frac{\partial u}{\partial t} = 0$. Dropping thus the zero terms and the dependency on $t$ we obtain the **stationary heat equation**
+**we restrict** ourselves to the case of the **stationary heat equation**, i.e. the case where we assume the **temperature $u(x, t)$** to be in a state where it **no longer changes with time**, i.e. $\frac{\partial u}{\partial t} = 0$.
+Dropping thus the zero terms and the dependency on $t$ we obtain the **stationary heat equation**
 ```math
 -k\, \frac{\partial^2 u}{\partial x^2}(x) = f(x) \qquad x \in (0, L).
 ```
-To fully specify the problem and find a unique solution we still need to indicate what happens at the extremities of the bar, i.e. at $u(0)$ and at $u(L)$.
+"""
+
+# ╔═╡ 3e10cf8e-d5aa-4b3e-a7be-12ccdc2f3cf7
+md"""
+To fully specify the problem and find a unique solution we still **need to indicate what happens at the extremities of the bar**, i.e. at $u(0)$ and at $u(L)$.
 Since these two points sit at the boundary of our computational domain $[0, L]$ we usually call these conditions on $u$ **boundary conditions**. 
+"""
+
+# ╔═╡ 7fd851e6-3180-4008-a4c0-0e08edae9954
+md"""
 We sketch the two most common cases:
 
 - Consider the case where the bar is in contact with heat baths of constant temperature. A temperature $α$ for the left-hand side bath and $β$ for the right-hand side bath. In this case we know $u(0) = α$ and $u(L) = β$. We obtain the **heat equation using Dirichlet boundary conditions**:
@@ -141,7 +176,8 @@ u(0) &= α, \quad u(L) = β,
 \right.
 ```
 were $α, β \in \mathbb{R}$.
-Similar to our approach when solving initial value problems we divide the full interval $[0, L]$ into $N+1$ subintervals $[x_j, x_{j+1}]$
+Similar to our approach when [solving initial value problems (chapter 11)](https://teaching.matmat.org/numerical-analysis/11_Initial_value_problems.html)
+we **divide the full interval $[0, L]$ into $N+1$ subintervals** $[x_j, x_{j+1}]$
 of uniform size $h$, i.e. 
 ```math
 x_j = j\, h \quad j = 0, \ldots, N, \qquad h = \frac{L}{N+1}.
@@ -149,15 +185,24 @@ x_j = j\, h \quad j = 0, \ldots, N, \qquad h = \frac{L}{N+1}.
 Our goal is thus to find approximate points $u_j$ such that $u_j ≈ u(x_j)$ at the nodes $x_j$.
 """
 
-# ╔═╡ a0314bf5-8792-45cf-9f4f-4785dc465160
+# ╔═╡ 82788dfd-3462-4f8e-b0c8-9e196dac23a9
 md"""
-Due to the Dirichlet boundary conditions $u(0) = α$ and $u(L) = β$ we notice that we neccessarily need $u_0 = α$ and $u_{N+1} = β$, such that the only unknows are the $u_j$ with $1 ≤ j ≤ N$, i.e. the value at the *internal* nodes of the interval.
+Due to the Dirichlet boundary conditions $u(0) = α$ and $u(L) = β$.
+To satisfy these we neccessarily need $u_0 = α$ and $u_{N+1} = β$.
+The unknowns of our problems are therefore those
+$u_j$ with $1 ≤ j ≤ N$
+--- the **internal nodes** of the interval.
+"""
 
-For these internal nodes $u(x_j)$ satisfies the equation
+# ╔═╡ d43ecff3-89a3-4edd-95c2-7262e317ce29
+md"""
+These internal nodes $u(x_j)$ need to satisfy
 ```math
 - \frac{\partial^2 u}{\partial x^2}(x_j) = f(x_j) \qquad \forall\, 1 ≤ j ≤ N.
 ```
-The LHS is a second derivative, which can replace by its central finite-difference approximation (see chapter 10) to obtain
+As the derivatives of $u$ are unknown to us we employ a
+**[central finite-difference formula](https://teaching.matmat.org/numerical-analysis/10_Numerical_differentiation.html)**
+to replace this derivative by the approximation
 ```math
 \tag{3}
 f(x_j) = -\frac{\partial^2 u}{\partial x^2}(x_j) ≈ -\frac{u(x_{j-1}) - 2u(x_j) + u(x_{j+1})}{h^2} \qquad \forall\, 1 ≤ j ≤ N
@@ -167,7 +212,11 @@ or in terms of $u_j$:
 \tag{4}
 \frac{-u_{j-1} + 2u_j - u_{j+1}}{h^2} = f(x_j) \qquad \forall\, 1 ≤ j ≤ N.
 ```
-Due to our imposed boundary conditions $u_0 = α$ and $u_{N+1} = β$,
+"""
+
+# ╔═╡ 1fb53091-89c8-4f70-ab4b-ca2371b830b2
+md"""
+Due to our **imposed boundary conditions** $u_0 = α$ and $u_{N+1} = β$,
 such that we can simplify the equations for $j = 1$ and $j=N$ as follows:
 ```math
 \begin{aligned}
@@ -175,7 +224,7 @@ j&=1: & \frac{-α + 2u_1 - u_2}{h^2} &= f(x_1) \quad &\Leftrightarrow \quad \fra
 j&=N: & \frac{-u_{N-1} + 2u_N - β}{h^2} &= f(x_N) \quad &\Leftrightarrow \quad \frac{-u_{N-1} +2u_N}{h^2} &= f(x_N) + \frac{β}{h^2}\\
 \end{aligned}
 ```
-Putting everything together we obtain the system of equations
+Collecting everything we obtain the system of equations
 ```math
 \tag{5}
 \left\{
@@ -186,7 +235,34 @@ Putting everything together we obtain the system of equations
 \end{aligned}
 \right.
 ```
-Introducing a vector $\mathbf{u} = (u_1, \ldots, u_N)^T \in \mathbb{R}^N$ for the unknowns and defining the *system matrix* $\mathbf{A} \in \mathbb{R}^{N\times N}$ and right-hand side $\mathbf{b} \in \mathbb{R}^N$ with
+"""
+
+# ╔═╡ 129d2e86-49e6-4c5f-aca1-0cb45d923294
+Foldable("Optional: Does the problem (5) always have a solution ?",
+md"""
+An important question in the mathematical literature for problems such as (5)
+is whether this problem is **well-posed**, that is whether a unique solution to such problems even exists at all.
+
+For the boundary value problems we consider in this chapter it turns out that such a solution always exists, provided that the incoming heat $f$ and the boundary values $α$ and $β$ are finite. More precisely we have the following result:
+
+!!! info "Theorem 1"
+	For every $\mathbf{f} = (f(x_1), f(x_2), \ldots f(x_n))^T \in \mathbb{R}^N$
+	and all $α, β \in \mathbb{R}$, the system of equations shown in (5)
+	admits a unique solution
+	$\mathbf{u} = (u_1, \ldots, u_N)^T \in \mathbb{R}^N$ with
+	```math
+	\tag{6}
+	\max_{j=1,\ldots,N} |u_j| ≤ \frac18 \max_{j=1,\ldots,N} |f(x_j)| + \max(|α|, |β|).
+	```
+
+Colloquially speaking this Theorem ensures that the solution $\mathbf{u}$ cannot take too large values and moreover it tells us that the solution values are always controlled by the norm of the vector $\mathbf{f}$ and the boundary values $α$ and $β$.
+""")
+
+# ╔═╡ cbcd1b1e-7755-4177-b52a-f361ee025e01
+md"""
+Finally, to write problem (5) more compactly we introduce
+a **vector of all unknowns** $\mathbf{u} = (u_1, \ldots, u_N)^T \in \mathbb{R}^N$,  define the **system matrix** $\mathbf{A} \in \mathbb{R}^{N\times N}$
+as well as the **right-hand side** $\mathbf{b} \in \mathbb{R}^N$ with
 ```math
 \tag{7}
 \mathbf{A} = \frac{1}{h^2} \begin{pmatrix}
@@ -199,15 +275,20 @@ Introducing a vector $\mathbf{u} = (u_1, \ldots, u_N)^T \in \mathbb{R}^N$ for th
 \qquad\qquad
 \mathbf{b} = \begin{pmatrix}
 f(x_1) + \frac{α}{h^2} \\ f(x_2) \\ \vdots \\ f(x_{N-1}) \\ f(x_N) + \frac{β}{h^2}
-\end{pmatrix}
+\end{pmatrix}.
 ```
-we can write this as a linear system
+With these objects the problem can be written as a linear system
 ```math
 \tag{8}
 \mathbf{A} \mathbf{u} = \mathbf{b}.
 ```
+which is to be solved for the unknows $\mathbf{u}$.
+"""
 
-We notice that $\mathbf{A}$ is symmetric and tridiagonal. Additionally one can show $\mathbf{A}$ to be positive definite. It can therefore be efficiently solved using direct methods based on (sparse) LU factorisation or iterative approaches such as steepest-descent or the conjugate gradient method.
+# ╔═╡ c21502ce-777f-491a-a536-ff499fc172fc
+md"""
+We notice that $\mathbf{A}$ is **symmetric and tridiagonal**. Additionally one can show $\mathbf{A}$ to be **positive definite**.
+Problem (8) can therefore be **efficiently solved** using [direct methods based on (sparse) LU factorisation (chapter 6)](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html) or an [iterative approaches (chapter 7)](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.html), e.g. the conjugate gradient method.
 """
 
 # ╔═╡ c2bb42b3-4fee-4ad4-84c0-06f58c7f7665
@@ -314,63 +395,186 @@ res_fd = fd_dirichlet(f, L, α, β, N);
 
 # ╔═╡ 474dee17-627a-49b1-84e8-d692346d8aa0
 let
-	plot(u_exact; xlims=(0, 2π),
+	plot(u_exact; xlims=(-0.1, L+0.1), legend=:topright,
 	     label="reference", lw=2, xlabel=L"x", ylabel=L"u(t)",
 	     title=L"-\frac{\partial^2 u}{\partial x^2} = \sin(x)")
 
 	plot!(res_fd.x, res_fd.u; label="Finite differences N=$N", mark=:o, lw=2, ls=:dash)
+
+	scatter!([0, L], [α, β], label="Boundary values", mark=:o, c=3)
 end
 
 # ╔═╡ 814ac12b-5ed7-4512-b053-fbe729b90ce6
 md"""
-Note that the plot of the finite-difference solution does not include the nodal point at the boundaries ($x = 0$ and $x = 2π$).
+Note that the plot of the finite-difference solution does not include the nodal point at the boundaries ($x = 0$ and $x = 2π$ --- shown in green in the plot).
 
-We observe that as the number of points increases, the solution becomes more and more accurate.
-"""
 
-# ╔═╡ 4c2a8796-f5c0-44c8-89b8-ed4ed8425a2f
-md"""
-Note that in contrast to the initial value problems we considered in the previous chapter, such boundary value problems can always be solved, provided that the incoming heat $f$ and the boundary values $α$ and $β$  are finite. More precisely we have the following result for Algorithm 1:
-"""
-
-# ╔═╡ a47d0e8c-0a72-4b9d-a126-3b93c7700e04
-md"""
-!!! info "Theorem 1"
-	For every $\mathbf{f} = (f(x_1), f(x_2), \ldots f(x_n))^T \in \mathbb{R}^N$
-	and all $α, β \in \mathbb{R}$, the system
-	```math
-	\tag{5}
-	\left\{
-	\begin{aligned}
-	\frac{2u_1 - u_2}{h^2} &= f(x_1) + \frac{α}{h^2} && j=1\\
-	\frac{-u_{j-1} + 2u_j - u_{j+1}}{h^2} &= f(x_j)  && \forall\, 2 ≤ j ≤ N-1 \\
-	\frac{-u_{N-1} +2u_N}{h^2} &= f(x_N) + \frac{β}{h^2} && j=N
-	\end{aligned}
-	\right.
-	```
-	admits a unique solution
-	$\mathbf{u} = (u_1, \ldots, u_N)^T \in \mathbb{R}^N$ with
-	```math
-	\tag{14}
-	\max_{j=1,\ldots,N} |u_j| ≤ \frac18 \max_{j=1,\ldots,N} |f(x_j)| + \max(|α|, |β|).
-	```
-
-Colloquially speaking this Theorem ensures that the solution $\mathbf{u}$ cannot take too large values and moreover it tells us that the solution values are always controlled by the norm of the vector $\mathbf{f}$ and the boundary values $α$ and $β$.
-"""
-
-# ╔═╡ 72caef09-8cdf-42be-92e4-07e0d84d8651
-md"""
-### Error analysis
-
-Employing the finite-difference scheme of Algorithm 1 to solve the Dirichlet boundary value problem (9) leads to the computed points $u_1, u_2, \ldots u_N$, which approximate the function values $u(x_1), u(x_2), \ldots, u(x_N)$ evaluated at the nodal points. Similar to the case of initial value problems we are interested in quantifying the error
+We observe that as the number of points `N` is increased,
+the solution visually becomes more and more accurate.
+The output of our numerical procedure are 
+the computed points $u_1, u_2, \ldots u_N$.
+These points are meant to approximate the true function values 
+$u(x_1), u(x_2), \ldots, u(x_N)$ of $u$ evaluated at the nodal points.
+A measure for the accuracy of our obtained solution is thus
+the maximal deviation any of these computed points has from
+from the true $u(x_j)$.
+This measure is called the **global error** defined by
 ```math
 |e_j| = |u(x_j) - u_j| \qquad \text{for $j = 1, \ldots, N$}.
 ```
-Since $u_j$ is determined by solving (4), which thus in turn depends on the approximate values $u_{j-1} ≈ u(x_{j-1})$ and $u_{j+1} ≈ u(x_{j+1})$ we can identify two error contributions:
-1. The local error due to employing the finite difference formula in (3) instead of the exact partial derivative.
-2. The propagation of error from the neighbours $u_{j-1}$ / $u_{j+1}$ to $u_j$ it self and vice versa.
 
-We start by understanding the local error, i.e. the error due to the finite difference formula (3):
+Numerically, by observing how this global error changes
+as $N$ increases, we observe **quadratic convergence**:
+"""
+
+# ╔═╡ 7a647ffe-000e-4bb7-a348-033cd75b1369
+let
+	Ns = [ round(Int, 5 * 10^k) for k in 0:0.5:4 ]
+	errors = Float64[]
+	for N in Ns
+		res_fd = fd_dirichlet(f, L, α, β, N)
+		x = res_fd.x
+		u = res_fd.u
+		error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
+		push!(errors, maximum(error))		
+	end
+	
+	p = plot(; title="Convergence of Dirichlet finite differences",
+			   xaxis=:log, yaxis=:log,
+	           xlabel=L"N", ylabel="Largest global error",
+	           legend=:bottomleft,
+	           xlims=(1, 3e5), ylims=(1e-13, 10))
+	plot!(p, Ns, errors; lw=2, mark=:o, c=1, label="Error")
+	plot!(p, Ns, 0.02(first(Ns) ./ Ns).^2, ls=:dash, lw=2, label=L"O(n^{-2})", c=1)
+
+	xticks!(p, 10.0 .^ (0:1:5))
+	yticks!(p, 10.0 .^ (0:-2:-12))
+	p
+end
+
+# ╔═╡ 52961854-695e-44e7-b8e2-20ed7ff07cda
+md"""
+In line with this discussion we define convergence for numerical schemes for boundary value problems as follows:
+
+!!! info "Definition: Convergence order for boundary value problems"
+	A numerical scheme approximating a boundary value problem (9)
+	**converges with order $p$** if there exists a constant $C>0$
+	such that
+	```math
+	\max_{j=0,\ldots,N+1} |u(x_j) - u_j| ≤ C \, h^p
+	```
+	provided that the solution $u$ is sufficiently regular.
+
+	For the **central finite difference scheme** discussed here $p=2$.
+"""
+
+# ╔═╡ d9fb073d-042c-4724-834f-bcdb0cc4aec6
+md"""
+### Numerical stability
+
+Let us push the convergence plot from above a little further:
+"""
+
+# ╔═╡ 2fd3f387-b950-462f-a06a-eabd458fe10e
+let
+	Ns = [ round(Int, 5 * 10^k) for k in 2:0.1:5.2 ]
+	errors = Float64[]
+	for N in Ns
+		res_fd = fd_dirichlet(f, L, α, β, N)
+		x = res_fd.x
+		u = res_fd.u
+		error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
+		push!(errors, maximum(error))		
+	end
+	
+	p = plot(; title="Convergence of Dirichlet finite differences",
+			   xaxis=:log, yaxis=:log,
+	           xlabel=L"N", ylabel="Largest global error",
+	           legend=:bottomleft,
+	           xlims=(100, 3e6), ylims=(1e-13, 10))
+	plot!(p, Ns, errors; lw=2, mark=:o, c=1, label="Error")
+	plot!(Ns, 0.002(first(Ns) ./ Ns).^2, ls=:dash, lw=2, label=L"O(N^{-2})", c=1)
+
+	xticks!(p, 10.0 .^ (2:1:6))
+	yticks!(p, 10.0 .^ (0:-2:-12))
+	p
+end
+
+# ╔═╡ 8039250a-c79a-4009-9a53-81307b8e0ace
+md"""
+While initially the convergence thus nicely follows the expected convergence curve, **for larger $N$ the convergence degrades and the error starts increasing again**.
+
+Similar to our discussion on numerical stability
+in the [chapter on numerical differentiation](https://teaching.matmat.org/numerical-analysis/10_Numerical_differentiation.html)
+this error plot is the result of a balance between two error contributions:
+- The **discretisation error** due to the choice of $N$, where as $N$ gets larger
+  this error **decreases** as $O(N^{-2})$.
+- The **error due to finite floating-point precision**, which turns out to increase
+  as $N$ increases.
+
+With respect to the second error contribution
+the underlying problem is related to solving the linear system $\textbf{A} \textbf{u} = \textbf{b}$ in Algorithm 1. 
+As it turns out the **condition number of the system matrix $\mathbf{A}$ grows** as $O(N^2) = O(h^{-2})$:
+"""
+
+# ╔═╡ f3819d92-c61a-49b2-a77b-9837cbed0cae
+let
+	Ns = [5, 10, 50, 80, 200, 500, 1000]
+	condition_numbers = [cond(fd_dirichlet(f, L, α, β, N).A) for N in Ns]
+
+	p = plot(Ns, condition_numbers; mark=:o, yaxis=:log, xaxis=:log, lw=2, xlabel=L"N", ylabel=L"κ(A)", legend=:topleft, label=L"Condition number of $A$", ylims=(1, 10^13), xlims=(1, 3e6), yticks=(10.0 .^ (0:2:12)), xticks=(10.0 .^ (0:1:6)))
+	plot!(p, Ns -> Ns^2, ls=:dash, lw=2, label=L"O(N^2) = O(h^{-2})")
+end
+
+# ╔═╡ 30b8bac2-7c95-4fee-bbde-b04a36258857
+md"""
+As a result **the finer we make the discretisation**, i.e. the **larger $N$**,
+the harder it becomes to solve the system $\mathbf{A} \mathbf{u} = \mathbf{b}$,
+such that the **floating-point error in computing the solution $\mathbf{u}$ itself** increases quadratically.
+
+To make this clear let's consider $N = 10^5$.
+At this stage the condition number is about $10^{10}$,
+such that the typical $10^{-16}$ error we make when representing
+any floating-point operation (such as the computation of $\mathbf{b}$)
+gets amplified to a relative error in the solution $\mathbf{u}$
+of around $10^{-6}$: at most around $6$ digits of the solution
+can be known exactly.
+
+As a result around $N = 10^5$ the floating-point error becomes
+the leading error contribution,
+such that increasing $N$ beyond $10^5$ thus causes the total
+observed error of the numerical procedure to increase again.
+"""
+
+# ╔═╡ e35398a8-d8e5-4b19-b5a9-2c7ab6b497e9
+md"""
+### Optional: Error analysis of the discretisation error
+
+Let us come back to the observed quadratic convergence
+in the regime of small $N$ where the discretisation error dominates.
+Ignoring thus the floating-point error we conclude that the global error 
+```math
+|e_j| = |u(x_j) - u_j| \qquad \text{for $j = 1, \ldots, N$}.
+```
+should scale as $\max_{j=1,\ldots,N} |u(x_j) - u_j| ≤ C h^2$ for some constant $C$.
+In this section we will make this more quantitative.
+"""
+
+# ╔═╡ e70af7c2-6df6-4724-8a82-7f3fc5c1fadf
+md"""
+First, since the value $u_j$ at each nodal point is determined by solving (4),
+i.e. by replacing the *exact* function values $u(x_{j-1})$, $u(x_j)$ and $u_{j+1}$
+by the approximations $u_{j-1}$, $u_{j}$ and $u_{j+1}$,
+there are in fact two contributions to the global error:
+1. The error due to employing the finite difference formula in (3)
+   instead of the exact partial derivative $\frac{\partial^2 u}{\partial x^2}$.
+2. The propagation of error from the neighbours $u_{j-1}$ / $u_{j+1}$ to $u_j$ it self and vice versa.
+"""
+
+# ╔═╡ 7fc0e2c7-fdf5-458a-9c54-63f906cb63ad
+md"""
+We start by understanding the first contribution,
+which is the **local error** due to employing the finite difference formula (3).
 
 !!! info "Definition: Local truncation error"
 	Given the exact solution $u(x_j)$ of problem (9) evaluated at the nodal points $x_j = j\,h$ for $j = 0, \ldots, N+1$ of the finite difference scheme of Algorithm 1, we define the **local truncation error** at the node $x_j$ as
@@ -382,9 +586,6 @@ We start by understanding the local error, i.e. the error due to the finite diff
 	That is the local truncation error is the residual of the numerical scheme (4)
 	when we replace the approximated solution $u_j$ by the exact solution $u(x_j)$.
 """
-
-# ╔═╡ 88c12d8e-58b4-4a68-88ea-e75a50f1e071
-TODO(md"Not so easy to see the point of this technical discussion.")
 
 # ╔═╡ 1f3b6898-3ff1-40b5-bcc2-97db023fc0e3
 md"""
@@ -400,21 +601,27 @@ In our case one can show for the local truncation error:
 """
 
 # ╔═╡ 5fa3718d-d58c-492f-9e04-1bca93d8b9fd
-details("Proof sketch",
-md"Since $u$ is the exact solution to (9) we have that $f(x_j) = -\frac{\partial^2 u}{\partial x^2}(x_j)$ for all $j = 1, \ldots, N$. Therefore
-```math
-\begin{aligned}
-\tau^h_j &= \frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} - f(x_j)\\
-&= \frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} + \frac{\partial^2 u}{\partial x^2}(x_j) \\
-&= -\frac{u(x_{j} - h) - 2u(x_j) + u(x_{j}+h)}{h^2} + u''(x_j)
-\end{aligned}
-```
-Considering a Taylor expansion to fourth order of $u(x_j \pm h)$ around $x_j$ than leads to the quoted result.")
+md"""
+> **Proof sketch:**
+> Since $u$ is the exact solution to (9) we have that $f(x_j) = -\frac{\partial^2 u}{\partial x^2}(x_j)$ for all $j = 1, \ldots, N$. Therefore
+> ```math
+> \begin{aligned}
+> \tau^h_j &= \frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} - f(x_j)\\
+> &= \frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} + \frac{\partial^2 u}{\partial x^2}(x_j) \\
+> &= -\frac{u(x_{j} - h) - 2u(x_j) + u(x_{j}+h)}{h^2} + u''(x_j)
+> \end{aligned}
+> ```
+> Considering a Taylor expansion to fourth order of $u(x_j \pm h)$
+> around $x_j$ than leads to the result.
+"""
 
 # ╔═╡ b811d679-e80b-41e1-8e85-dd81d01f00a7
 md"""
-Next we want to see how this resultpropagates to the global scale.
-We rearrange the definition of the local truncation error (10) one obtains that the exact solution satisfies the discrete problem
+Next we tackle the second aspect,
+namely how this local truncation error propagates to give global error.
+
+By rearranging the definition of the local truncation error (10),
+we find that the exact solution satisfies the discrete problem
 ```math
 \tag{12}
 \frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} = f(x_j) + \tau^h_j 	\qquad j = 1, \ldots, N.
@@ -444,17 +651,19 @@ we have $e_0 = e_{N+1} = 0$, such that the error satisfies
 ```
 which is again a discretised Dirichlet bounary value problem (5) with the conditions that $f(x_j) = τ^h_j$ and $α=β=0$.
 
-We can therefore apply equation (14) of Theorem 1 to this problem and conclude
+We can therefore apply equation (14) of Theorem 1 
+(see the folded section *Optional: Does the problem (5) always have a solution ?*)
+to problem (13) and conclude
 ```math
 \tag{15}
 \max_{j=1,\ldots,N} |e_j| ≤ \frac{1}{8} \max_{j=1,\ldots,N} |τ^h_j|,
 ```
-which relates the local truncatino error to the error at each nodal point.
+which relates the local truncation error to the error at each nodal point.
 """
 
 # ╔═╡ f472502a-678f-479a-ab18-9ba0af7cde2f
 md"""
-Combining this result with Lemma 2 yields finally
+Combining this result with Lemma 2 yields
 
 !!! info "Theorem 3: Global error of finite differences"
 	Under the assumption that the exact solution $u$ of the Dirichlet boundary value problem (9) is four times differentiable,
@@ -465,101 +674,11 @@ Combining this result with Lemma 2 yields finally
 	```
 	where $C = \frac{1}{96} \|u''''\|_\infty$.
 	It thus achieves **quadratic convergence**.
-
-Numerically we find indeed quadratic convergence:
 """
 
-# ╔═╡ 06265b91-1acc-4585-96a1-f553b3b8be3f
-let
-	Ns = [ round(Int, 5 * 10^k) for k in 0:0.5:4 ]
-	errors = Float64[]
-	for N in Ns
-		res_fd = fd_dirichlet(f, L, α, β, N)
-		x = res_fd.x
-		u = res_fd.u
-		error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
-		push!(errors, maximum(error))		
-	end
-	
-	p = plot(; title="Convergence of Dirichlet finite differences",
-			   xaxis=:log, yaxis=:log,
-	           xlabel=L"n", ylabel="Largest global error",
-	           legend=:bottomleft,
-	           xlims=(1, 3e5), ylims=(1e-13, 10))
-	plot!(p, Ns, errors; lw=2, mark=:o, c=1, label="Error")
-	plot!(Ns, 0.02(first(Ns) ./ Ns).^2, ls=:dash, lw=2, label=L"O(n^{-2})", c=1)
-	p
-end
-
-# ╔═╡ 52961854-695e-44e7-b8e2-20ed7ff07cda
+# ╔═╡ 23307b35-c76e-487d-906a-18f65b691d79
 md"""
-In general we define convergence for numerical schemes for boundary value problems as follows:
-
-!!! info "Definition: Convergence order for boundary value problems"
-	A numerical scheme approximating a boundary value problem (9)
-	**converges with order $p$** if there exists a constant $C>0$
-	such that
-	```math
-	\max_{j=0,\ldots,N+1} |u(x_j) - u_j| ≤ C \, h^p
-	```
-	provided that the solution $u$ is sufficiently regular.
-"""
-
-# ╔═╡ d9fb073d-042c-4724-834f-bcdb0cc4aec6
-md"""
-### Numerical stability
-
-Let us push the convergence plot from above a little further:
-"""
-
-# ╔═╡ 2fd3f387-b950-462f-a06a-eabd458fe10e
-let
-	Ns = [ round(Int, 5 * 10^k) for k in 2:0.1:5.2 ]
-	errors = Float64[]
-	for N in Ns
-		res_fd = fd_dirichlet(f, L, α, β, N)
-		x = res_fd.x
-		u = res_fd.u
-		error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
-		push!(errors, maximum(error))		
-	end
-	
-	p = plot(; title="Convergence of Dirichlet finite differences",
-			   xaxis=:log, yaxis=:log,
-	           xlabel=L"N", ylabel="Largest global error",
-	           legend=:bottomleft,
-	           xlims=(100, 3e6), ylims=(1e-13, 10))
-	plot!(p, Ns, errors; lw=2, mark=:o, c=1, label="Error")
-	plot!(Ns, 0.002(first(Ns) ./ Ns).^2, ls=:dash, lw=2, label=L"O(N^{-2})", c=1)
-	p
-end
-
-# ╔═╡ 8039250a-c79a-4009-9a53-81307b8e0ace
-md"""
-While initially the convergence thus nicely follows the expected convergence curve, for larger $N$ the convergence degrades and the error starts increasing again.
-
-The underlying problem is related to solving the linear system $\textbf{A} \textbf{u} = \textbf{b}$ in Algorithm 1. Namely, it turns out that the condition number of the system matrix $\mathbf{A}$ grows as $O(N^2) = O(h^{-2})$:
-"""
-
-# ╔═╡ f3819d92-c61a-49b2-a77b-9837cbed0cae
-let
-	Ns = [5, 10, 50, 80, 200, 500, 1000]
-	condition_numbers = [cond(fd_dirichlet(f, L, α, β, N).A) for N in Ns]
-		
-	plot(Ns, condition_numbers; mark=:o, yaxis=:log, xaxis=:log, lw=2, xlabel=L"N", ylabel=L"κ(A)", legend=:topleft, label=L"Condition number of $A$", ylims=(10, 10^6))
-	plot!(Ns, Ns.^2, ls=:dash, lw=2, label=L"O(N^2) = O(h^{-2})")
-end
-
-# ╔═╡ 30b8bac2-7c95-4fee-bbde-b04a36258857
-md"""
-As a result the finer we make the discretisation in an attempt to reduce the error to the reference, the harder it becomes to solve the system $\mathbf{A} \mathbf{u} = \mathbf{b}$.
-
-Eventually this error will be larger than the approximation error of the numerical method, which we have quantified in Theorem 3. The result is, that the overall observed error of the numerical procedure increases again.
-"""
-
-# ╔═╡ 8e1559d4-2bf0-45d3-bac8-02fff3c96b7d
-md"""
-## Optional: Galerkin methods 
+## Galerkin methods 
 
 Let us return to the general heat equation using Dirichlet boundary conditions:
 
@@ -573,12 +692,17 @@ u(0) &= α, \quad u(L) = β
 \right.
 ```
 
-We saw that with finite differences the increasing condition number of the system matrix $\mathbf{A}$ with increasing number of nodal points $N$ effectively puts a bound on the minimal error --- in the above example around an error of $10^{-10}$.
-
+We saw that **with finite differences** the increasing condition number of the system matrix $\mathbf{A}$ as we increase $N$ makes it **impossible to obtain the solution to arbitrary accuracy**.
+In the above example we were unable to obtain a solution
+to higher accuracy than $10^{-10}$, irrespective of what value for $N$ we chose.
 In this section we will develop an alternative approach to solve boundary value problems, which is more general.
-For this let us assume we are given a generic smooth function $\psi(x)$,
+"""
+
+# ╔═╡ 7ae614fb-f2e0-46af-a557-6a378f6553e8
+md"""
+Let us assume we are given some smooth function $\psi(x)$,
 the so-called **test function**,
-for which we will additionally assume that it vanishes at the boundary,
+for which we will additionally assume that it **vanishes at the boundary**,
 i.e. $\psi(0) = \psi(L) = 0$.
 If we multiply the first line of (17) by this function and integrate over the full computational domain $[0, L]$, this yields:
 ```math
@@ -593,9 +717,9 @@ If we multiply the first line of (17) by this function and integrate over the fu
 where we used partial integration in step $(\ast)$ and the property  $\psi(0) = \psi(L) = 0$ in the final step.
 """
 
-# ╔═╡ b179e41d-ab84-4d54-b9b2-d6ad661fe6cb
+# ╔═╡ 962ca311-c2ed-46eb-b043-827ecfb64ac3
 md"""
-Let us define the set of all test functions as
+Let us define the **set of all test functions** as
 ```math
 V_0 = \Big\{ \psi : [0, L] \to \mathbb{R} \ \Big|\ \text{$\psi$ smooth and $\psi(0) = \psi(L) = 0$} \Big\}.
 ```
@@ -612,7 +736,10 @@ u(0) &= α, \quad u(L) = β
 ```
 Equation (19) is known as the **weak form** of the 1D heat equation equation (17)
 and solving it is interesting in its own right:
+"""
 
+# ╔═╡ 05999b01-4a41-480a-9f3a-2e04d97748b3
+md"""
 !!! info "Definition: Weak form and weak solution"
 	If a function $u : [0, L] \to \mathbb{R}$ satisfies
 	```math
@@ -626,19 +753,39 @@ and solving it is interesting in its own right:
 	```
 	for all choices of the test function $\psi$ we call $u$ a **weak solution**
 	of the boundary value problem (17).
+"""
 
+# ╔═╡ 7a86c1db-e5be-4310-951a-4de51bec4e98
+md"""
 The original problem (17) is additionally called the **strong form** of the heat equation BVP and its solution $u$ the **strong solution**.
 
 !!! info "Observation: Strong and weak solutions"
 	If $u$ is a solution to the strong form (17) of a BVP,
 	than it is also a solution to the weak form (19).
-	However, the converse is in general not true.
-
-The weak form (19) might look unusual at first sight and one might wonder why we even consider it, especially since it seems to produce solutions, which do not satisfy (17). However, it turns out that for many contexts in physics and mathematics the weak problem can be considered to more fundamental than the strong form (17).
-For example in the atomistic modelling of materials (17) can lead to unphysical artifacts in models, while (19) does not.
+	However, **not every weak solution as also a strong solution**.
 """
 
-# ╔═╡ aaaa4639-21b9-469d-b3a1-78bd829c7e2f
+# ╔═╡ 79816267-531b-4b99-bdea-1194574dd160
+md"""
+The weak form (19) looks unusual at first sight
+and additionally one might wonder why it is useful,
+since it can produce solutions, which do not satisfy
+the original strong problem (17).
+
+But surprisingly for many problems from physics or engineering
+the situation turns out to be the reverse:
+it turns out that the somewhat "looser" form provided
+by **the weak formulation is actually more physical**. 
+In some cases --- such as the atomistic modelling of materials ---
+using the strong form  can lead to unphysical artifacts,
+which are in fact avoided when using the weak form.
+
+While we do not have time to discuss this further in this course,
+the interested reader is referred to the master course [MATH-500: Error control in scientific modelling](https://teaching.matmat.org/error-control/)
+where some of this is discussed.
+"""
+
+# ╔═╡ bbb839d2-599f-40e2-a1f7-2419d07c96a8
 md"""
 ### Discretisation of the weak form
 
@@ -663,17 +810,23 @@ u(0) &= u(L) = 0.
 \end{aligned}
 \right.
 ```
+"""
 
-One difficulty in this equation is that the condition $\forall \psi \in V_0$ corresponds to an infinite number of constraints to satisfy (as the set $V_0$ has infinitely many members). The first idea is to approximate this condition by satisfying only finitely many constraints.
+# ╔═╡ 43ade623-1b58-4035-a1e5-803911063833
+md"""
+One difficulty in this equation is that the condition $\forall \psi \in V_0$ corresponds to an infinite number of constraints to satisfy (as the set $V_0$ has infinitely many members). One idea is to approximate this condition by satisfying only finitely many constraints.
+"""
 
-To do so we assume that $\psi$ can be written as a linear combination
+# ╔═╡ e6f3450d-6fb7-4c59-a209-ae3587a43bab
+md"""
+To do so we assume that **$\psi$ can be written as a linear combination**
 ```math
 \tag{22}
-\psi(x) = \sum_{i=1}^m ξ_i\, \varphi_i(x)
+\psi(x) = \sum_{i=1}^m ξ_i\, \varphi_i(x),
 ```
-where $φ_1, φ_2, \ldots, φ_m$ is a selection of
+where $φ_1, φ_2, \ldots, φ_m$ are a selection of
 $m$ linearly independent functions from $V_0$,
-i.e. which each satisfy $φ_i(0) = φ_i(L) = 0$.
+i.e. smooth functions which each satisfy $φ_i(0) = φ_i(L) = 0$.
 Inserting (22) into the first line of (21) leads to
 ```math
 \begin{aligned}
@@ -681,18 +834,38 @@ Inserting (22) into the first line of (21) leads to
   &= \sum_{i=1}^m ξ_i \left[ \int_0^L k\,u'(x)\,\varphi_i'(x)  - f(x)\,\varphi_i(x) \,dx\right]
 \end{aligned}
 ```
-One way to satisfy this equation is by requiring the term in the bracket to be zero for all our selected functions $\varphi_i$, that is
+which should be true **independent of the values of $ξ_i$**.
+As a result the above condition can be achieved if and only if
+the term in the **square bracket is zero all our functions $\varphi_i$**,
+that is if
 ```math
 \tag{23}
 \forall i = 1, \ldots, m: \qquad
- \int_0^L k\,u'(x)\,\varphi_i'(x)\,dx = \int_{0}^L f(x)\,\varphi_i(x)\,dx
+\int_0^L k\,u'(x)\,\varphi_i'(x)\,dx = \int_{0}^L f(x)\,\varphi_i(x)\,dx.
 ```
-Since the $\varphi_i$ are linearly independent, this can be shown to be *the only* solution. The values of the constants $ξ_i$ are thus not relevant provided that we satisfy (23) we do not need to consider them any further.
 """
 
-# ╔═╡ eb7c7cde-9805-4475-852c-578d1dbcabb3
+# ╔═╡ c7610b00-7277-46c3-881d-85d417db2e9e
 md"""
-With only a finite number of constraints to satisfy in (21) we will also approximate the solution $u(x)$ as a linear combination of finitely many functions. A natural choices is to employ the same selection of functions that we used for $\psi$ leading to
+Notice, that the condition (23) is independent of the actual
+values taken by the coefficients $\{ξ_i\}_{i=1}^m$.
+Provided that (23) holds we thus do not need to worry about
+determining the values of $\{ξ_i\}_{i=1}^m$.
+In fact in all following development these coefficients
+will play no further role.
+
+With this development we can replace the infinite number of constraints encoded
+by the $\forall \psi \in V_0$ in equation (21) by the approximate **version (23)**,
+which **only involves $m < \infty$ conditions** to satisfy.
+"""
+
+# ╔═╡ 5e7387cc-f9eb-484e-ade7-c844bddeb716
+md"""
+Considering $u(x)$ we make an additional approximation,
+namely that --- similar to $\psi$ --- this function can **also be
+approximated by a linear combination of finitely many functions**.
+Here, for simplicity we employ the same selection of functions,
+that we used for $\psi$ leading to an ansatz
 ```math
 \tag{24}
 u(x) = \sum_{j=1}^m c_j φ_j(x).
@@ -708,12 +881,25 @@ or arranged differently
 \forall i = 1, \ldots, m: \qquad
 \sum_{j=1}^m c_j \int_0^L k\,φ_j'(x)\,φ_i'(x)\,dx = \int_{0}^L f(x)\,\varphi_i(x)\, dx
 ```
+"""
+
+# ╔═╡ e32d65f1-9bf2-4043-811c-d47801d0f85e
+md"""
 Since $φ_j(0) = φ_j(L) = 0$ an immediate consequence is that
 such a $u$ satisfies the boundary condition $u(0) = u(L) = 0$
 independent of the choice of the coefficients $c_j$.
-Solving equation (25) therefore automatically ensures that the second line of the weak problem (21) is solved. Moreover following from our discussion it additionally represents a finite-dimensional approximation to the first line of (21).
-Since (25) essentially encodes the conditions on the numerical solution, it is called:
+Solving equation (25) therefore automatically ensures that the second line of the weak problem (21) is satisfied.
+Additionally this equation satisfies (23)
+--- our approximation to the first line of (21).
 
+In summary a **solution to equation (25)** thus **satisfies** (our approximation to)
+**both conditions required to be a solution
+to the weak problem** (21).
+Equation (25) is thus given a special name:
+"""
+
+# ╔═╡ ef1ad23b-89bc-4b75-9560-4fa4fb96c802
+md"""
 !!! info "Definition: Galerkin conditions"
 	Given a basis $φ_1, φ_2, \ldots, φ_m$
 	of $m$ linearly independent functions
@@ -723,6 +909,7 @@ Since (25) essentially encodes the conditions on the numerical solution, it is c
 	if the coefficients $c_1, c_2, \ldots, c_m$
 	satisfy the **Galerkin conditions**
 	```math
+	\tag{25}
 	\forall i = 1, \ldots, m: \qquad
 	\sum_{j=1}^m c_j \int_0^L k\,φ_j'(x)\,φ_i'(x)\,dx = \int_{0}^L f(x)\,\varphi_i(x)\, dx
 	```
@@ -760,22 +947,28 @@ u(0) &= u(L) = 0,
 i.e. where $k=1$, $L=π$ and $f(x) = x$.
 """
 
-# ╔═╡ 51861556-f6f5-4768-a416-d419cc160018
+# ╔═╡ 4d7ae336-be84-4960-835f-aa81ab91c4e2
 md"""
 For the basis functions $\varphi_j$ we select the sine basis
 ```math
 \varphi_j(x) = \sin(j\,x) \qquad \text{for $j = 1, \ldots, m$}.
 ```
 It is easy to see that all of them satisfy $\varphi_j(0) = \varphi_j(2π) = 0$.
-Using a little algebra the entries of $\mathbf{A}$ and $\mathbf{f}$ in equation (26) as
+With these basis functions
+we can obtain the entries of $\mathbf{A}$ and $\mathbf{f}$
+in equation (26) as
 ```math
 \begin{aligned}
 	A_{ij}
-	&= \int_0^{π} \frac{d}{dx}\big( \sin(i\, x)\big)\, \frac{d}{dx}\big( \sin(j\, x)\big)\, dx \\
+	&= \int_0^{π} \frac{d}{dx}\big[ \sin(i\, x)\big]\, \frac{d}{dx}\big[ \sin(j\, x)\big]\, dx \\
 	&= i\,j \int_0^{π} \cos(i\,x) \cos(j\,x)\,dx = \frac{π\,i^2}{2}\, δ_{ij} = \left\{\begin{array}{ll} \frac{π\,i^2}{2} &i=j \\ 0 & i\neq j\end{array}\right.\\[1em]
 	f_i &= \int_0^{π} x \sin(i\,x) \,dx = \frac{(-1)^{i+1}\, π}{i}
 \end{aligned}
 ```
+"""
+
+# ╔═╡ 27a67eb3-76e5-4e23-a848-7a9e58485721
+md"""
 For example for $m=5$ we find the matrix and vector
 ```math
 \mathbf{A} = \frac{π}{2} \begin{pmatrix}
@@ -790,9 +983,22 @@ For example for $m=5$ we find the matrix and vector
 	1 \\ -\frac12 \\ \frac13 \\ -\frac14 \\ \frac15
 \end{pmatrix}.
 ```
-Since $\mathbf{A}$ is diagonal from this we can directly compute the coefficient vector $\mathbf{c}$ as 
+"""
+
+# ╔═╡ 52716cfc-6dea-44ad-aa96-842332fe607b
+md"""
+Since $\mathbf{A}$ is diagonal we can directly compute
+the coefficient vector $\mathbf{c}$ as 
 ```math
-\mathbf{c} = \begin{pmatrix}
+\mathbf{c} = 
+\begin{pmatrix}
+f_1 / A_{11} \\
+f_2 / A_{22} \\
+f_3 / A_{33} \\
+f_4 / A_{44} \\
+f_5 / A_{55}
+\end{pmatrix}
+= \begin{pmatrix}
 2 \\ -\frac28 \\ \frac2{27} \\ -\frac2{64} \\ \frac2{125}
 \end{pmatrix}
 ```
@@ -831,7 +1037,9 @@ end
 
 # ╔═╡ d0a2133c-47d0-40d5-8508-18bb046d92d1
 md"""
-For different $m$ this looks like:
+Choosing different values for $m$ we obtain:
+- Show reference: $(@bind show_solution CheckBox(default=true))
+- Show $m=10$:    $(@bind show_10 CheckBox(default=true))
 """
 
 # ╔═╡ aa589aa5-1a5c-4782-af66-2509f21ac891
@@ -839,10 +1047,15 @@ let
 	x = range(0, π; length=1000)
 	reference(x) = sine_solution(300, x)
 
-	p = plot(x, reference.(x); lw=2.5, label="Reference (m = 300)", title="Solution")
+	p = plot(title="Solution")
+	if show_solution
+		plot!(p, x, reference.(x); lw=2.5, label="Reference (m = 300)")
+	end
 	q = plot(; yaxis=:log, ylims=(1e-6, 1e-1), xlabel=L"x", title="Error")
 	c = 1
 	for m in [3, 5, 10]
+		m == 10 && !show_10 && continue
+		
 		c += 1
 		plot!(p, x, sine_solution.(m, x); lw=1.5, ls=:dash, label="Solution m=$m", c)
 		
@@ -854,7 +1067,7 @@ let
 end
 
 # ╔═╡ 4fee47fc-077d-4921-8572-7820ab84988e
-md"""We see that already for 3 and 5 $\sin$ functions we are pretty close to a reference solution with $300$ $\sin$ basis functions.
+md"""We see that already for 5 $\sin$ basis functions it becomes visually very hard to see the difference to the reference solution with $300$ basis functions.
 
 Numerically we observe a **quadratic convergence** in a log-log plot:
 """
@@ -874,210 +1087,6 @@ let
 	p = plot(ms, errors, yaxis=:log, xaxis=:log, lw=2, mark=:o, title=L"Convergence in $m$", xlabel=L"m", ylabel="maximal error", label="Error")
 	plot!(p, ms, 1 ./ms.^2, ls=:dash, lw=2, label=L"O(m^2)")
 end
-
-# ╔═╡ 629dec46-72aa-4450-b08f-c3fa9bd50661
-md"""
-### Finite elements
-
-In the context of piecewise linear polynomial interpolation (chapter 5) we already discussed the hat functions. Recall, that given a set of nodes $x_0 < x_1 < \cdots < x_{n}$ the hat functions are
-```math
-H_i(x) = \left\{ \begin{array}{ll}
-\frac{x - x_{i-1}}{x_i - x_{i-1}} & \text{if $i>0$ and $x\in [x_{i-1}, x_i]$}\\
-\frac{x_{i+1} - x}{x_{i+1} - x_{i}} & \text{if $i< n$ and $x\in [x_{i}, x_{i+1}]$}\\
-0 & \text{otherwise}
-\end{array}\right.
-```
-for $i = 0, \ldots, n$.
-In the context of Galerkin approximations these hat functions turn out to be a very useful (and widely applicable) choice for the basis functions $φ_i = H_{i}(x)$. 
-
-For our case, the weak form of the Dirichlet heat equation (21), a natural set of nodes is $0 = x_0 < x_1 < \cdots < x_{n} = L$ and for simplicity we will further assume the nodes to be equispaced with spacing $h = \frac{L}{n} = x_{i+1} - x_i$. In this setting the hat functions can be expressed as
-```math
-\tag{28}
-H_i(x) = \left\{ \begin{array}{ll}
-\frac{x - x_{i-1}}{h} & \text{if $i>0$ and $x\in [x_{i-1}, x_i]$}\\
-\frac{x_{i+1} - x}{h} & \text{if $i<n$ and $x\in [x_{i}, x_{i+1}]$}\\
-0 & \text{otherwise}
-\end{array}\right.
-```
-for $i = 0, \ldots, n$.
-Note, that since the hat functions $φ_i = H_{i}(x)$ satisfy the cardinality property $H_i(x_j) = δ_{ij}$ this implies for the expansion (24)
-```math
-\tag{29}
-u(x) = \sum_{j=1}^{m} c_j φ_j(x) = \sum_{i=\textcolor{red}{1}}^{\textcolor{red}{n-1}} u_i\, H_i(x)
-```
-where $u_i = u(x_i)$, i.e. the numerical solution at the nodal points.
-Note that the last sum in (29) is deliberately constructed to omit
-the hat functions $H_0$ and $H_n$,
-since their associated nodal point is either $0 = x_0$ or $L = x_n$.
-As a consequence these two functions are unable to satisfy the condition $0 = φ_j(0) = φ_j(L)$ underlying $V_0$.
-"""
-
-# ╔═╡ 3e1bacca-5393-446e-a590-4ac291db4373
-md"""
-The importance of the hat functions for Galerkin methods stems from the fact that each hat functions $H_i(x)$ is only non-zero in an interval $[x_{i-1}, x_{i+1}]$. Instead of considering integrals over the full domain $[0, L]$ when evaluating the  Galerkin conditions (26) one only needs to compute integrations over a few subintervals.
-
-As an example consider the evaluation of the elements of the matrix $\mathbf{A} \in \mathbb{R}^{m\times m} = \mathbb{R}^{(n-1) \times (n-1)}$. 
-First note that $H'_{i}$ is at most non-zero over the same interval as $H_{i}$,
-i.e. $[x_{i-1}, x_{i+1}]$. As a result the product $H'_{i} H'_{j}$ can only be non-zero in the intersection of $[x_{i-1}, x_{i+1}]$ and $[x_{j-1}, x_{j+1}]$.
-This intersection is empty whenever $i+1 < j-1 \Leftrightarrow i < j-2$ or $i > j+2$. Moreover it contains only a single element for $i = j-2$ and $i = j+2$.
-As a consequence
-```math
-A_{i,i+d} = \int_0^L k\,H_{i}'(x)\,H_{i+d}'(x)\,dx = 0
-\qquad \text{if $d ≥ 2$}.
-```
-where $i = 1, \ldots, n-3$ and similarly by symmetry
-```math
-A_{i+d,i} = \int_0^L k\,H_{i+d}'(x)\,H_{i}'(x)\,dx = 0
-\qquad \text{if $d ≥ 2$}.
-```
-again for $i = 1, \ldots, n-3$
-
-"""
-
-# ╔═╡ fd3f3e4a-4002-4454-9e25-0d719f681316
-md"""
-Now we consider the remaining three cases, namely
-```math
-\begin{aligned}
-A_{ii} &= \int_0^L k\,H_{i}'(x)\,H_{i}'(x)\,dx\\
-	    &= \int_{x_{i-1}}^{x_{i}} k\,  H_{i}'(x)\,H_{i}'(x)\,dx
-			+ \int_{x_{i}}^{x_{i+1}} k\,  H_{i}'(x)\,H_{i}'(x)\,dx \\
-	    &= \int_{x_{i-1}}^{x_{i}} k\cdot  \frac{1}{h} \cdot\frac{1}{h}\,dx
-			+ \int_{x_{i}}^{x_{i+1}} k\cdot \frac{-1}{h}\cdot\frac{-1}{h}\,dx \\ 
-		&= \frac{k}{h^2} \left[ \int_{x_{i-1}}^{x_{i}} 1 \, dx
-			+ \int_{x_{i}}^{x_{i+1}} 1 \, dx
-		\right] \\
-		&= \frac{2k}{h}
-\end{aligned}
-```
-for $i=1,\ldots,n-1$ as well as
-```math
-\begin{aligned}
-A_{i+1,i} =
-A_{i,i+1} &= \int_0^L k\,H_{i}'(x)\,H_{i+1}'(x)\,dx\\
-	    &= \int_{x_{i}}^{x_{i+1}} k\, H_{i}'(x)\,H_{i+1}'(x)\,dx\\
-		&= \int_{x_{i}}^{x_{i+1}} k\cdot \frac{-1}{h} \cdot \,\frac{1}{h}\,dx\\
-		&= -\frac{k}{h}.
-\end{aligned}
-```
-for $i=1,\ldots,n-2$. We recover a tridiagonal matrix
-```math
-\tag{30}
-\mathbf{A} = \frac{k}{h} \begin{pmatrix}
-2  & -1 \\
--1 & 2 & -1\\
-   & -1 & 2 & \ddots \\
-   &  &  \ddots & \ddots & -1 \\
-&&& -1 & 2
-\end{pmatrix} \in \mathbb{R}^{(n-1)\times(n-1)}
-```
-"""
-
-# ╔═╡ 18b4a335-42a4-4f11-a399-85126d6b24d2
-md"""
-Finally we consider the elements of the vector $\mathbf{f}$. For this need to perform the two integrals
-```math
-f_i  = \int_{0}^{L} f(x)\,H_i(x)\,dx
-= \int_{x_{i-1}}^{x_i} f(x)\,H_i(x)\,dx + \int_{x_i}^{x_{i+1}} f(x)\,H_i(x)\,dx
-```
-for $i = 1, \ldots, n-1$. One can show that to a very good approximation one can replace $f(x)$ by the average value of the function over the respective integrals,
-i.e.
-```math
-\begin{aligned}
-\int_{x_{i-1}}^{x_i} f(x)\,H_i(x)\,dx &≈  \frac{f(x_{i-1}) + f(x_{i})}{2} \int_{x_{i-1}}^{x_i} H_i(x)\,dx = \frac{f(x_{i-1}) + f(x_{i})}{2} \cdot \frac{h}{2} \\
-\int_{x_{i}}^{x_{i+1}} f(x)\,H_i(x)\,dx &≈  \frac{f(x_i) + f(x_{i+1})}{2}\int_{x_{i}}^{x_{i+1}}  H_i(x)\,dx = \frac{f(x_i) + f(x_{i+1})}{2} \cdot \frac{h}{2}.
-\end{aligned}
-```
-In particular this approximation converges quadratically as $h\to0$,
-which turns out to be exactly the order of approximation of the finite element method itself. Therefore putting in additional efforts to compute these integrals more accurately would not even improve the accuracy of our final result.
-
-Putting these developments tothere we obtain for $i=1,\ldots,n-1$ that
-```math
-\tag{31}
-\begin{aligned}
-f_i &= \frac{f(x_i) + f(x_{i-1})}{2} \frac{h}{2   }
-+ \frac{f(x_{i+1}) + f(x_{i})}{2} \frac{h}{2}  \\
-&= \frac{h}{4} \Big( f(x_{i-1}) + 2f(x_i) + f(x_{i+1}) \Big).
-\end{aligned}
-```
-
-From $\mathbf{A}$ and $\mathbf{f}$ the coefficients $\mathbf{u} = (u_1, u_2, \ldots, u_{n-1})^T$ in the expansion (29) is than obtained by solving the linear system
-```math
-\mathbf{A} \mathbf{u} = \mathbf{f}.
-```
-Notably, due to the cardinality property of the hat functions $u_i = u(x_i)$, i.e. these coefficients are directly the numerical approximation to the solution $u(x)$ at the nodal points.
-
-An implementation of this approch is given below:
-"""
-
-# ╔═╡ 563e2c1f-3c51-4be4-9693-5a2cfb8e6eda
-function heat_equation_1d_fem(f, k, L, n)
-	# f:  Function describing the external heat source
-	# k:  thermal conductivity
-	# L:  Length of the metal rod
-	# N:  Number of nodal points for the finite element scheme
-	
-	h = L / n                 # Step size
-	x = [i * h for i in 0:n]  # Nodal points (x₀, x₁, ..., xₙ)
-	x_inner = x[2:n]          # Inner nodal points (x₁, ..., xₙ₋₁)
-	
-
-	# Build A and f: Note that these are a (n-1) × (n-1) matrix
-	# respectively a vector of length (n-1)
-	A = k/h * SymTridiagonal(2ones(n-1), -ones(n-2))
-	f = h/4 * [f(x[i-1]) + 2f(x[i]) + f(x[i+1])
-	           for i in 2:n]   # Skip first nodal point, i.e. x[1] = x₀
-
-	u = A \ f
-	(; x=x_inner, u)
-end
-
-# ╔═╡ d1115511-a798-47e7-aeea-fc87ad77d2f7
-md"""
-Let us return to the example we considered with the sine basis, i.e.
-```math
-\left\{
-\begin{aligned}
-- \frac{\partial^2 u}{\partial x^2}(x) &= x \qquad x \in (0, π)\\
-u(0) &= u(L) = 0,
-\end{aligned}
-\right.
-```
-i.e. the Dirichlet heat equation (20) with $k=1$, $L=π$ and $f(x) = x$.
-
-As a reference solution we consider the solution using the sine basis with $m=300$, which we know to be very accurate for this problem:
-"""
-
-# ╔═╡ 72b37ada-df37-4bfa-a2da-ae56026625dd
-reference(x) = sine_solution(300, x)
-
-# ╔═╡ 4042ff5d-3da6-418f-816b-905318e10f39
-md"""
-- `n = ` $(@bind n Slider(4:2:50; show_value=true, default=6))
-"""
-
-# ╔═╡ 1c8966d7-8a12-4b25-9c51-93dea0faeb14
-let
-	# Parameters of the problem
-	f(x) = x
-	k = 1
-	L = π
-
-	# Plot the reference
-	p = plot(reference; lw=2.5, label="Reference", title="Solution", xlims=(0, L))
-
-	# Compute FEM solution and plot it
-	result = heat_equation_1d_fem(f, k, L, n)
-	plot!(p, result.x, result.u; lw=1.5, ls=:dash, label="Solution n=$n", mark=:o)
-end
-
-# ╔═╡ 8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
-md"""
-The finite element method is one of the most widely employed approaches in science and engineering to solve differential equations. With this short instroduction we only scratched the surface.
-
-More information on the approach can be found for example in
-[chapter 10.6](https://tobydriscoll.net/fnc-julia/bvp/galerkin.html) of Driscoll, Brown: *Fundamentals of Numerical Computation*.
-"""
 
 # ╔═╡ 3348115a-2fd4-4935-9dba-b85d9e0c95f5
 let
@@ -2304,11 +2313,20 @@ version = "1.4.1+2"
 # ╟─206ae56c-fcfa-4d6f-93e4-30f03dee8f90
 # ╟─8c818dad-6789-4771-9eab-4e4ba78f5612
 # ╟─cf1055db-a773-4dc2-bd66-0ae840c656a4
-# ╠═c26a4a32-1776-4cd3-99c9-c7311454745b
-# ╟─d06e11da-6ec0-485e-ae16-0d6d59f3685a
-# ╟─11d0a713-a4d8-472f-ad42-8968d2151783
+# ╟─93b28014-c767-4f40-b27c-4646f63faa89
+# ╟─f1b662de-b4cf-4a73-9c00-580a2ea8a428
+# ╟─b5c3ed4b-3c4d-40d5-9171-94187416b363
+# ╟─226a30be-f721-4f3d-8d49-abddca22f661
+# ╟─59f11469-c86e-4dc4-9eed-039101aaa058
+# ╟─3e10cf8e-d5aa-4b3e-a7be-12ccdc2f3cf7
+# ╟─7fd851e6-3180-4008-a4c0-0e08edae9954
 # ╟─52c7ce42-152d-40fd-a910-78f755fcae47
-# ╟─a0314bf5-8792-45cf-9f4f-4785dc465160
+# ╟─82788dfd-3462-4f8e-b0c8-9e196dac23a9
+# ╟─d43ecff3-89a3-4edd-95c2-7262e317ce29
+# ╟─1fb53091-89c8-4f70-ab4b-ca2371b830b2
+# ╟─129d2e86-49e6-4c5f-aca1-0cb45d923294
+# ╟─cbcd1b1e-7755-4177-b52a-f361ee025e01
+# ╟─c21502ce-777f-491a-a536-ff499fc172fc
 # ╟─c2bb42b3-4fee-4ad4-84c0-06f58c7f7665
 # ╟─e38a1d5b-a35c-4942-aeb2-0e91668ac8f3
 # ╠═3bc63106-3d1c-4b4e-a6a6-682e09475cb4
@@ -2322,43 +2340,43 @@ version = "1.4.1+2"
 # ╠═474dee17-627a-49b1-84e8-d692346d8aa0
 # ╟─0bb8239c-22c0-4420-8ae7-59c5c00436a2
 # ╟─814ac12b-5ed7-4512-b053-fbe729b90ce6
-# ╟─4c2a8796-f5c0-44c8-89b8-ed4ed8425a2f
-# ╟─a47d0e8c-0a72-4b9d-a126-3b93c7700e04
-# ╟─72caef09-8cdf-42be-92e4-07e0d84d8651
-# ╠═88c12d8e-58b4-4a68-88ea-e75a50f1e071
+# ╠═7a647ffe-000e-4bb7-a348-033cd75b1369
+# ╟─52961854-695e-44e7-b8e2-20ed7ff07cda
+# ╟─d9fb073d-042c-4724-834f-bcdb0cc4aec6
+# ╟─2fd3f387-b950-462f-a06a-eabd458fe10e
+# ╟─8039250a-c79a-4009-9a53-81307b8e0ace
+# ╟─f3819d92-c61a-49b2-a77b-9837cbed0cae
+# ╟─30b8bac2-7c95-4fee-bbde-b04a36258857
+# ╟─e35398a8-d8e5-4b19-b5a9-2c7ab6b497e9
+# ╟─e70af7c2-6df6-4724-8a82-7f3fc5c1fadf
+# ╟─7fc0e2c7-fdf5-458a-9c54-63f906cb63ad
 # ╟─1f3b6898-3ff1-40b5-bcc2-97db023fc0e3
 # ╟─5fa3718d-d58c-492f-9e04-1bca93d8b9fd
 # ╟─b811d679-e80b-41e1-8e85-dd81d01f00a7
 # ╟─f472502a-678f-479a-ab18-9ba0af7cde2f
-# ╠═06265b91-1acc-4585-96a1-f553b3b8be3f
-# ╟─52961854-695e-44e7-b8e2-20ed7ff07cda
-# ╟─d9fb073d-042c-4724-834f-bcdb0cc4aec6
-# ╠═2fd3f387-b950-462f-a06a-eabd458fe10e
-# ╟─8039250a-c79a-4009-9a53-81307b8e0ace
-# ╠═f3819d92-c61a-49b2-a77b-9837cbed0cae
-# ╟─30b8bac2-7c95-4fee-bbde-b04a36258857
-# ╟─8e1559d4-2bf0-45d3-bac8-02fff3c96b7d
-# ╟─b179e41d-ab84-4d54-b9b2-d6ad661fe6cb
-# ╟─aaaa4639-21b9-469d-b3a1-78bd829c7e2f
-# ╟─eb7c7cde-9805-4475-852c-578d1dbcabb3
+# ╟─23307b35-c76e-487d-906a-18f65b691d79
+# ╟─7ae614fb-f2e0-46af-a557-6a378f6553e8
+# ╟─962ca311-c2ed-46eb-b043-827ecfb64ac3
+# ╟─05999b01-4a41-480a-9f3a-2e04d97748b3
+# ╟─7a86c1db-e5be-4310-951a-4de51bec4e98
+# ╟─79816267-531b-4b99-bdea-1194574dd160
+# ╟─bbb839d2-599f-40e2-a1f7-2419d07c96a8
+# ╟─43ade623-1b58-4035-a1e5-803911063833
+# ╟─e6f3450d-6fb7-4c59-a209-ae3587a43bab
+# ╟─c7610b00-7277-46c3-881d-85d417db2e9e
+# ╟─5e7387cc-f9eb-484e-ade7-c844bddeb716
+# ╟─e32d65f1-9bf2-4043-811c-d47801d0f85e
+# ╟─ef1ad23b-89bc-4b75-9560-4fa4fb96c802
 # ╟─fcd48a38-eca2-44d9-a32e-9dd65c58fb89
-# ╟─51861556-f6f5-4768-a416-d419cc160018
+# ╟─4d7ae336-be84-4960-835f-aa81ab91c4e2
+# ╟─27a67eb3-76e5-4e23-a848-7a9e58485721
+# ╟─52716cfc-6dea-44ad-aa96-842332fe607b
 # ╟─dd44672f-b793-449a-8239-b5b2e1c5ef35
 # ╠═a3705c5f-b833-4594-8ad3-c505f08660e7
 # ╟─d0a2133c-47d0-40d5-8508-18bb046d92d1
 # ╟─aa589aa5-1a5c-4782-af66-2509f21ac891
 # ╟─4fee47fc-077d-4921-8572-7820ab84988e
 # ╟─1d55c98e-4ed9-4ac4-a847-b18432483472
-# ╟─629dec46-72aa-4450-b08f-c3fa9bd50661
-# ╟─3e1bacca-5393-446e-a590-4ac291db4373
-# ╟─fd3f3e4a-4002-4454-9e25-0d719f681316
-# ╟─18b4a335-42a4-4f11-a399-85126d6b24d2
-# ╠═563e2c1f-3c51-4be4-9693-5a2cfb8e6eda
-# ╟─d1115511-a798-47e7-aeea-fc87ad77d2f7
-# ╠═72b37ada-df37-4bfa-a2da-ae56026625dd
-# ╟─4042ff5d-3da6-418f-816b-905318e10f39
-# ╠═1c8966d7-8a12-4b25-9c51-93dea0faeb14
-# ╟─8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
 # ╟─3348115a-2fd4-4935-9dba-b85d9e0c95f5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
