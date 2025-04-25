@@ -24,6 +24,7 @@ begin
 	using Plots
 	using LaTeXStrings
 	using HypertextLiteral
+	using Printf
 end
 
 # ╔═╡ 34beda8f-7e5f-42eb-b32c-73cfc724062e
@@ -35,18 +36,54 @@ md"""
 # ╔═╡ 13298dc4-9800-476d-9474-182359a7671b
 TableOfContents()
 
-# ╔═╡ 377d9d74-2826-4c53-bc9a-8bfe5a087a84
+# ╔═╡ a138fb39-aae0-41b4-bd7b-d2f7eaad7a53
 md"""
 # Eigenvalue problems
 
-In the previous notebooks we already noted a connection between the eigenspectrum of the iteration matrix and the convergence properties of fixed-point problems or the convergence properties of solving linear systems. 
+Recall that the eigenpairs of a matrix $A$ are the pairs $(λ_i, \mathbf{v}_i)$
+of eigenvalues $λ_i$ and eigenvectors $\mathbf{v}_i$ such that
+```math
+\mathbf{A} \mathbf{v}_i = λ_i \mathbf{v}_i.
+```
+Geometrically speaking the eigenvectors provide special directions in space along which forming the matrix-vector-product $\mathbf{A}\mathbf{v}_i$ is particularly simple, namely it just *scales* the vector $\mathbf{v}_i$ by a number.
 
+But more generally if $\mathbf x$ is an arbitrary vector
+and if for simplicity we assume $\mathbf{A}$ to be symmetric,
+then we find
+```math
+\| \mathbf A \mathbf x \| \leq \| \mathbf A \| \, \| \mathbf x \| \leq 
+\sqrt{λ_\text{max}(\mathbf A^T \mathbf A)} \, \| \mathbf x \|
+= λ_\text{max}(\mathbf A) \, \| \mathbf x \|
+```
+where we used the inequalities introduced at the end of  [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html).
+We note that the **largest eigenvalue of $\mathbf A$**
+provides a **bound to the action of $\mathbf{A}$**.
+"""
+
+# ╔═╡ a702d4b6-e70c-417d-ac98-92c534d52770
+md"""
+This may sound technical, but as **matrices are common
+in physics and engineering**
+and since their **eigenpairs characterise the action of these matrices**,
+the computation of
+eigenpairs often carris a **physical interpretation**.
+
+For example, in the classical mechanics of rotating objects, the eigenvectors of the **[Moment of inertia](https://en.wikipedia.org/wiki/Moment_of_inertia)** tensor are the **principle axes** along which an object spins without coupling to other rotational degrees of freedom.
+
+In engineering the **eigenvalues of the Hessian matrix (the Laplacian)**
+of an object's total energy describe the **resonance frequences**.
+That is the frequencies at which the object best absorbs energy from an outside excitation. When these frequencies coincide
+with the motion of humans or cars this can lead to a [Resonance disaster](https://en.wikipedia.org/wiki/Mechanical_resonance#Resonance_disaster), e.g. the famous [Tacoma Narrows Bridge Collapse](https://en.wikipedia.org/wiki/Tacoma_Narrows_Bridge_(1940)#Collapse) or the [Millenium Bridge Lateral Excitation Problem](https://en.wikipedia.org/wiki/Millennium_Bridge,_London#Resonance)).
+Analysing the eigenfrequencies of bridges is nowadays required as part of the procedure to obtain the permissons for construction.
+"""
+
+# ╔═╡ 73889935-2e4c-4a15-a281-b155cf1ca1c9
+md"""
 In this notebook we will discuss some simple iterative methods for actually computing  eigenpairs. However, the topic is vast and we will only scratch the surface. 
 Readers interested in a more in-depth treatment
 of eigenvalue problems are encouraged to attend the master class
-[MATH-500: Error control in scientific modelling](https://staging-edu.epfl.ch/coursebook/en/error-control-in-scientific-modelling-MATH-500).
-
-A more comprehensive treatment of the topic can also be found in the book [Numerical Methods for Large Eigenvalue Problems](https://epubs.siam.org/doi/book/10.1137/1.9781611970739) by Youssef Saad as well as the [Lecture notes on Large Scale Eigenvalue Problems](https://people.inf.ethz.ch/arbenz/ewp/Lnotes/lsevp.pdf) by Peter Arbenz.
+[MATH-500: Error control in scientific modelling](https://teaching.matmat.org/error-control/).
+Some recommended further reading can also be found in the book [Numerical Methods for Large Eigenvalue Problems](https://epubs.siam.org/doi/book/10.1137/1.9781611970739) by Youssef Saad as well as the [Lecture notes on Large Scale Eigenvalue Problems](https://people.inf.ethz.ch/arbenz/ewp/Lnotes/lsevp.pdf) by Peter Arbenz.
 """
 
 # ╔═╡ 71d74b6a-96b2-4855-b20f-59b00c8f560b
@@ -75,7 +112,7 @@ But if we appy many times we start to see something ...
 """
 
 # ╔═╡ 5a4038ac-1905-42e5-88ee-ced49c5375ad
-@bind dummy Button("Regenerate random matrix and rerun experiment")
+@bind dummy Button("Regenerate random vector and rerun experiment")
 
 # ╔═╡ 0dabc016-9cb8-4d1b-bd44-fb9493b8cf28
 begin
@@ -91,33 +128,40 @@ A * x
 
 # ╔═╡ 272e7bce-e05e-412f-b2f5-2742d33d0b6f
 begin
+	history = [x]
 	for j in 1:6
 		x = A * x
+		push!(history, x)
+		@printf "Iteration %i:  x = [%12.4f, %12.4f]\n" j x[1] x[2]
 	end
 	maxerror = maximum(abs, (x - A * x))
 	@show maxerror
-	[x A * x]
-end
+end;
 
-# ╔═╡ 076bbe2b-130a-44e5-9218-6fdcc1998cf5
-TODO("Graphical visualisation")
+# ╔═╡ 2dbe6cbf-6b27-49c1-b28c-e03a9b11e09d
+let
+	l = norm(history[1])	
+	p = plot(xlims=(-l, l), ylims=(-l, l), legend=:topleft)
+	for (i, x) in enumerate(history)
+		plot!([0, x[1]], [0, x[2]], arrow=true, label="Iteration $(i-1)", lw=2,
+			  colour=cgrad(:speed)[i/length(history)])
+	end
+
+	ev = [0.5547, -0.83205]
+	plot!([-3ev[1], 3ev[1]], [3ev[2], -3ev[2]], ls=:dash, lw=1.5, c=:grey, label="final direction")
+	p
+end
 
 # ╔═╡ db0c875b-9955-4bc1-bdb1-ec2e1a44942d
 md"""Note how the iterations stabilise, i.e. that $\textbf{x}$ and $\textbf{A} \textbf{x}$ start to be alike. In other words we seem to achieve $\mathbf{A} \mathbf{x} = \mathbf{x}$, which is nothing else than saying that $\mathbf{x}$ is an eigenvector of $\mathbf{A}$ with eigenvalue $1$.
 """
 
-# ╔═╡ 4d1eb1b1-7634-4f38-a564-98f64923e377
-TODO(md"Warning box about eigenvalue ordering: Note explicitly the order of Julia and the orderings we use here. Note that we use different eigenvalue orderings depending on the algorithm which is discussed and the context that one focuses on. Note in partiuclar that $λ_1$ and $λ_2$ throughout these notes may mean different things !")
-
 # ╔═╡ 73c62d23-ac2a-48be-b3c7-0d51ffce773c
 md"""
-Note, that in this developent we have cheated a little, namely we allowed ourself to 
-normalise the columns (the `M = M ./ sum(M; dims=1)` above).
-
 Let us understand what happened in this example in detail now. We consider the case $\mathbf{A} \in \mathbb{R}^{n \times n}$ diagonalisable and let further
 ```math
 \tag{1}
-|λ_1| > |λ_2| ≥ |λ_3| ≥ \cdots ≥ |λ_n|
+|λ_1| ≤ |λ_2| ≤ |λ_3| ≤ \cdots ≤ |λ_{n-1}| \textcolor{red}{<} |λ_n|
 ```
 be its eigenvalues with corresponding eigenvectors $\mathbf v_1$, $\mathbf v_2$, $\ldots, \mathbf v_n$,
 which we collect column-wise in a unitary matrix $\mathbf{V}$, i.e.
@@ -126,7 +170,7 @@ which we collect column-wise in a unitary matrix $\mathbf{V}$, i.e.
 				\downarrow & \downarrow & \cdots & \downarrow
              \end{pmatrix}
 ```
-Note that $|λ_1| > |λ_2|$, such that $λ_1$ is non-degenerate and the absolutely largest eigenvalue. We call it the **dominant eigenvalue** of $\mathbf{A}$.
+Note that $|λ_{n-1}| < |λ_n|$, such that $λ_n$ is non-degenerate and the absolutely largest eigenvalue. We call it the **dominant eigenvalue** of $\mathbf{A}$.
 If $k > 0$ is a positive integer, then we have
 ```math
 \mathbf{A}^k = \left(\mathbf{V} \, \mathbf{D}\, \mathbf{V}^{-1}\right)^k = \mathbf{V} \, \mathbf{D}^k \,\mathbf{V}^{-1} 
@@ -142,8 +186,8 @@ Notably this implies $\mathbf z = \mathbf{V}^{-1} \mathbf{x}^{(1)}$.
 
 # ╔═╡ 16d6559c-977b-4fd9-aecb-2b6f61290f04
 md"""
-We now consider applying $\mathbf{A}$ a $k$ number of times to $\mathbf{x}^{(1)}$,
-which yields
+Consider applying $\mathbf{A}$ a $k$ number of times to $\mathbf{x}^{(1)}$.
+This yields
 ```math
 \tag{2}
 \begin{aligned}
@@ -153,51 +197,131 @@ which yields
 \vdots\\
 λ_n^k z_n
 \end{pmatrix} \\ 
-&= λ_1^k \left( z_1 \mathbf v_1 + \left( \frac{λ_2}{λ_1} \right)^k z_2 \mathbf v_2 + \cdots + \left( \frac{λ_n}{λ_1} \right)^k z_n \, \mathbf v_n   \right).
+&= λ_n^k \left( \left( \frac{λ_1}{λ_n} \right)^k z_1 \mathbf v_1 + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^k z_{n-1} \, \mathbf v_{n-1} + z_n \mathbf v_{n}   \right).
 \end{aligned}
 ```
-Therefore if $z_1 \neq 0$ then
+If $z_n \neq 0$ then
 ```math
 \tag{3}
-\left\| \frac{\mathbf{A}^k \mathbf{x}^{(1)}}{λ_1^k} - z_1 \textbf v_1 \right\| ≤ 
-\left|\frac{λ_2}{λ_1}\right|^k \, |z_2| \, \|\textbf v_2\| +
+\left\| \frac{\mathbf{A}^k \mathbf{x}^{(1)}}{λ_n^k} - z_n \textbf v_n \right\| ≤ 
+\left|\frac{λ_1}{λ_n}\right|^k \, |z_1| \, \|\textbf v_1\| +
 \cdots
-+ \left|\frac{λ_n}{λ_1}\right|^k \, |z_n| \, \|\textbf v_n\|
++ \left|\frac{λ_{n-1}}{λ_n}\right|^k \, |z_{n-1}| \, \|\textbf v_{n-1}\|
 ```
-Now, each of the terms $\left|\frac{λ_j}{λ_1}\right|^k$
-for $j = 2, \ldots, n$ goes to zero for $k \to \infty$ due to the
-descending eigenvalue ordering of Equation (1).
+Now, each of the terms $\left|\frac{λ_j}{λ_n}\right|^k$
+for $j = 1, \ldots, {n-1}$ goes to zero for $k \to \infty$ due to the
+ascending eigenvalue ordering of Equation (1).
 Therefore overall
 ```math
-\left\| \frac{\mathbf{A}^k \mathbf{x}^{(1)}}{λ_1^k} - z_1 \textbf v_1 \right\|
+\left\| \frac{\mathbf{A}^k \mathbf{x}^{(1)}}{λ_n^k} - z_n \textbf v_n \right\|
 \to 0 \qquad \text{as $k \to \infty$}.
 ```
-In other words $\frac{1}{λ_1^k} \mathbf{A}^k \mathbf{x}^{(1)}$ eventually becomes a multiple of the eigenvector associated with the dominant eigenvalue.
+In other words $\frac{1}{λ_n^k} \mathbf{A}^k \mathbf{x}^{(1)}$ **eventually becomes a multiple of the eigenvector** associated with the dominant eigenvalue.
 """
 
-# ╔═╡ 139ad60c-e04f-4dd6-b18c-a6de140a0154
-TODO(md"
-First show that generalising to a 2x2 matrix without the rescaling trick fails because the entries in the iterated vector $x$ get larger and larger.
+# ╔═╡ 7fc2ff92-bd21-498e-8e1e-4e8a18355501
+md"""
+!!! danger "Conventions of eigenpair ordering"
+	In the literature as well as across linear algebra codes
+	there are multiple conventions regarding the ordering
+	of eigenvalues. E.g. whether eigenvalues are ordered from
+	smallest to largest, from largest to smallest, whether
+	one considers the absolute value of the eigenvalues or
+	the signed values etc.
+	Wherever this is possible and makes sense we will employ the
+	ordering
+	```math
+	|λ_1| ≤ |λ_2| ≤ |λ_3| ≤ \cdots ≤ |λ_n|
+	```
+	i.e. that eigenvalues increase in magnitude,
+	but their signs may differ.
+"""
 
-Then suggests to rescale the entries somehow, one natural idea is to simply use the largest by magnitude entry. Show that this fixes the issue.
-
-Then motivate why β is a good estimate for the eigenvalue, show the algorithm, show its convergence and then show its convergence proof.
-")
-
-# ╔═╡ 1f512d18-1f9c-4730-9676-ca333a7531de
+# ╔═╡ cd72b974-37ab-40ad-b9a6-e930efa3e767
 md"""
 ### Power iteration algorithm
+Let's try applying our idea from the earlier section to the matrix
+"""
 
-In order to turn this idea into an algorithm there are two aspects missing:
--   $λ_1^k$ becomes either extremely small (for $λ_1 < 1$) or extremely large (for $λ_1 > 1$) if $k \to \infty$. As a result representing the matrix entries of $\mathbf A^k \mathbf{x}$ and performing the associated matrix-vector products numerically accurately in finite-precision floating-point arithmetic is difficult. Some form of *normalisation* at each step of our iteration techinque is thus required.
-- For the normalisation we cannot simply divide by $λ_1$ itself, since this eigenvalue is unknown to us.
+# ╔═╡ a3377f9f-7fba-4e6b-b014-e85de15ca3f0
+md"""
+- `λₙ = ` $(@bind λₙ Slider([0.2, 1.0, 5.0, 10.0]; default=5.0, show_value=true))
+"""
 
-But other choices of normalisation exist. In this case we will take the infinity norm:
+# ╔═╡ 612948f2-abd5-4350-9327-bbfa51cebc57
+B = [0.1 5.0;
+	 0.0 λₙ]
+
+# ╔═╡ bfefdb2f-f42a-4867-9a5e-94d22226645b
+md"""which has eigenvalues $0.1$ and `λₙ = ` $λₙ. The latter is the dominant one, which can further be changed by this slider:""" 
+
+# ╔═╡ 1e461d1e-bcc7-4c9d-8398-f87a51311fdd
+md"We again run 6 subsequent applications of $\mathbf B$ and hope the iterations to stabilise:"
+
+# ╔═╡ d4b22b38-04f7-44a7-834b-1bdbad64182d
+let
+	x = randn(2)
+	for j in 1:6
+		x = B * x
+		@printf "Iteration %i:  x = [%12.4f, %12.4f]\n" j x[1] x[2]
+	end
+end;
+
+# ╔═╡ 56352bf0-5837-4c38-89c1-62a940e80b3c
+md"""
+But this time this does not work ... unless `λₙ` happens to be 1.0. 
+
+- This can be understood looking at equation (2): if $λ_n > 1.0$,
+  then $λ_n^k$ becomes extremely large, such that $\mathbf{A}^k \mathbf{x}^{(1)}
+  ≈ λ_n^k z_n \mathbf v^k$, which grows significantly from one iteration to the next,
+  such that no stabilisation is achieved.
+  Similarly if $λ_n < 1.0$ then as $k\to \infty$ the $λ_n^k$ becomes smaller
+  and smaller.
+- Apart from not converging, this also poses difficulties from a numerical point of view, since accurately representing the vector entries of $\mathbf A^k \mathbf{x}$ and performing the associated matrix-vector products becomes more and more difficult the larger the range of numbers that have to be represented.
+
+
+Naively one could take a look at (3) and just **normalise in each iteration** by dividing by $λ_n$. And indeed this works:
+"""
+
+# ╔═╡ 60bbeaee-dc3a-4c44-b016-02d8b1b5623b
+let
+	x = randn(2)
+	for j in 1:6
+		x = x / λₙ   # Normalise
+		x = B * x
+		@printf "Iteration %i:  x = [%12.4f, %12.4f]\n" j x[1] x[2]
+	end
+end;
+
+# ╔═╡ b728388d-e6e4-475a-adce-149b2b53a1d4
+md"""
+The problem here is that for general problems **we don't know $λ_n$**,
+so we cannot use it for normalisation.
+Fortunately it turns out, however, that pretty much any normalisation of $\mathbf x$ works. For example we can use the infinity norm:
 ```math
 \|x\|_\infty = \max_{i=1,\ldots n} |x_i|,
 ```
 which simply selects the largest absolute entry of the vector.
-Based on this idea we obtain the algorithm
+Again this works as expected:
+"""
+
+# ╔═╡ 2425ae53-d861-47f7-9f86-750cf4f363c1
+let
+	x = randn(2)
+	for j in 1:6
+		x = x / maximum(abs.(x))  # Normalise 
+		x = B * x
+		@printf "Iteration %i:  x = [%12.4f, %12.4f]\n" j x[1] x[2]
+	end
+	@printf "Estimate for eigenvalue: %12.6f" maximum(abs.(x))
+end;
+
+# ╔═╡ a11825e7-9ee5-416c-b170-edd1c5eb746c
+md"We also note in passing that $\|x\|_\infty$ seems to converge to the dominant eigenvalue."
+
+# ╔═╡ b69a8d6c-364a-4951-afd9-24588ac10b64
+md"""
+Based on this idea we formulate the algorithm
 
 !!! info "Algorithm 1: Power iterations"
     Given a diagonalisable matrix $\mathbf A \in \mathbb R^{n\times n}$
@@ -211,58 +335,22 @@ Based on this idea we obtain the algorithm
     3. Set $α^{(k)} = \frac{1}{y^{(k)}_m}$ and $β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}$.
     4. Set $\mathbf x^{(k+1)} = α^{(k)} \mathbf y^{(k)}$
 
-Note for this algorithm we can write
-```math
-\tag{4}
-\textbf{x}^{(k)} = α^{(1)} \cdot α^{(2)} \cdot \, \cdots \, \cdot \, α^{(k)} \cdot \, \textbf{A}^k \textbf x^{(1)}
-= \prod_{i=1}^k α^{(i)} \cdot \mathbf A^k \mathbf x^{(1)}
-```
-and by construction we always have $\left\| \textbf{x}^{(k)} \right\|_\infty = 1$. Algorithm 1 thus only presents a minor modification over the scheme we discussed in the previous section.
 """
 
-# ╔═╡ 2073afcb-7e3c-4d3f-924e-cc768681a8fa
+# ╔═╡ 4ebfc860-e179-4c76-8fc5-8c1089301078
 md"""
-Finally we note that if $\textbf{x}^{(k)}$ is almost an eigenvector of the dominant eigenvalue, then $\mathbf A\, \mathbf{x}^{(k)}$ is almost $\lambda_1 \mathbf{x}^{(k)}$
-and thus one would assume $β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}$ to be a reasonable eigenvalue estimate. Indeed note that
-```math
-\begin{aligned}
-β^{(k)} &= \frac{y^{(k)}_m}{x^{(k)}_m}
-= \frac{\left(\mathbf{A}\, \mathbf{x}^{(k)}\right)_m}{x^{(k)}_m}\\
-&\stackrel{(4)}{=} \frac{
-\left( \prod_{i=1}^k α^{(i)} \cdot \mathbf A^{k+1} \mathbf x^{(1)} \right)_\textcolor{red}{m}
-}{
-\left( \prod_{i=1}^k α^{(i)} \cdot \mathbf A^k \mathbf x^{(1)} \right)_\textcolor{red}{m}
-}\\
-&\stackrel{(2)}{=}
-\frac{
-λ_1^{k+1} \left( z_1 \mathbf v_1 + \left( \frac{λ_2}{λ_1} \right)^{k+1} z_2 \mathbf v_2 + \cdots + \left( \frac{λ_n}{λ_1} \right)^{k+1} z_n \, \mathbf v_n   \right)_\textcolor{red}{m}
-}{
-λ_1^{k} \left( z_1 \mathbf v_1 + \left( \frac{λ_2}{λ_1} \right)^{k} z_2 \mathbf v_2 + \cdots + \left( \frac{λ_n}{λ_1} \right)^k z_n \, \mathbf v_n   \right)_\textcolor{red}{m}
-}\\
-&= 
-\frac{
-λ_1 \left( b_1 + \left( \frac{λ_2}{λ_1} \right)^{k+1} b_2 + \cdots + \left( \frac{λ_n}{λ_1} \right)^{k+1} b_n   \right)
-}{
-b_1 + \left( \frac{λ_2}{λ_1} \right)^{k} b_2 + \cdots + \left( \frac{λ_n}{λ_1} \right)^k b_n
-}
-\end{aligned}
-```
-where $_m$ denotes that we take the $m$-th element of the vector in the brackets
-and we further defined $b_i = z_i \left(\mathbf{v}_i\right)_m$, that is $z_i$ multiplied by the $m$-th element of the eigenvector $\mathbf{v}_i$.
-Again we assume $z_1 \neq 0$, which implies $b_1 \neq 0$.
-Under this assumption
-```math
-\tag{5}
-β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}=
-λ_1 \, \frac{
-1 + \left( \frac{λ_2}{λ_1} \right)^{k+1} \frac{b_2}{b_1} + \cdots + \left( \frac{λ_n}{λ_1} \right)^{k+1} \frac{b_n}{b_1}
-}{
-1 + \left( \frac{λ_2}{λ_1} \right)^{k} \frac{b_2}{b_1} + \cdots + \left( \frac{λ_n}{λ_1} \right)^k \frac{b_n}{b_1}
-}
-\to λ_1 \qquad \text{as $k\to\infty$}.
-```
-Keeping in mind that $\frac{λ_i}{λ_1} < 1$ for all $2 ≤ i ≤ n$ we indeed
-observe $β^{(k)}$ to converge to $λ_1$.
+Note that in this algorithm
+$α^{(k)} = 1 / \| y^{(k)}$, such that Step 4 is exactly performing
+the normalisation we developed above.
+Furthermore instead of employing $\| x \|_\infty$
+as the eigenvalue estimate it employs
+$β^{(k)}$, which is just a scaled version of $\| x \|_\infty$.
+To see why this should be expected to be an estimate of the
+dominant eigenvalue $λ_n$ assume that
+$\textbf{x}^{(k)}$ is already close to the associated eigenvector $\mathbf v_n$.
+Then $\mathbf A\, \mathbf{x}^{(k)}$ is almost $\lambda_n \mathbf{x}^{(k)}$,
+such that the ratio $β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}$
+becomes close to $λ_n$ itself.
 
 An implementation of this power method algorithm in:
 """
@@ -314,22 +402,82 @@ begin
 	     ylabel=L"|β^{(k)} - λ_{\textrm{ref}}|", xlabel=L"k")
 end
 
-# ╔═╡ cc3495af-e53c-4ee8-8ec0-f4b597e17f53
+# ╔═╡ 25836ba5-5850-44d5-981b-3cc4dd5c7fdc
 md"""
-!!! note "Remark on z₁ ≠ 0"
-    In the theoretical discussions so far we always assumed $z₁ ≠ 0$,
-    i.e. that the initial guess $\mathbf{x}^{(1)}$ has a non-zero component along
-    the eigenvector $\mathbf v_1$ of the dominant eigenvalue. This may not
-    always be the case. However even if $z₁ ≠ 0$,
-    computing $\mathbf{A} \mathbf{x}^{(1)}$
-    in finite-precision floating-point arithmetic is associated with
-    a small error, which means that 
-    which implies that $\mathbf{A} \mathbf{x}^{(1)}$ and thus
-    $\mathbf{x}^{(2)}$ does usually
-    *not* have a zero component along $\mathbf v_1$,
-    such that in practical calculations assuming $z₁ ≠ 0$
-    is not a restriction.
+We want to demonstrate why $β^{(k)} \to λ_n$ as $k\to\infty$ more rigorously.
+
+Let us first note that for our algorithm
+```math
+\tag{4}
+\textbf{x}^{(k)} = α^{(1)} \cdot α^{(2)} \cdot \, \cdots \, \cdot \, α^{(k)} \cdot \, \textbf{A}^k \textbf x^{(1)}
+= \prod_{i=1}^k α^{(i)} \cdot \mathbf A^k \mathbf x^{(1)}
+```
+and by construction we always have $\left\| \textbf{x}^{(k)} \right\|_\infty = 1$. 
+We further note
+```math
+\begin{aligned}
+β^{(k)} &= \frac{y^{(k)}_m}{x^{(k)}_m}
+= \frac{\left(\mathbf{A}\, \mathbf{x}^{(k)}\right)_\textcolor{red}{m}}{x^{(k)}_m}\\
+&\stackrel{(4)}{=} \frac{
+\left( \prod_{i=1}^k α^{(i)} \cdot \mathbf A^{k+1} \mathbf x^{(1)} \right)_\textcolor{red}{m}
+}{
+\left( \prod_{i=1}^k α^{(i)} \cdot \mathbf A^k \mathbf x^{(1)} \right)_\textcolor{red}{m}
+}\\
+&\stackrel{(2)}{=}
+\frac{
+λ_n^{k+1} \left( 
+\left( \frac{λ_1}{λ_n} \right)^{k+1} z_1 \mathbf v_1 + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^{k+1} z_{n-1} \, \mathbf v_{n-1} + z_n \mathbf v_{n} 
+\right)_\textcolor{red}{m}
+}{
+λ_n^{k} \left( 
+\left(\frac{λ_1}{λ_n} \right)^{k} z_1 \mathbf v_1 + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^{k} z_{n-1} \, \mathbf v_{n-1} + z_n \mathbf v_{n}  
+\right)_\textcolor{red}{m}
+}\\
+&= 
+\frac{
+λ_n \left( 
+\left( \frac{λ_1}{λ_n} \right)^{k+1} b_1 + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^{k+1} b_{n-1} + b_{n} 
+\right)
+}{
+\left( 
+\left(\frac{λ_1}{λ_n} \right)^{k} b_1 + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^{k} b_{n-1} + b_{n}  
+\right)
+}
+\end{aligned}
+```
+where $_\textcolor{red}{m}$ denotes that we take the $m$-th element of the vector in the brackets
+and we further defined $b_i = z_i \left(\mathbf{v}_i\right)_m$, that is $z_i$ multiplied by the $m$-th element of the eigenvector $\mathbf{v}_i$.
+Again we assume $z_n \neq 0$, which implies $b_n \neq 0$.
+Under this assumption
+```math
+\tag{5}
+β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}=
+λ_n \, \frac{
+\left( \frac{λ_1}{λ_n} \right)^{k+1} \frac{b_1}{b_n} + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^{k+1} \frac{b_{n-1}}{b_n} + 1
+}{
+\left( \frac{λ_1}{λ_n} \right)^{k} \frac{b_1}{b_n} + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^{k} \frac{b_{n-1}}{b_n} + 1
+}
+\to λ_n \qquad \text{as $k\to\infty$}.
+```
+Keeping in mind that $\frac{λ_j}{λ_n} < 1$ for all $1 ≤ i ≤ n-1$ we indeed
+observe $β^{(k)}$ to converge to $λ_n$.
 """
+
+# ╔═╡ cc3495af-e53c-4ee8-8ec0-f4b597e17f53
+Foldable("A remark on zₙ ≠ 0", 
+md"""
+In the theoretical discussions so far we always assumed $z_n ≠ 0$,
+i.e. that the initial guess $\mathbf{x}^{(1)}$ has a non-zero component along
+the eigenvector $\mathbf v_n$ of the dominant eigenvalue. This may not
+always be the case. However even if $z_n ≠ 0$,
+computing $\mathbf{A} \mathbf{x}^{(1)}$
+in finite-precision floating-point arithmetic is associated with
+a small error, which means that 
+$\mathbf{A} \mathbf{x}^{(1)}$ and thus
+$\mathbf{x}^{(2)}$ does usually
+*not* have a zero component along $\mathbf v_n$:
+Assuming $z_n ≠ 0$ is not a restriction for practical calculations.
+""")
 
 # ╔═╡ c1b01e10-235c-4424-8524-0836a07106ff
 md"""
@@ -340,71 +488,77 @@ the exact eigenvalue. Indeed a detailed analysis shows that the convergence rate
 can be computed as
 ```math
 \tag{6}
-r_{\textrm{power}} = \lim_{k\to\infty} \frac{|β^{(k+1)} - λ_1|}{|β^{(k)} - λ_1|}
-= \left|\frac{λ_2}{λ_1}\right|.
+r_{\textrm{power}} = \lim_{k\to\infty} \frac{|β^{(k+1)} - λ_n|}{|β^{(k)} - λ_n|}
+= \left|\frac{λ_{n-1}}{λ_n}\right|.
 ```
 """
 
 # ╔═╡ 38015a4f-17af-47c5-a5b6-5e19c429c841
-details("Detailed derivation",
+details("Optional: Detailed derivation",
 md"""
 To show the rate $r_{\textrm{power}}$ we revisit equation (5)
 ```math
-β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}=
-λ_1 \frac{
-1 + \left( \frac{λ_2}{λ_1} \right)^{k+1} \frac{b_2}{b_1} + \cdots + \left( \frac{λ_n}{λ_1} \right)^{k+1} \frac{b_n}{b_1}
+β^{(k)} =
+λ_n \, \frac{
+\left( \frac{λ_1}{λ_n} \right)^{k+1} \frac{b_1}{b_n} + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^{k+1} \frac{b_{n-1}}{b_n} + 1
 }{
-1 + \left( \frac{λ_2}{λ_1} \right)^{k} \frac{b_2}{b_1} + \cdots + \left( \frac{λ_n}{λ_1} \right)^k \frac{b_n}{b_1}
+\left( \frac{λ_1}{λ_n} \right)^{k} \frac{b_1}{b_n} + \cdots + \left( \frac{λ_{n-1}}{λ_n} \right)^{k} \frac{b_{n-1}}{b_n} + 1
 }
 ```
 and introduce the shorthand notation
 ```math
-B_i = b_i/b_1 \qquad\text{and}\qquad
-r_i = λ_i/λ_1
+B_i = b_i/b_n \qquad\text{and}\qquad
+r_i = λ_i/λ_n
 ```
 such that
 ```math
 β^{(k)} =
-λ_1 \frac{
-1 +  r_2^{k+1} B_2 + \cdots + r_n^{k+1} B_n
+λ_n \frac{
+r_1^{k+1} B_1 + r_2^{k+1} B_2 + \cdots + r_{n-1}^{k+1} B_{n-1} + 1
 }{
-1 +  r_2^{k} B_2 + \cdots + r_n^k B_n.
+r_1^{k}   B_1 + r_2^{k}   B_2 + \cdots + r_{n-1}^{k}   B_{n-1} + 1
 }
 ```
-We will make the *additional assumption* $|λ_2| < |λ_3|$,
-such that $|λ_3 / λ_2| < 1$. This is not strictly speaking neccessary,
-but it allows to simplify our developments,
-since the common expression
+We will make the *additional assumption* $|λ_{n-2}| < |λ_{n-1}|$,
+such that $|λ_{n-2} / λ_{n-1}| < 1$.
+We could also complete this development without this assumption,
+but the resulting expressions are involved.
+Now
 ```math
-1 + r_2^{k} B_2 + \cdots + r_n^{k} B_n
-= 1 + r_2^k \left[
-B_2 + \left( \frac{λ_3}{λ_2} \right)^k B_3
-+ \cdots + \left( \frac{λ_n}{λ_2} \right)^k B_n
+\begin{aligned}
+r_1^{k}   B_1 &+ r_2^{k}   B_2 + \cdots + r_{n-1}^k   B_{n-1} + 1\\
+&= 1 + r_{n-1}^k \left[
+  \left(\frac{λ_1}{λ_{n-1}}\right)^k B_1
++ \cdots 
++ \left(\frac{λ_{n-2}}{λ_{n-1}}\right)^k B_{n-2}
++ B_{n-1}
 \right]
+\end{aligned}
 ```
-clearly approaches $1 + r_2^k B_2$ as $k \to \infty$.
-Now noting for $k \to \infty$ that
+clearly approaches $1 + r_{n-1}^k B_{n-1}$ as $k \to \infty$.
+Noting for $k \to \infty$ that
 ```math
-\frac{1}{1 + r_2^k B_2} = 1 - r_2^k B_2 + O(r_2^{2k})
+\frac{1}{1 + r_{n-1}^k B_{n-1}} = 1 - r_{n-1}^k B_{n-1} + O(r_{n-1}^{2k})
 ```
 we can conclude in this limit
 ```math
-β^{(k)} - λ_1 = λ_1 \left(1 +  r_2^{k+1} B_2\right)
-\left( 1 - r_2^k B_2 + O(r_2^{2k}) \right) - λ_1
-= (r_2 - 1) r_2^k B_2 + O(r_2^{2k}).
+\begin{aligned}
+β^{(k)} - λ_n &= λ_n \left(1 +  r_{n-1}^{k+1} B_{n-1}\right)
+\left[ 1 - r_{n-1}^k B_{n-1} + O(r_{n-1}^{2k}) \right] - λ_n\\
+&= (r_{n-1} - 1) r_{n-1}^k B_{n-1} + O(r_{n-1}^{2k}).
+\end{aligned}
 ```
 This is indeed linear convergence with convergence rate
 ```math
-\tag{6}
-\frac{|β^{(k+1)} - λ_1|}{|β^{(k)} - λ_1|}
-\to \frac{|(r_2 - 1) r_2^{k+1} B_2|}{|(r_2 - 1) r_2^{k} B_2|} = |r_2| = \left|\frac{λ_2}{λ_1}\right|
+\frac{|β^{(k\textcolor{red}{+1})} - λ_n|}{|β^{(k)} - λ_n|}
+\to \frac{|(r_{n-1} - 1) r_{n-1}^{k\textcolor{red}{+1}} B_{n-1}|}{|(r_{n-1} - 1) r_{n-1}^{k} B_{n-1}|} = |r_{n-1}| = \left|\frac{λ_{n-1}}{λ_n}\right|
 \quad \text{as $k \to \infty$}
 ```
 """)
 
 # ╔═╡ d6a56c08-374a-4665-9968-d538fe2c4c59
 md"""
-So the smaller the ratio between $|λ_2|$ and $|λ_1|$,
+So the smaller the ratio between $|λ_{n-1}|$ and $|λ_n|$,
 the faster the convergence.
 """
 
@@ -413,17 +567,16 @@ md"and we will put these on the diagonal of a triangular matrix, such that the e
 
 # ╔═╡ 385b07d6-15ef-40ee-8d2e-b3b6505a4171
 md"""
-We check this: We introduce a slider to tune the $λ_2$ of equation (6):
-- `λ₂ = `$(@bind λ₂ Slider(-0.6:-0.05:-0.95; show_value=true, default=-0.9) )
+We introduce a slider to tune the $λ_{n-1}$ of equation (6):
+- `λₙ₋₁ = `$(@bind λₙ₋₁ Slider(-0.6:-0.05:-0.95; show_value=true, default=-0.9) )
 """
 
 # ╔═╡ 79afdc06-a39e-4187-b91d-0af65a62613b
-md"Let us take a case where $λ_1 = 1.0$. Therefore the size of $λ_2$ determines the rate of convergence. Let's take $λ_2$ = $(round(λ₂; sigdigits=2))."
+md"Let us take a case where $λ_n = 1.0$. Therefore the size of $λ_{n-1}$ determines the rate of convergence. Let's take $λ_{n-1}$ = $(round(λₙ₋₁; sigdigits=2))."
 
 # ╔═╡ 59b21a54-5cac-4e7f-b800-89c1f5f2d01f
 begin
-	λ₁ = 1
-	λ_δ = [λ₁, λ₂, 0.6, -0.4, 0]   # The reference eigenvalues we will use
+	λ_δ = [0.0, -0.4, 0.6, λₙ₋₁, 1.0]   # The reference eigenvalues we will use
 end
 
 # ╔═╡ e5bf05e5-b064-4e43-b64b-22e5e45ddcd0
@@ -441,19 +594,23 @@ let
 	     ylabel=L"|β^{(k)} - λ_{\textrm{ref}}|",
 	     xlabel=L"k", legend=:bottomleft, lw=2)
 
-	r_power = abs(λ₂ / λ₁)	
-	plot!(p, k -> r_power^k; ls=:dash, label=L"expected rate $| λ_2 / λ_1|$", lw=2)
+	λₙ = 1.0
+	r_power = abs(λₙ₋₁ / λₙ)	
+	plot!(p, k -> r_power^k; ls=:dash, label=L"expected rate $| λ_{n-1} / λ_n|$", lw=2)
 end
 
 # ╔═╡ 0e4a443b-e99d-436f-8151-d6cfed9b773b
 md"""
 ## Spectral transformations
 
-The above procedure provides us with a simple algorithm to compute the *largest* eigenvalue of a matrix and its associated eigenvector.
-A natural question is now how one could compute the smallest value or some eigenvalue in between.
-In this section we discuss an extension to power iteration, which makes this feasible.
-We only need a small ingredient from linear algebra that makes this feasible,
-the so-called spectral transformations.
+The power method provides us with a simple algorithm to compute the *largest* eigenvalue of a matrix and its associated eigenvector.
+But what if one actually wanted to compute the smallest eigenvalue
+or an eigenvalue somewhere in the middle ?
+
+In this section we discuss an extension to power iteration,
+which makes this feasible.
+We only need a small ingredient from linear algebra
+the **spectral transformations**.
 
 We explore based on a few examples. Consider
 """
@@ -470,7 +627,7 @@ md"Its eigenvalues and eigenvectors are:"
 eigen(Ashift)
 
 # ╔═╡ ad005fc4-04fd-400a-9113-757e52488beb
-md"Now we can add a multiple of the identity matrix, e.g.:"
+md"Now we add a multiple of the identity matrix, e.g.:"
 
 # ╔═╡ 2d5eabf9-ba09-43f8-8ee6-9b35bd826640
 σ = 2  # Shift
@@ -481,7 +638,7 @@ eigen(Ashift + σ * I)  # Add 2 * identity matrix
 # ╔═╡ b0a4cf39-749d-470f-8a25-f59cda1a740c
 md"Notice, how the eigenvectors are the same and only the eigenvalues have been shifted by $σ$.
 
-Similarly we notice:
+Similarly:
 "
 
 # ╔═╡ 850f1909-b5ab-402a-b4f4-d11decc4d457
@@ -491,15 +648,15 @@ let
 end
 
 # ╔═╡ a2f76acd-0f52-4d39-8c4a-c106c8db25ca
-md"Notice how this matrix still has the same eigenpairs (albeit in a different order)  and simply the *inverted* eigenvalues of $\mathbf A + σ \mathbf I$."
+md"Notice how this matrix still has the same eigenvectors (albeit in a different order) and the *inverted* eigenvalues of $\mathbf A + σ \mathbf I$."
 
 # ╔═╡ 0775cca6-48e4-49eb-b63b-8e183ae2e2ed
 1 ./ eigvals(Ashift + σ * I)
 
-# ╔═╡ 677bd623-d1cd-497f-9155-ffd8dba28054
+# ╔═╡ b25fb4e5-127b-4939-a44b-001cc68ea811
 md"""
-We now aim to formalise our observation more rigourously,
-recall that if $λ_i$ is an eigenvalue of $\mathbf A$ with (non-zero) eigenvector $\mathbf x_i$ if and only if
+We want to formalise our observation more rigourously.
+Recall that $λ_i$ is an eigenvalue of $\mathbf A$ with (non-zero) eigenvector $\mathbf x_i$ if and only if
 ```math
 \tag{7}
 \mathbf{A} \mathbf x_i = λ_i \mathbf x_i.
@@ -507,15 +664,21 @@ recall that if $λ_i$ is an eigenvalue of $\mathbf A$ with (non-zero) eigenvecto
 We usually refer to the pair $(λ_i, \mathbf x_i)$ as an **eigenpair** of $\mathbf A$.
 
 The statement of the **spectral transformations** is:
+"""
 
+# ╔═╡ c19c7118-37e5-4bfd-adc9-434a96358abd
+md"""
 !!! info "Theorem 1: Spectral transformations"
     Assume $\mathbf A \in \mathbb R^{n \times n}$ is diagonalisable. 
 	Let $(λ_i, \mathbf x_i)$ be an eigenpair of $\mathbf A$, then
-	  1. If $A$ is invertible, then $(\frac{1}{λ_i}, x_i)$ is an eigenpair of $A^{-1}$.
+	  1. If $\mathbf A$ is invertible, then $(\frac{1}{λ_i}, x_i)$ is an eigenpair of $A^{-1}$.
 	  2. For every $σ \in \mathbb{R}$ we have that
          $(λ_i - σ, x_i)$ is an eigenpair of $\mathbf A - σ \mathbf I$.
 	  3. If $\mathbf A - σ \mathbf I$ is invertible, then $(\frac{1}{λ_i - σ}, x_i)$ is an eigenpair of $(\mathbf A - σ \mathbf I)^{-1}$.
+"""
 
+# ╔═╡ f5014b54-79ea-4506-8ddf-8262bd09d9f9
+md"""
 > **Proof:** 
 > The result follows from a few calculations on top of (7). We proceed 
 > in order of the statements above.
@@ -535,7 +698,10 @@ The statement of the **spectral transformations** is:
 > 2. The argument is similar to 1 and we leave it as an exercise.
 > 
 > 3. This statement follows by combining statements 1. and 2.
+"""
 
+# ╔═╡ 5ea67b6d-a297-403e-bb3e-e69f647f90a8
+md"""
 !!! tip "Exercise 1"
     Assume $\mathbf A \in \mathbb R^{n \times n}$ is diagonalisable.
     Prove statement 2. of Theorem 1, that is for all $σ \in \mathbb{R}$:
@@ -544,21 +710,25 @@ The statement of the **spectral transformations** is:
     of $\mathbf A - σ \mathbf I$ with eigenvalue $λ_i - σ$.
 """
 
-# ╔═╡ 2a2192b5-0c49-4bdd-9470-23c81e3912f7
+# ╔═╡ 9b32cc52-b74d-49fe-ba3f-192f5efc4ef2
 md"""
-Consider point 1. of Theorem 1 and assume that $\mathbf A$ has a *smallest* eigenvalue
+Consider point 1. of Theorem 1 and assume that $\mathbf A$
+has a *smallest* eigenvalue
 ```math
-|λ_1| ≥ |λ_2| ≥ \cdots |λ_{n-1}| > |λ_n| > 0,
+0 < |λ_1| < |λ_2| ≤ |λ_3| ≤ \cdots ≤ |λ_n|
 ```
 then $\mathbf A^{-1}$ has the eigenvalues
 ```math
-|λ_1^{-1}| ≤ |λ_2^{-1}| ≤ \cdots |λ_{n-1}^{-1}| < |λ_n^{-1}|,
+|λ_1^{-1}| > |λ_2^{-1}| ≥ |λ_3^{-1}| ≥ \cdots ≥ |λ_n^{-1}|,
 ```
-thus a dominating (i.e. largest) eigenvalue $|λ_n^{-1}|$.
-Applying the `power_method` function (Algorithm 1) to $\mathbf A^{-1}$
-we thus converge to $|λ_n^{-1}|$ from which we can deduce $|λ_n|$,
-the eigenvalue of $\mathbf A$ closest to zero.
+thus a dominating (i.e. largest) eigenvalue $|λ_1^{-1}|$.
+**Applying** the `power_method` function (Algorithm 1) **to $\mathbf A^{-1}$**
+we thus converge to $λ_1^{-1}$ from which we can deduce $λ_1$,
+the **eigenvalue of $\mathbf A$ closest to zero**.
+"""
 
+# ╔═╡ 36dc90e6-fd8a-4c88-a816-140b663532ef
+md"""
 Now consider point 3. and assume $σ$ has been chosen such that
 ```math
 \tag{8}
@@ -567,23 +737,37 @@ Now consider point 3. and assume $σ$ has been chosen such that
 i.e. such that $σ$ is closest to the eigenvalue $λ_1$.
 It follows
 ```math
-|λ_n-σ|^{-1} ≤ |λ_{n-1}-σ|^{-1} ≤ \cdots |λ_2-σ|^{-1} < |λ_1-σ|^{-1},
+|(λ_n-σ)^{-1}| ≤ |(λ_{n-1}-σ)^{-1}| ≤ \cdots |(λ_2-σ)^{-1}| < |(λ_1-σ)^{-1}|,
 ```
-such that the `power_method` function converges to $|λ_1-σ|^{-1}$.
+such that the `power_method` function converges to $(λ_1-σ)^{-1}$.
 From this value we can deduce $λ_1$, since we know $σ$.
-In other words by applying Algorithm 1 to the
-shift-and-invert matrix $(\mathbf A - σ \mathbf I)^{-1}$
-enables us to find the eigenvalue of $\mathbf A$ closest to $σ$.
+In other words by **applying Algorithm 1** to the
+**shift-and-invert matrix** $(\mathbf A - σ \mathbf I)^{-1}$
+enables us to find the **eigenvalue of $\mathbf A$ closest to $σ$**.
+"""
 
-Note, that a naive application of Algorithm 1 would to compute
+# ╔═╡ 29a4d3a6-29e0-4067-b703-43da5171f7bf
+md"""
+A naive application of Algorithm 1 would first compute $\mathbf{P} = (\mathbf A - σ \mathbf I)^{-1}$ and then apply 
 ```math
-\mathbf y^{(k)} = (\mathbf A - σ \mathbf I)^{-1} \mathbf x^{(k)},
+\mathbf y^{(k)} = (\mathbf A - σ \mathbf I)^{-1} \mathbf x^{(k)} \mathbf{P} \mathbf x^{(k)}
 ```
-which is numerically unstable due to the computation of the matrix inverse.
-To avoid this computation we obtain $\mathbf y^{(k)}$ by solving
-a linear system. We arrive at the following algorithm,
+in each step of the power iteration.
+However, for many problems the explicit computation of the inverse
+$\mathbf{P}$ is numerically unstable.
+Instead of computing $\mathbf{P}$ explicitly
+one instead obtains $\mathbf y^{(k)}$ by **solving a linear system**
+```math
+(\mathbf A - σ \mathbf I) \, \mathbf y^{(k)} = \mathbf x^{(k)}
+```
+for $\mathbf y^{(k)}$,
+which is done **using LU factorisation**.
+We arrive at the following algorithm,
 where the changes compared to Algorithm 1 are marked in red.
+"""
 
+# ╔═╡ 49838e6f-63c2-4494-a5d8-9e3dd25554d3
+md"""
 !!! info "Algorithm 2: Inverse iterations"
      Given
      - a diagonalisable matrix $\mathbf A \in \mathbb R^{n\times n}$,
@@ -596,7 +780,10 @@ where the changes compared to Algorithm 1 are marked in red.
      2. Find the index $m$ such that $y^{(k)}_m = \|\mathbf y^{(k)}\|$
      3. Set $α^{(k)} = \frac{1}{y^{(k)}_m}$ and $\textcolor{brown}{β^{(k)} = σ + \frac{x^{(k)}_m}{y^{(k)}_m}}$.
      4. Set $\mathbf x^{(k+1)} = α^{(k)} \mathbf y^{(k)}$
+"""
 
+# ╔═╡ 3e0e12ad-4d09-4128-9175-14e71c7de5a2
+md"""
 Note the additional change in step 3: In Algorithm 1 we obtained the estimate of the dominant eigenvalue as $y^{(k)}_m / x^{(k)}_m$.
 Here this estimate approximates $\frac 1 {λ_1 - σ}$, the dominant eigenvalue of $(\mathbf A - σ \mathbf I)^{-1}$.
 Therefore an estimate of $λ_1$ itself is obtained by solving
@@ -606,11 +793,7 @@ Therefore an estimate of $λ_1$ itself is obtained by solving
 ```
 for $λ_1$, which yields exactly the expression shown in step 3 of Algorithm 2.
 
-Before we take a look at the implementation, one final point. Each iteration of Algorithm 2 requires the solution of a linear system with the same system matrix $\mathbf B = \mathbf A - σ \mathbf I$. Here, we will attempt this using direct methods, that is PLU factorisation. Since $\mathbf B$ does not change between iterations, the factorisation itself only needs to be computed once, which we
-do right before entering the loop. Since for dense matrices
-computing the factorisation scales $O(n^3)$,
-but solving linear systems based on the factorisation only scales $O(n^2)$
-(recall chapter 6), this reduces the cost per iteration.
+An implementation of this algorithm is given in:
 """
 
 # ╔═╡ 4873fe3b-d411-4e06-92b3-8cfbed493a12
@@ -637,11 +820,104 @@ function inverse_iterations(A, σ, x; maxiter=100)
 	(; x, λ=last(history), history)
 end
 
+# ╔═╡ 67d258d1-9959-46ad-9f13-2bc9abb4da37
+md"""
+Notice that in this implementation we make use of the fact that
+once an **LU factorisation is computed** it can be **re-used
+for solving multiple linear systems** with changing right-hand sides:
+in our case we can expect to solve many linear systems
+involving the matrix $\mathbf A - σ \mathbf I$.
+Therefore we **compute the LU factorisation** only once,
+namely at the beginning of the algorithm and before entering
+the iterative loop.
+
+Since for dense matrices
+computing the factorisation scales $O(n^3)$,
+but solving linear systems based on the factorisation only scales $O(n^2)$
+([recall chapter 6](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html)), this reduces the cost per iteration.
+"""
+
+# ╔═╡ 8e01a98d-c49f-43b3-9681-07d8e4b7f12a
+md"""
+To investigate the possibilities enabled by inverse iterations,
+we consider a few examples using the following triangular matrix
+"""
+
+# ╔═╡ 19e64038-afb3-4df6-ad47-16bad5a98a7b
+C = [-4.0  3.0  4.0;
+	  0.0  4.0  5.0;
+	  0.0  0.0  2.0]
+
+# ╔═╡ 75ab9929-200d-4a69-bb84-187d962662eb
+md"""which has eigenvalues $λ_1 = -4$, $λ_2 = 4$ and $λ_3 = 2$.
+
+Since it has no unique dominant eigenvalue ($|λ_1| = |λ_2| = 4$)
+**plain power iterations** do not converge, but rather oscillate around $4$ or $-4$:
+"""
+
+# ╔═╡ fe15a206-e650-4d59-962c-a00bc226bf48
+let
+	xinit = randn(size(C, 2))
+	res = power_method(C, xinit; maxiter=30)
+
+	plot(res.history; mark=:o, c=1, label="", lw=1.5, ylabel=L"β^{(k)}", xlabel=L"k",
+		 title="Power iterations on C")
+end
+
+# ╔═╡ a152d4e2-afde-4b57-8a22-33f5f26f6880
+md"""
+In contrast for **inverse iterations** (with $σ=0$) what matters are the eigenvalues of $\mathbf{C}^{-1}$, which are $1 / λ_i$ or
+```math
+\frac{1}{λ_1} = - \frac 14
+\qquad
+\frac{1}{λ_2} = \frac 14
+\qquad
+\frac{1}{λ_3} = \frac 12
+```
+Therefore there is a single dominant eigenvalue ($\frac 12$) and inverse iterations will converge to the eigenvalue $2$:
+"""
+
+# ╔═╡ d467f287-0e29-48fe-adb5-71c52aa66cfc
+let
+	σ = 0.0  # Just perform plain inverse iterations
+	
+	xinit = randn(size(C, 2))
+	res = inverse_iterations(C, σ, xinit; maxiter=30)
+
+	plot(res.history; mark=:o, c=1, label="", lw=1.5, ylabel=L"β^{(k)}", xlabel=L"k",
+		 title="Inverse iterations on C with σ = $σ")
+end
+
+# ╔═╡ 9345e24b-f19b-46ce-8e35-fb8acbaabb53
+md"""
+Now suppose we knew that $\mathbf{C}$ has one eigenvalue near $-6$, such that we take $σ = -6$. Then what matters for convergence in the inverse iterations are the eigenvalues of $(\mathbf C - (-6) \mathbf I)^{-1}$, which are
+$\mu_i = \frac1{λ_i-σ}$ or
+```math
+\mu_1 = \frac{1}{-4 + 6} = \frac12 \qquad \mu_2 = \frac{1}{4+6} = \frac1{10} \qquad \mu_3 = \frac1{2+6} = \frac{1}{8},
+```
+such that $\mu_1 = \frac12$ is the dominating eigenvalue. Therefore
+with $σ = -6$ inverse iterations converge to $-6 + 1 / \mu_1 = 
+with $σ = -6$ inverse iterations converge to $-6 + 1 / (\frac{1}2) = -4$:
+"""
+
+# ╔═╡ 10558bcb-43d4-41cd-b39f-63ec58e86b1b
+let
+	σ = -6.0
+	
+	xinit = randn(size(C, 2))
+	res = inverse_iterations(C, σ, xinit; maxiter=30)
+
+	plot(res.history; mark=:o, c=1, label="", lw=1.5, ylabel=L"β^{(k)}", xlabel=L"k",
+		 title="Inverse iterations on C with σ = $σ")
+end
+
 # ╔═╡ 59493fbc-1b97-4ade-bbba-30eea2b5c91a
 md"""
+### Convergence of inverse iterations
+
 Inserting $\mathbf A - σ \mathbf I$ in the place of $\mathbf A$ in (6) and recalling the eigenvalue ordering (8), i.e.
 $|λ_n - σ| ≥ |λ_{n-1} - σ| ≥ \cdots |λ_{2} - σ| > |λ_1 - σ| > 0$
-one can show similarly that inverse iterations converge again linearly with rate
+one can show similarly that **inverse iterations converge linearly** with rate
 ```math
 \tag{9}
 r_\text{inviter} =
@@ -653,8 +929,10 @@ This implies that convergence is fastest if $σ$ is closest to the targeted
 eigenvalue $λ_1$ than to all other eigenvalues of $\mathbf A$.
 """
 
-# ╔═╡ 93173364-1a49-4f87-b814-f95cd00d657f
-md"""To demonstrate this rate we again consider the case of diagonalising a triangular matrix
+# ╔═╡ d998c91f-0d3c-4846-a6df-9d2c407f5836
+md"""
+Finally let us consider a case where we use a slider to be able to
+change the applied shift:
 """
 
 # ╔═╡ c734b379-ab45-4270-8bea-461332887640
@@ -682,22 +960,21 @@ begin
 	r_inviter = diff_sorted[end] / diff_sorted[end-1]
 end
 
-# ╔═╡ c0bcba34-3435-4d0a-a52d-a2fbbfd7519c
-TODO(md"Give an example using a 3x3 tridiagonal matrix using power iterations, inverse power iterationsn ($σ=0$), inverse power iterations with non-zero shift. One case should not be converging due to two dominant eigenvalues. In each case indicate the eigenvalue to which one converges and the rate of convergence.")
-
 # ╔═╡ 03e47af0-840c-425e-aa82-d265e862da7a
 md"""
 ## Optional: Dynamic shifting
 
-In the discussion in the previous section we noted that the convergence of inverse iterations is best if $σ$ is chosen close to the eigenvalue of the matrix $\mathbf A$. Since inverse iterations (Algorithm 2) actually produce an estimate for the eigenvalue in each iteration (the $β^{(k)}$), a natural idea is to *update* the shift. 
+In the discussion in the previous section we noted that the convergence of inverse iterations is best if $σ$ is chosen close to the eigenvalue of the matrix $\mathbf A$. Since **inverse iterations** (Algorithm 2) actually **produce an estimate for the eigenvalue** in each iteration (the $β^{(k)}$),
+a natural idea is to **update the shift**:
+instead of using the same $σ$ in each iteration,
+we select a different $σ = β^{(k)}$ *dynamically*
+based on the best eigenvalue estimate currently available to us.
 
-In other words instead of using the same $σ$ in each iteration of Algorithm 2,
-we dynamically update $σ = β^{(k)}$ once the new eigenvalue estimate $β^{(k)}$ has been computed.
 This also implies that for solving the linear system in step 1, i.e.
-```math
-(\mathbf A - σ \mathbf I) \, \mathbf y^{(k)} = \mathbf x^{(k)}
-```
-the system matrix is different for each $k$, such that pre-computing the PLU factorisation once before entering the iteration loop is no longer possible.
+$(\mathbf A - σ \mathbf I) \, \mathbf y^{(k)} = \mathbf x^{(k)}$
+the system matrix is different for each $k$.
+Therefore pre-computing the LU factorisation
+before entering the iteration loop is no longer possible.
 
 We arrive at the following implementation for an **inverse iteration algorithm with dynamic shifting**:
 """
@@ -713,7 +990,7 @@ function dynamic_shifting(A, σ, x; maxiter=100, tol=1e-8)
 		
 	history = Float64[]
     for k in 1:maxiter
-        y = (A - σ*I) \ x   # PLU-factorise (A - σ*I) and solve system
+        y = (A - σ*I) \ x   # LU-factorise (A - σ*I) and solve system
         m = argmax(abs.(y))
 		α = 1 / y[m]
 		β = σ + x[m] / y[m]
@@ -731,7 +1008,10 @@ end
 
 # ╔═╡ 1af4bb50-277f-4368-97b8-2cfcdfea69bc
 md"""
-A consequence of the fact that we need to compute the PLU factorisation in each iteration is that the overall cost of `dynamic_shifting` is larger than the cost of `inverse_iterations`, but the convergence is also improved:
+Since we now need to compute a fresh LU factorisation
+in each iteration, the overall cost of `dynamic_shifting`
+is larger than the cost of `inverse_iterations`.
+On the upside, convergence is improved:
 We go from linear to **quadratic convergence**
 (see [chapter 8.3](https://tobydriscoll.net/fnc-julia/krylov/inviter.html#dynamic-shifting) of Driscoll, Brown: Fundamentals of Numerical Computation).
 
@@ -811,7 +1091,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 400)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 320)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -823,6 +1103,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 HypertextLiteral = "~0.9.5"
@@ -838,7 +1119,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "f79bcaca905d4cbb7ab479799cb8df23f72216ed"
+project_hash = "ed4b990b71c74481d1b3d103b825239737d31586"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -2029,7 +2310,9 @@ version = "1.4.1+2"
 # ╟─34beda8f-7e5f-42eb-b32c-73cfc724062e
 # ╠═4949225a-ccf2-11ee-299b-9b834eb6bd42
 # ╟─13298dc4-9800-476d-9474-182359a7671b
-# ╟─377d9d74-2826-4c53-bc9a-8bfe5a087a84
+# ╟─a138fb39-aae0-41b4-bd7b-d2f7eaad7a53
+# ╟─a702d4b6-e70c-417d-ac98-92c534d52770
+# ╟─73889935-2e4c-4a15-a281-b155cf1ca1c9
 # ╟─71d74b6a-96b2-4855-b20f-59b00c8f560b
 # ╠═6db511ac-a217-49e2-a508-2590b64ea636
 # ╟─814e602d-1afa-44ba-bb25-ed32dd66e2b9
@@ -2039,20 +2322,31 @@ version = "1.4.1+2"
 # ╠═5d990087-901a-4457-a9ec-ba3b2d60f470
 # ╟─7da94235-399e-4c13-8a02-25d8fa795e17
 # ╠═272e7bce-e05e-412f-b2f5-2742d33d0b6f
+# ╟─2dbe6cbf-6b27-49c1-b28c-e03a9b11e09d
 # ╟─5a4038ac-1905-42e5-88ee-ced49c5375ad
-# ╠═076bbe2b-130a-44e5-9218-6fdcc1998cf5
 # ╟─db0c875b-9955-4bc1-bdb1-ec2e1a44942d
-# ╟─4d1eb1b1-7634-4f38-a564-98f64923e377
 # ╟─73c62d23-ac2a-48be-b3c7-0d51ffce773c
 # ╟─16d6559c-977b-4fd9-aecb-2b6f61290f04
-# ╟─139ad60c-e04f-4dd6-b18c-a6de140a0154
-# ╟─1f512d18-1f9c-4730-9676-ca333a7531de
-# ╟─2073afcb-7e3c-4d3f-924e-cc768681a8fa
+# ╟─7fc2ff92-bd21-498e-8e1e-4e8a18355501
+# ╟─cd72b974-37ab-40ad-b9a6-e930efa3e767
+# ╠═612948f2-abd5-4350-9327-bbfa51cebc57
+# ╟─bfefdb2f-f42a-4867-9a5e-94d22226645b
+# ╟─a3377f9f-7fba-4e6b-b014-e85de15ca3f0
+# ╟─1e461d1e-bcc7-4c9d-8398-f87a51311fdd
+# ╠═d4b22b38-04f7-44a7-834b-1bdbad64182d
+# ╟─56352bf0-5837-4c38-89c1-62a940e80b3c
+# ╠═60bbeaee-dc3a-4c44-b016-02d8b1b5623b
+# ╟─b728388d-e6e4-475a-adce-149b2b53a1d4
+# ╠═2425ae53-d861-47f7-9f86-750cf4f363c1
+# ╟─a11825e7-9ee5-416c-b170-edd1c5eb746c
+# ╟─b69a8d6c-364a-4951-afd9-24588ac10b64
+# ╟─4ebfc860-e179-4c76-8fc5-8c1089301078
 # ╠═01186225-602f-4637-99f2-0a6dd569a703
 # ╟─25f2b565-cc6a-4919-ac82-37d6dd62ba16
 # ╠═22b9c8b5-02cd-481e-aca7-bb2fe4e85c3c
 # ╟─81a6721f-f7e5-42c9-b389-518a4c458ae9
 # ╠═033b6a9b-2187-4053-bc69-bbc1f03494fa
+# ╟─25836ba5-5850-44d5-981b-3cc4dd5c7fdc
 # ╟─cc3495af-e53c-4ee8-8ec0-f4b597e17f53
 # ╟─c1b01e10-235c-4424-8524-0836a07106ff
 # ╟─38015a4f-17af-47c5-a5b6-5e19c429c841
@@ -2074,17 +2368,32 @@ version = "1.4.1+2"
 # ╠═850f1909-b5ab-402a-b4f4-d11decc4d457
 # ╟─a2f76acd-0f52-4d39-8c4a-c106c8db25ca
 # ╠═0775cca6-48e4-49eb-b63b-8e183ae2e2ed
-# ╟─677bd623-d1cd-497f-9155-ffd8dba28054
-# ╟─2a2192b5-0c49-4bdd-9470-23c81e3912f7
+# ╟─b25fb4e5-127b-4939-a44b-001cc68ea811
+# ╟─c19c7118-37e5-4bfd-adc9-434a96358abd
+# ╟─f5014b54-79ea-4506-8ddf-8262bd09d9f9
+# ╟─5ea67b6d-a297-403e-bb3e-e69f647f90a8
+# ╟─9b32cc52-b74d-49fe-ba3f-192f5efc4ef2
+# ╟─36dc90e6-fd8a-4c88-a816-140b663532ef
+# ╟─29a4d3a6-29e0-4067-b703-43da5171f7bf
+# ╟─49838e6f-63c2-4494-a5d8-9e3dd25554d3
+# ╟─3e0e12ad-4d09-4128-9175-14e71c7de5a2
 # ╠═4873fe3b-d411-4e06-92b3-8cfbed493a12
+# ╟─67d258d1-9959-46ad-9f13-2bc9abb4da37
+# ╟─8e01a98d-c49f-43b3-9681-07d8e4b7f12a
+# ╠═19e64038-afb3-4df6-ad47-16bad5a98a7b
+# ╟─75ab9929-200d-4a69-bb84-187d962662eb
+# ╠═fe15a206-e650-4d59-962c-a00bc226bf48
+# ╟─a152d4e2-afde-4b57-8a22-33f5f26f6880
+# ╠═d467f287-0e29-48fe-adb5-71c52aa66cfc
+# ╟─9345e24b-f19b-46ce-8e35-fb8acbaabb53
+# ╠═10558bcb-43d4-41cd-b39f-63ec58e86b1b
 # ╟─59493fbc-1b97-4ade-bbba-30eea2b5c91a
-# ╟─93173364-1a49-4f87-b814-f95cd00d657f
+# ╟─d998c91f-0d3c-4846-a6df-9d2c407f5836
 # ╠═c734b379-ab45-4270-8bea-461332887640
 # ╟─6ffd6918-3b4d-4e1f-ba7e-5c825f96681d
 # ╟─43d637d5-0b62-4c60-a363-e1616f517eb7
 # ╠═908ae6f5-23fe-4ca8-bceb-e484589441a2
-# ╟─57709e05-2ca5-43d4-8d7f-19c04393dcb3
-# ╠═c0bcba34-3435-4d0a-a52d-a2fbbfd7519c
+# ╠═57709e05-2ca5-43d4-8d7f-19c04393dcb3
 # ╟─03e47af0-840c-425e-aa82-d265e862da7a
 # ╠═f0ecec01-dde6-4d51-9039-cdfc648d16e9
 # ╟─1af4bb50-277f-4368-97b8-2cfcdfea69bc
