@@ -360,7 +360,7 @@ function forward_euler(f, u₀, a, b, N)
     t = [a + i * h for i in 0:N]
 
 	# Setup output vector with all elements initialised to u₀
-	u = [copy(u₀) for i in 0:N]
+	u = [float(copy(u₀)) for i in 0:N]
 
 	# Time integration
 	u[1] = u₀
@@ -838,7 +838,7 @@ function midpoint(f, u₀, a, b, N)
     t = [a + i * h for i in 0:N]
 
 	# Setup output vector with all elements initialised to u₀
-	u = [copy(u₀) for i in 0:N]
+	u = [float(copy(u₀)) for i in 0:N]
 
 	# Time integration ... this is what changes over forward_euler
 	u[1] = u₀
@@ -923,7 +923,7 @@ function rk4(f, u₀, a, b, N)
     t = [a + i * h for i in 0:N]
 
 	# Setup output vector with all elements initialised to u₀
-	u = [copy(u₀) for i in 0:N]
+	u = [float(copy(u₀)) for i in 0:N]
 
 	# Time integration ... this is what changes over forward_euler
 	u[1] = u₀
@@ -1066,7 +1066,7 @@ Let us consider the innocent looking initial value problem
 ```math
 \left\{
 \begin{aligned}
-\frac{d u(t)}{d t} &= -C && t > 0 \\
+\frac{d u(t)}{d t} &= -Cu(t) && t > 0 \\
 u(0) &= 10.
 \end{aligned}\right.
 ```
@@ -1458,7 +1458,7 @@ function backward_euler(f, u₀, a, b, N; tol=1e-10)
     t = [a + i * h for i in 0:N]
 
 	# Setup output vector with all elements initialised to u₀
-	u = [copy(u₀) for i in 0:N]
+	u = [float(copy(u₀)) for i in 0:N]
 
 	# Time integration
 	u[1] = u₀
