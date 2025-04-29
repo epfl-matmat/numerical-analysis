@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -107,9 +107,9 @@ and **then integrate that** instead of $f$ itself.
 Since the integration of the polynomial is essentially exact,
 the error of such a scheme is **dominated by the error of the polynomial
 interpolation**.
-As we found out in [the chapter on Interpolation](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html) polynomials
-through equispaced nodes become rather inaccurate for large $n$
-due to Runge's phaenomenon.
+Recall the [chapter on Interpolation](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html), where we noted polynomials
+through equispaced nodes to become numerically unstable and
+possibly inaccurate for large $n$ due to Runge's phaenomenon.
 
 Therefore we will pursue **piecewise linear polynomial interpolation**
 instead of fitting an $n$-th degree polynomial.
@@ -140,9 +140,9 @@ let
 		plot!(p, [a + i * h, a + i * h], [0, f(a + i * h)];
 			  ls=:dash, c=:black, label="", lw=1.5)
 	end
-	annotate!(p, [(a,   -0.5, L"t_0"),
+	annotate!(p, [(a,   -0.5, L"a = t_0"),
 				  (a+h, -0.5, L"t_1"),
-				  (a+n*h, -0.5, L"t_n")])
+				  (a+n*h, -0.5, L"t_n = b")])
 
 	ylims!(p, (-0.9, 10.5))
 	p
@@ -1219,7 +1219,7 @@ QuadGK = "~2.11.2"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.4"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "0b137bedfe8a154be757099565fbd14062a17cca"
 
@@ -1760,7 +1760,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+4"
+version = "0.8.5+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]

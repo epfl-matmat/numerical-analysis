@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -568,7 +568,7 @@ More precisely one can formulate:
 	where $C > 0$ and $L > 0$ are constants.
 
 We note:
-- If the local truncation error $τ^{(n)}_h$ converges with order $p$, then the one-step methods also converges globally with order $p$.
+- If the local truncation error $τ^{(n)}_h$ converges with order $p$, then the explicit methods also converges globally with order $p$.
 - However, the global error has an **additional prefactor** $(e^{L (t_n-a)} -1)$, which **grows exponentially in time**. This is an effect of the accumulation of error from one time step to the next. In particular if $b \gg a$ or results can get rather inaccurate **even for higher-order methods** beyond Forward Euler where $p > 1$. This point we will pick up in the section on *Stability and implicit methods* below.
 - For Theorem 2 to hold there are a few more details to consider (e.g. problem (1) should have  a unique solution). More information can be unfolded below.
 """
@@ -1518,7 +1518,7 @@ PlutoUI = "~0.7.62"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.4"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "073d0fedb2bdd79c9801f78082bc44acadfdc9ec"
 
@@ -2914,7 +2914,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+4"
+version = "0.8.5+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
