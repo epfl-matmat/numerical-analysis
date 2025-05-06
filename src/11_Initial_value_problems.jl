@@ -134,7 +134,7 @@ Often (but not always) $t$ plays the role of time and (1) thus models the time-d
 
 # ╔═╡ 1dbe5d72-17d9-4f20-b365-ad913cd607c3
 md"""
-## Numerical solution in DifferentialEquations.jl
+## Solving initial value problems numerically
 For simple examples like the Duck problem above
 analytic solutions can still be found with a little practice.
 However, initial value problems quickly become more involved.

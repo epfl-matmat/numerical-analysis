@@ -239,7 +239,7 @@ and
 ```math
 I = \int_0^1 e^x\,dx = e - 1
 ```
-which is approximately $(exact).
+which is approximately $(round(exact; digits=7)).
 
 We consider a sequence of results where we double the number of integration points:
 """
@@ -319,7 +319,7 @@ md"""
 ## Simpson's rule
 """
 
-# ╔═╡ fb9420e4-d49c-4cfe-b029-c3a0e92f9af2
+# ╔═╡ becdcc4e-ecff-46ad-8f3a-92d117e374f7
 md"""
 Considering the construction of the trapezoidal rule
 we may easily wonder: why stop at using only linear polynomials
@@ -340,11 +340,27 @@ This is a little harder to compute and will be done as an exercise. The resultin
 &= \frac h6 f(t_0) + \frac h3 \sum_{i=1}^{n-1} f(t_i) + \frac {2h}3 \sum_{i=0}^{n-1} f(m_i) + \frac h6 f(t_n).
 \end{aligned}
 ```
+"""
+
+# ╔═╡ 5ee0ec01-54c3-48d8-8ba8-4460144002dd
+md"""
 While a little harder to see, this formula can also be brought into the form of (2):
 it employs **$2n + 1$ equispaced nodes**
 --- namely the collection of both the $t_i$ for $i=0, \ldots, n$ *and* the $m_i$ for $i=0,\ldots n-1$.
 Therefore $N = 2n$ in (2) leading to a **nodal distance** of $\frac{b-a}{2n} = \frac{h}{2}$, where we used that $h = t_{i+1} - t_i = \frac{b-a}{n}$
+"""
 
+# ╔═╡ abcafa59-e8a1-4438-9ff6-3e8fc9fbd28d
+md"""
+!!! exercise
+    Derive Simpson's rule, i.e. show that
+    ```math
+    \int_a^b p_{2,h}(x)\, dx = \sum_{i=1}^n \frac h6 \big( f(t_{i-1}) + 4f(m_{i-1}) + f(t_i) \big)
+    ```
+"""
+
+# ╔═╡ 277ec8d1-949b-457a-8c1a-12d357a76efc
+md"""
 A Julia implementation of Simpson's rule is given below:
 """
 
@@ -437,7 +453,6 @@ into error contributions from each of the intervals $[t_{i-1}, t_i]$.
 Assume for simplicity that the function $f$ is smooth and we can thus
 build a Taylor expansion
 ```math
-\tag{5}
 f(x) = \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) \, (x-m_i)^k
 ```
 around the midpoint $m_i = \frac{t_{i+1} + t_i}{2}$ of the interval $[t_i, t_{i+1}]$.
@@ -475,6 +490,7 @@ h\, \sum_{i=0}^1 w_i \, q_k(t_i)
 The difference between these expressions is exactly the error
 contribution from the interval $[t_{i}, t_{i+1}]$, namely
 ```math
+\tag{5}
 \begin{aligned}
 \int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)
 &= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) \left[ \int_{t_i}^{t_{i+1}} q_k(x) - Q_{t_i}^{t_{i+1}}(q_k) \right].
@@ -505,13 +521,13 @@ One property of quadrature formulas is their **degree of exactness**:
 	but not for $s = r+1$.
 """
 
-# ╔═╡ ca54c435-1a49-48e6-9fc9-d0f5a0fe12a4
+# ╔═╡ bc2043be-41e0-4083-9f8b-82b3ce6a13af
 md"""
 Note that the polynomial $q_k = ( x - m_i )^{k}$
 only features monomials $x^s$ with $0 \leq s \leq k$.
 Therefore a formula with degree of exactness $r$ will have
 $\int_{t_i}^{t_{i+1}} q_k(x) - Q_{t_i}^{t_{i+1}}(q_k) = 0$ for $k \leq r$.
-The first non-zero error term is thus
+In (5) the first non-zero error term is thus
 ```math
 \begin{aligned}
 \left|\int_{t_i}^{t_{i+1}} q_{r+1}(x) - Q_{t_i}^{t_{i+1}}(q_{r+1})\right|
@@ -522,20 +538,27 @@ The first non-zero error term is thus
 ```
 where in $(\ast)$ all powers in $x$ less than $r+1$ drop again because of $Q$'s degree of exactness and in $(\S)$ we skipped a few non-trivial steps,
 which are optional and will be presented below.
+This is also the leading-order error term, such that
+```math
+\left|\int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)\right| ≤ \widetilde{C}_i h^{r+2}
+```
+"""
 
-We thus note that the individual intervals converge with $(r+2)$-th order,
+# ╔═╡ 9cb44731-9d50-4718-9d4d-8fffca3a387f
+md"""
+The error in each of the the $N$ subintervals thus converges with $(r+2)$-th order,
 such that combining with (4) and using the triangle inequality
 we obtain the total error as
 ```math
 \begin{aligned}
 \left|\int_a^b f(x)\,dx - Q_a^b(f)\right|
 &\leq \sum_{i=0}^{N-1} \left|\int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)\right|\\
-&\leq h^{r+2} \underbrace{\sum_{i=0}^{N-1} \tilde{C}_i}_\text{$N$ terms}\\
-&\leq h^{r+1} \frac{b-a}{N} N \, \max_i \tilde{C}_i \\
+&\leq h^{r+2} \underbrace{\sum_{i=0}^{N-1} \widetilde{C}_i}_\text{$N$ terms}\\
+&\leq h^{r+1} \frac{b-a}{N} N \, \max_i \widetilde{C}_i \\
 &= C \, h^{r+1}
 \end{aligned}
 ```
-where $C = (b-a) \max_i \tilde{C}_i$.
+where $C = (b-a)\, \max_i \widetilde{C}_i$.
 
 We notice:
 """
@@ -768,7 +791,7 @@ this scheme is able to **increase the convergence order**.
 
 # ╔═╡ 15b22584-5f21-4f00-ac04-0643fb1dfd56
 md"""
-Let us apply this to the trapezoidal formula for approximating the integral $I = \int_a^b f(x)\, dx$. We use $n+1$ quadrature nodes of equal separation $h = (b-a)/n$.
+Let us **apply this to the trapezoidal formula** for approximating the integral $I = \int_a^b f(x)\, dx$. We use $n+1$ quadrature nodes of equal separation $h = (b-a)/n$.
 As we have discussed above the trapezoidal formula is of order $2$,
 so the leading-order error term is $h^2$.
 However, in this fortunate case one can even show
@@ -1045,7 +1068,7 @@ md"Finally, we perform one more level of extrapolation to get the sxth-order acc
 R80 = (16S80 - S40) / 15
 
 # ╔═╡ cf6e7935-268e-458a-990a-39432ab3e9f3
-md"We compute all errors to 6 digits:"
+md"We compute all errors to 10 digits:"
 
 # ╔═╡ cc54215f-3af2-48c0-83ec-04cc786fd2ce
 begin
@@ -2449,7 +2472,10 @@ version = "1.4.1+2"
 # ╟─f189cf70-d72e-483c-af61-a3346ddd201d
 # ╟─5f0178ad-c05b-4ac4-a008-b35d105cc7b2
 # ╟─c31c7012-6986-441f-ae99-5e2bb2b469e5
-# ╟─fb9420e4-d49c-4cfe-b029-c3a0e92f9af2
+# ╟─becdcc4e-ecff-46ad-8f3a-92d117e374f7
+# ╟─5ee0ec01-54c3-48d8-8ba8-4460144002dd
+# ╟─abcafa59-e8a1-4438-9ff6-3e8fc9fbd28d
+# ╟─277ec8d1-949b-457a-8c1a-12d357a76efc
 # ╠═538b816c-5cc3-4e5c-b259-33825bdc39c3
 # ╟─a255138c-74bd-4aad-b49a-0a16746f3bda
 # ╠═df5373cc-b997-4a80-906a-9bde0689c84b
@@ -2458,7 +2484,8 @@ version = "1.4.1+2"
 # ╟─adf895be-b9d1-40e1-9c2b-146b30b996be
 # ╟─4144570b-f8d9-49c8-af6b-732966864755
 # ╟─7812f9d7-cda7-4d05-a800-3f7bea2e0e8c
-# ╟─ca54c435-1a49-48e6-9fc9-d0f5a0fe12a4
+# ╟─bc2043be-41e0-4083-9f8b-82b3ce6a13af
+# ╟─9cb44731-9d50-4718-9d4d-8fffca3a387f
 # ╟─4a048166-315d-4bf6-b099-866c9e3f8813
 # ╟─9bad55de-c2d7-44f9-9478-7b66751bfbfe
 # ╟─a4cf020a-bb95-4fed-ad50-11ebae1934f5

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -477,6 +477,9 @@ md"""
 	```
 """
 
+# ╔═╡ 69b0a1cf-a1dd-48e4-8d00-564509902e3e
+TODO("Triangle inequality, triangle inequality for sums")
+
 # ╔═╡ 831aef2e-e129-4183-95c2-b6f98afb6b44
 let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
@@ -897,6 +900,7 @@ version = "17.4.0+2"
 # ╟─e363da18-0001-4870-adb5-ef7d73514a36
 # ╟─bd53a113-a153-405e-9340-da78a61b775a
 # ╟─f8720ba3-9f6e-476c-adf2-bf66e07c3755
+# ╠═69b0a1cf-a1dd-48e4-8d00-564509902e3e
 # ╟─831aef2e-e129-4183-95c2-b6f98afb6b44
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
