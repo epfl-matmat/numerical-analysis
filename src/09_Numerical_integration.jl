@@ -479,10 +479,11 @@ such that $N=1$ and the term $\frac{b-a}{N} = \frac{t_{i+1} - t_i}{1} = h$.
 We obtain:
 ```math
 \begin{aligned}
-Q_{t_i}^{t_{i+1}}(f) &= h\, \sum_{i=0}^1 w_i f(t_i) \\
-&= h\, \sum_{i=0}^1 w_i  \left[\sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) \, (t_i-m_i)^k \right]\\
+Q_{t_i}^{t_{i+1}}(f) &= h\, \sum_{j=i}^{i+1} w_j f(t_j) \\
+&= h\, \sum_{j=i}^{i+1} w_j  \left[\sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_j) \, (t_j-m_j)^k \right]\\
+&= h\, \sum_{j=i}^{i+1} w_j  \left[\sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_j) \, q_k(t_j) \right]\\
 &= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) \left[
-h\, \sum_{i=0}^1 w_i \, q_k(t_i)
+h\, \sum_{j=i}^{i+1} w_j \, q_k(t_j)
 \right] \\
 &= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) Q_{t_i}^{t_{i+1}}(q_k)
 \end{aligned}.
@@ -493,7 +494,7 @@ contribution from the interval $[t_{i}, t_{i+1}]$, namely
 \tag{5}
 \begin{aligned}
 \int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)
-&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) \left[ \int_{t_i}^{t_{i+1}} q_k(x) - Q_{t_i}^{t_{i+1}}(q_k) \right].
+&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) \left[ \int_{t_i}^{t_{i+1}} q_k(x) \,dx - Q_{t_i}^{t_{i+1}}(q_k) \right].
 \end{aligned}
 ```
 """
@@ -523,15 +524,20 @@ One property of quadrature formulas is their **degree of exactness**:
 
 # ╔═╡ bc2043be-41e0-4083-9f8b-82b3ce6a13af
 md"""
-Note that the polynomial $q_k = ( x - m_i )^{k}$
+Note that the polynomial
+```math
+q_k(x) = ( x - m_i )^{k} = x^k + \left(\begin{smallmatrix}k\\1\end{smallmatrix}\right)\, x^{k-1} m_i + \left(\begin{smallmatrix}k\\2\end{smallmatrix}\right)\, x^{k-2} m_i^2
++ \cdots + \left(\begin{smallmatrix}k\\k-1\end{smallmatrix}\right)\, x \, m_i^{k-1}
++ m_i^k
+```
 only features monomials $x^s$ with $0 \leq s \leq k$.
 Therefore a formula with degree of exactness $r$ will have
-$\int_{t_i}^{t_{i+1}} q_k(x) - Q_{t_i}^{t_{i+1}}(q_k) = 0$ for $k \leq r$.
+$\int_{t_i}^{t_{i+1}} q_k(x) \,dx - Q_{t_i}^{t_{i+1}}(q_k) = 0$ for $k \leq r$.
 In (5) the first non-zero error term is thus
 ```math
 \begin{aligned}
-\left|\int_{t_i}^{t_{i+1}} q_{r+1}(x) - Q_{t_i}^{t_{i+1}}(q_{r+1})\right|
-&\stackrel{(\ast)}{=} \left|\int_{t_i}^{t_{i+1}} x^{r+1} - Q_{t_i}^{t_{i+1}}(x^{r+1})\right| \\
+\left|\int_{t_i}^{t_{i+1}} q_{r+1}(x) \,dx - Q_{t_i}^{t_{i+1}}(q_{r+1})\right|
+&\stackrel{(\ast)}{=} \left|\int_{t_i}^{t_{i+1}} x^{r+1} \,dx - Q_{t_i}^{t_{i+1}}(x^{r+1})\right| \\
 &\stackrel{(\S)}{\leq}
 \widetilde{C}_i h^{r+2}
 \end{aligned}
