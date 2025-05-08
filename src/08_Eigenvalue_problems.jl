@@ -48,7 +48,8 @@ of eigenvalues $λ_i$ and eigenvectors $\mathbf{v}_i$ such that
 Geometrically speaking the eigenvectors provide special directions in space along which forming the matrix-vector-product $\mathbf{A}\mathbf{v}_i$ is particularly simple, namely it just *scales* the vector $\mathbf{v}_i$ by a number.
 
 But more generally if $\mathbf x$ is an arbitrary vector
-and if for simplicity we assume $\mathbf{A}$ to be symmetric,
+and if for simplicity we assume $\mathbf{A}$ to be symmetric
+and positive-definite,
 then we find
 ```math
 \| \mathbf A \mathbf x \| \leq \| \mathbf A \| \, \| \mathbf x \| \leq 
