@@ -40,7 +40,7 @@ TableOfContents()
 md"""
 # Eigenvalue problems
 
-Recall that the eigenpairs of a matrix $A$ are the pairs $(λ_i, \mathbf{v}_i)$
+Recall that the eigenpairs of a matrix $\mathbf A$ are the pairs $(λ_i, \mathbf{v}_i)$
 of eigenvalues $λ_i$ and eigenvectors $\mathbf{v}_i$ such that
 ```math
 \mathbf{A} \mathbf{v}_i = λ_i \mathbf{v}_i.
@@ -49,7 +49,7 @@ Geometrically speaking the eigenvectors provide special directions in space alon
 
 But more generally if $\mathbf x$ is an arbitrary vector
 and if for simplicity we assume $\mathbf{A}$ to be symmetric
-and positive-definite,
+and positive definite,
 then we find
 ```math
 \| \mathbf A \mathbf x \| \leq \| \mathbf A \| \, \| \mathbf x \| \leq 
@@ -67,7 +67,7 @@ This may sound technical, but as **matrices are common
 in physics and engineering**
 and since their **eigenpairs characterise the action of these matrices**,
 the computation of
-eigenpairs often carris a **physical interpretation**.
+eigenpairs often carries a **physical interpretation**.
 
 For example, in the classical mechanics of rotating objects, the eigenvectors of the **[Moment of inertia](https://en.wikipedia.org/wiki/Moment_of_inertia)** tensor are the **principle axes** along which an object spins without coupling to other rotational degrees of freedom.
 
@@ -159,7 +159,7 @@ md"""Note how the iterations stabilise, i.e. that $\textbf{x}$ and $\textbf{A} \
 
 # ╔═╡ 73c62d23-ac2a-48be-b3c7-0d51ffce773c
 md"""
-Let us understand what happened in this example in detail now. We consider the case $\mathbf{A} \in \mathbb{R}^{n \times n}$ diagonalisable and let further
+Let us understand what happened in this example in detail. We consider the case $\mathbf{A} \in \mathbb{R}^{n \times n}$ diagonalisable and let further
 ```math
 \tag{1}
 |λ_1| ≤ |λ_2| ≤ |λ_3| ≤ \cdots ≤ |λ_{n-1}| \textcolor{red}{<} |λ_n|
@@ -341,8 +341,9 @@ Based on this idea we formulate the algorithm
 # ╔═╡ 4ebfc860-e179-4c76-8fc5-8c1089301078
 md"""
 Note that in this algorithm
-$α^{(k)} = 1 / \| y^{(k)}$, such that Step 4 is exactly performing
-the normalisation we developed above.
+$y_m^{(k)} = \| y^{(k)} \|_\infty$
+and $α^{(k)} = 1 / \| y^{(k)} \|_\infty$.
+Step 4 is thus performing the normalisation we developed above.
 Furthermore instead of employing $\| x \|_\infty$
 as the eigenvalue estimate it employs
 $β^{(k)}$, which is just a scaled version of $\| x \|_\infty$.
@@ -853,7 +854,7 @@ C = [-4.0  3.0  4.0;
 md"""which has eigenvalues $λ_1 = -4$, $λ_2 = 4$ and $λ_3 = 2$.
 
 Since it has no unique dominant eigenvalue ($|λ_1| = |λ_2| = 4$)
-**plain power iterations** do not converge, but rather oscillate around $4$ or $-4$:
+**plain power iterations** do not converge, but rather oscillate:
 """
 
 # ╔═╡ fe15a206-e650-4d59-962c-a00bc226bf48
@@ -897,8 +898,7 @@ $\mu_i = \frac1{λ_i-σ}$ or
 \mu_1 = \frac{1}{-4 + 6} = \frac12 \qquad \mu_2 = \frac{1}{4+6} = \frac1{10} \qquad \mu_3 = \frac1{2+6} = \frac{1}{8},
 ```
 such that $\mu_1 = \frac12$ is the dominating eigenvalue. Therefore
-with $σ = -6$ inverse iterations converge to $-6 + 1 / \mu_1 = 
-with $σ = -6$ inverse iterations converge to $-6 + 1 / (\frac{1}2) = -4$:
+with $σ = -6$ inverse iterations converge to $-6 + 1 / \mu_1 = -6 + 1 / (\frac{1}2) = -4$:
 """
 
 # ╔═╡ 10558bcb-43d4-41cd-b39f-63ec58e86b1b
@@ -2311,7 +2311,6 @@ version = "1.4.1+2"
 # ╟─34beda8f-7e5f-42eb-b32c-73cfc724062e
 # ╠═4949225a-ccf2-11ee-299b-9b834eb6bd42
 # ╟─13298dc4-9800-476d-9474-182359a7671b
-# ╟─1980cffb-4b56-4b66-8100-a730da0c89f5
 # ╟─a138fb39-aae0-41b4-bd7b-d2f7eaad7a53
 # ╟─a702d4b6-e70c-417d-ac98-92c534d52770
 # ╟─73889935-2e4c-4a15-a281-b155cf1ca1c9
