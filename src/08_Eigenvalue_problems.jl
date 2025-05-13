@@ -209,9 +209,12 @@ If $z_n \neq 0$ then
 \cdots
 + \left|\frac{λ_{n-1}}{λ_n}\right|^k \, |z_{n-1}| \, \|\textbf v_{n-1}\|
 ```
-Now, each of the terms $\left|\frac{λ_j}{λ_n}\right|^k$
-for $j = 1, \ldots, {n-1}$ goes to zero for $k \to \infty$ due to the
-ascending eigenvalue ordering of Equation (1).
+A consequence of the ascending eigenvalue ordering of equation (1) is that
+```math
+\left|\frac{λ_{j}}{λ_n}\right| < 1 \qquad \text{for all $j = 1, \ldots, n-1$}
+```
+and therefore that each of the terms $\left|\frac{λ_j}{λ_n}\right|^k$
+for $j = 1, \ldots, {n-1}$ goes to zero for $k \to \infty$.
 Therefore overall
 ```math
 \left\| \frac{\mathbf{A}^k \mathbf{x}^{(1)}}{λ_n^k} - z_n \textbf v_n \right\|
@@ -322,39 +325,43 @@ md"We also note in passing that $\|x\|_\infty$ seems to converge to the dominant
 
 # ╔═╡ b69a8d6c-364a-4951-afd9-24588ac10b64
 md"""
-Based on this idea we formulate the algorithm
+Note that $\|x\|_\infty = \max_{i=1,\ldots n} |x_i|$
+implies that there exists an index $m \in \{1,\ldots n\}$,
+such that $\|x\|_\infty = |x_m|$.
+
+Keeping this in mind we formulate the algorithm
 
 !!! info "Algorithm 1: Power iterations"
     Given a diagonalisable matrix $\mathbf A \in \mathbb R^{n\times n}$
     and an initial guess $\mathbf x^{(1)} \in \mathbb R^n$ we iterate
     for $k = 1, 2, \ldots$:
     1. Set $\mathbf y^{(k)} = \mathbf A \, \mathbf x^{(k)}$
-    2. Find the index $m$ such that $\left|y_m^{(k)}\right|$ is the largest (by magnitude) element of $\textbf{y}^{(k)}$, i.e.
-       ```math
-       m = \textrm{argmax}_i \left|y_i^{(k)}\right|
-       ```
-    3. Set $α^{(k)} = \frac{1}{y^{(k)}_m}$ and $β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}$.
-    4. Set $\mathbf x^{(k+1)} = α^{(k)} \mathbf y^{(k)}$
+    2. Find the index $m$ such that $\left|y_m^{(k)}\right| = \left\|y^{(k)}\right\|_\infty$
+    3. Compute $α^{(k)} = \frac{1}{y^{(k)}_m}$ and set $β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}$ *(see below why)*
+    4. Set $\mathbf x^{(k+1)} = α^{(k)} \mathbf y^{(k)}$ *(Normalisation)*
 
+    We obtain $β^{(k)}$ as the estimate to the dominant eigenvalue
+    and $\mathbf x^{(k)}$ as the estimate of the corresponding eigenvector.
 """
 
 # ╔═╡ 4ebfc860-e179-4c76-8fc5-8c1089301078
 md"""
-Note that in this algorithm
-$y_m^{(k)} = \| y^{(k)} \|_\infty$
-and $α^{(k)} = 1 / \| y^{(k)} \|_\infty$.
+In this algorithm $α^{(k)} = \frac{1}{y^{(k)}_m} = \frac{1}{\| y^{(k)} \|_\infty}$.
 Step 4 is thus performing the normalisation we developed above.
-Furthermore instead of employing $\| x \|_\infty$
-as the eigenvalue estimate it employs
-$β^{(k)}$, which is just a scaled version of $\| x \|_\infty$.
-To see why this should be expected to be an estimate of the
-dominant eigenvalue $λ_n$ assume that
-$\textbf{x}^{(k)}$ is already close to the associated eigenvector $\mathbf v_n$.
-Then $\mathbf A\, \mathbf{x}^{(k)}$ is almost $\lambda_n \mathbf{x}^{(k)}$,
-such that the ratio $β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}$
-becomes close to $λ_n$ itself.
 
-An implementation of this power method algorithm in:
+Furthermore $β^{(k)}$ is now computed as the eigenvalue estimate
+instead of $\| x \|_\infty$. The idea is
+that if $\textbf{x}^{(k)}$ is already close to the eigenvector $\mathbf v_n$
+associated to the dominant eigenvalue $λ_n$, then
+```math
+\mathbf{y}^{(k)} = \mathbf A\, \mathbf{x}^{(k)} \approx \mathbf A\, \mathbf{v}_n = λ_n \mathbf{x}^{(k)}
+\quad \Rightarrow \quad 
+\mathbf{y}^{(k)}_m \approx λ_n \mathbf{x}^{(k)}_m
+\quad \Rightarrow \quad
+λ_n \approx \frac{\mathbf{y}^{(k)}_m}{\mathbf{x}^{(k)}_m} = β^{(k)}
+```
+
+An implementation of this power method algorithm is:
 """
 
 # ╔═╡ 01186225-602f-4637-99f2-0a6dd569a703
@@ -752,7 +759,7 @@ enables us to find the **eigenvalue of $\mathbf A$ closest to $σ$**.
 md"""
 A naive application of Algorithm 1 would first compute $\mathbf{P} = (\mathbf A - σ \mathbf I)^{-1}$ and then apply 
 ```math
-\mathbf y^{(k)} = (\mathbf A - σ \mathbf I)^{-1} \mathbf x^{(k)} \mathbf{P} \mathbf x^{(k)}
+\mathbf y^{(k)} = \mathbf{P} \mathbf x^{(k)}
 ```
 in each step of the power iteration.
 However, for many problems the explicit computation of the inverse
@@ -779,7 +786,7 @@ md"""
      we iterate for $k = 1, 2, \ldots$:
      1.    $\textcolor{brown}{\text{Solve }(\mathbf A - σ \mathbf I) \mathbf y^{(k)} = \mathbf x^{(k)}
         \text{ for }\mathbf y^{(k)}}$.
-     2. Find the index $m$ such that $y^{(k)}_m = \|\mathbf y^{(k)}\|$
+     2. Find the index $m$ such that $|y^{(k)}_m| = \|\mathbf y^{(k)}\|_\infty$
      3. Set $α^{(k)} = \frac{1}{y^{(k)}_m}$ and $\textcolor{brown}{β^{(k)} = σ + \frac{x^{(k)}_m}{y^{(k)}_m}}$.
      4. Set $\mathbf x^{(k+1)} = α^{(k)} \mathbf y^{(k)}$
 """
