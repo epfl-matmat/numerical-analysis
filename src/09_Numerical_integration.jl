@@ -976,7 +976,7 @@ On the others the function values are already known (as they were needed at the 
 """
 
 # ╔═╡ 57e9518b-b8d8-4d4e-911c-9034afd807f6
-RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/master/notes/img/node-doubling.svg", "img/node-doubling.svg", :width => 600)
+RobustLocalResource("https://github.com/epfl-matmat/numerical-analysis/blob/30a76271c3fa3be9d24896ecd2450d18fa505df3/src/img/node-doubling.svg", "img/node-doubling.svg", :width => 600)
 
 # ╔═╡ d5885f27-7171-4a78-a32f-ead4a4791b0b
 md"""

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -68,7 +68,7 @@ md"""
 """
 
 # ╔═╡ 93b28014-c767-4f40-b27c-4646f63faa89
-RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/master/notes/img/node-doubling.svg", "img/heat-equation.svg", :width => 500)
+RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/30a76271c3fa3be9d24896ecd2450d18fa505df3/src/img/heat-equation.svg", "img/heat-equation.svg", :width => 500)
 
 # ╔═╡ f1b662de-b4cf-4a73-9c00-580a2ea8a428
 md"""
@@ -180,7 +180,7 @@ Similar to our approach when [solving initial value problems (chapter 11)](https
 we **divide the full interval $[0, L]$ into $N+1$ subintervals** $[x_j, x_{j+1}]$
 of uniform size $h$, i.e. 
 ```math
-x_j = j\, h \quad j = 0, \ldots, N, \qquad h = \frac{L}{N+1}.
+x_j = j\, h \quad j = 0, \ldots, N+1, \qquad h = \frac{L}{N+1}.
 ```
 Our goal is thus to find approximate points $u_j$ such that $u_j ≈ u(x_j)$ at the nodes $x_j$.
 """
@@ -762,7 +762,7 @@ The original problem (17) is additionally called the **strong form** of the heat
 !!! info "Observation: Strong and weak solutions"
 	If $u$ is a solution to the strong form (17) of a BVP,
 	than it is also a solution to the weak form (19).
-	However, **not every weak solution as also a strong solution**.
+	However, **not every weak solution is also a strong solution**.
 """
 
 # ╔═╡ 79816267-531b-4b99-bdea-1194574dd160
@@ -1070,22 +1070,42 @@ end
 md"""We see that already for 5 $\sin$ basis functions it becomes visually very hard to see the difference to the reference solution with $300$ basis functions.
 
 Numerically we observe a **quadratic convergence** in a log-log plot:
+
+- Show finite difference approximation of same size ($N = m$) $(@bind show_fd CheckBox(; default=false))
 """
 
 # ╔═╡ 1d55c98e-4ed9-4ac4-a847-b18432483472
 let
 	x = range(0, π; length=1000)
-	reference(x) = sine_solution(300, x)
+	reference(x) = sine_solution(800, x)
 
-	ms = [5, 10, 20, 40, 50, 60, 80, 100]
+	ms = [5, 10, 20, 40, 50, 60, 80, 100, 300]
 	errors = Float64[]
 	for m in ms
 		error = [abs(sine_solution(m, xᵢ) - reference(xᵢ)) for xᵢ in x]
 		push!(errors, maximum(error))
 	end
 	
-	p = plot(ms, errors, yaxis=:log, xaxis=:log, lw=2, mark=:o, title=L"Convergence in $m$", xlabel=L"m", ylabel="maximal error", label="Error")
+	p = plot(ms, errors, yaxis=:log, xaxis=:log, lw=2, mark=:o, title=L"Convergence in $m$", xlabel=L"m", ylabel="maximal error", label="Error sin Galerkin")
 	plot!(p, ms, 1 ./ms.^2, ls=:dash, lw=2, label=L"O(m^2)")
+	
+	ylims!(p, (1e-6, 1e-1))
+	xticks!(p, 10.0 .^ (0:0.5:3))
+	yticks!(p, 10.0 .^ (0:-1:-6))
+
+	if show_fd
+		errors_fd = Float64[]
+		for N in ms
+			res_fd = fd_dirichlet(f, L, α, β, N)
+			x = res_fd.x
+			u = res_fd.u
+			error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
+			push!(errors_fd, maximum(error))
+		end
+		plot!(p, ms, errors_fd; lw=2, mark=:o, c=3, label="Error finite-differences")
+	end
+
+	p
 end
 
 # ╔═╡ 3348115a-2fd4-4935-9dba-b85d9e0c95f5
@@ -1118,7 +1138,7 @@ PlutoUI = "~0.7.59"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.4"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "386992f2ee9496aea372b754edcbbad6c546e5b7"
 
@@ -1659,7 +1679,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+4"
+version = "0.8.5+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -2376,7 +2396,7 @@ version = "1.4.1+2"
 # ╟─d0a2133c-47d0-40d5-8508-18bb046d92d1
 # ╟─aa589aa5-1a5c-4782-af66-2509f21ac891
 # ╟─4fee47fc-077d-4921-8572-7820ab84988e
-# ╟─1d55c98e-4ed9-4ac4-a847-b18432483472
+# ╠═1d55c98e-4ed9-4ac4-a847-b18432483472
 # ╟─3348115a-2fd4-4935-9dba-b85d9e0c95f5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
