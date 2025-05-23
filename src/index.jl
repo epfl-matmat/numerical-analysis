@@ -44,8 +44,9 @@ generating this website.
 md"""
 ## EPFL resources
 
-If you are an EPFL student, you can find the following course resources:
+If you are an EPFL student you find the internal course resources following these links:
 - **Moodle link:** <https://go.epfl.ch/numerical-analysis>
+- **Lecture recordings:** [https://mediaspace.epfl.ch](https://mediaspace.epfl.ch/channel/numerical-analysis/110626)
 
 """
 
