@@ -133,14 +133,14 @@ Since these two points sit at the boundary of our computational domain $[0, L]$ 
 md"""
 We sketch the two most common cases:
 
-- Consider the case where the bar is in contact with heat baths of constant temperature. A temperature $α$ for the left-hand side bath and $β$ for the right-hand side bath. In this case we know $u(0) = α$ and $u(L) = β$. We obtain the **heat equation using Dirichlet boundary conditions**:
+- Consider the case where the bar is in contact with heat baths of constant temperature. A temperature $b_0$ for the left-hand side bath and $b_L$ for the right-hand side bath. In this case we know $u(0) = b_0$ and $u(L) = b_L$. We obtain the **heat equation using Dirichlet boundary conditions**:
   ```math
   \tag{1}
   \left\{
   \begin{aligned}
   -k \, \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L).\\
-  u(0) &= α\\
-  u(L) &= β
+  u(0) &= b_0\\
+  u(L) &= b_L
   \end{aligned}
   \right.
   ```
@@ -151,12 +151,12 @@ We sketch the two most common cases:
   \left\{
   \begin{aligned}
   -k \, \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L).\\
-  \frac{\partial u}{\partial x}(0) &= - \frac{\phi_L}{k} \\
-  \frac{\partial u}{\partial x}(L) &= - \frac{\phi_R}{k}
+  \frac{\partial u}{\partial x}(0) &= - \frac{\phi_0}{k} \\
+  \frac{\partial u}{\partial x}(L) &= - \frac{\phi_L}{k}
   \end{aligned}
   \right.
   ```
-  where in the insulating case $\phi_L = \phi_R = 0$. We will not consider Neumann problems any further here.
+  where in the insulating case $\phi_0 = \phi_L = 0$. We will not consider Neumann problems any further here.
 
 Since for such kind of problems knowing the boundary is imperative to obtain a unique solution one refers to such problems as **boundary value problems**.
 """
@@ -171,11 +171,11 @@ Our goal is thus to find a function $u : [0, L] \to \mathbb{R}$ with
 \left\{
 \begin{aligned}
 - \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L)\\
-u(0) &= α, \quad u(L) = β,
+u(0) &= b_0, \quad u(L) = b_L,
 \end{aligned}
 \right.
 ```
-were $α, β \in \mathbb{R}$.
+were $b_0, b_L \in \mathbb{R}$.
 Similar to our approach when [solving initial value problems (chapter 11)](https://teaching.matmat.org/numerical-analysis/11_Initial_value_problems.html)
 we **divide the full interval $[0, L]$ into $N+1$ subintervals** $[x_j, x_{j+1}]$
 of uniform size $h$, i.e. 
@@ -187,8 +187,8 @@ Our goal is thus to find approximate points $u_j$ such that $u_j ≈ u(x_j)$ at 
 
 # ╔═╡ 82788dfd-3462-4f8e-b0c8-9e196dac23a9
 md"""
-Due to the Dirichlet boundary conditions $u(0) = α$ and $u(L) = β$.
-To satisfy these we neccessarily need $u_0 = α$ and $u_{N+1} = β$.
+Due to the Dirichlet boundary conditions $u(0) = b_0$ and $u(L) = b_L$.
+To satisfy these we neccessarily need $u_0 = b_0$ and $u_{N+1} = b_L$.
 The unknowns of our problems are therefore those
 $u_j$ with $1 ≤ j ≤ N$
 --- the **internal nodes** of the interval.
@@ -216,12 +216,12 @@ or in terms of $u_j$:
 
 # ╔═╡ 1fb53091-89c8-4f70-ab4b-ca2371b830b2
 md"""
-Due to our **imposed boundary conditions** $u_0 = α$ and $u_{N+1} = β$,
+Due to our **imposed boundary conditions** $u_0 = b_0$ and $u_{N+1} = b_L$,
 such that we can simplify the equations for $j = 1$ and $j=N$ as follows:
 ```math
 \begin{aligned}
-j&=1: & \frac{-α + 2u_1 - u_2}{h^2} &= f(x_1) \quad &\Leftrightarrow \quad \frac{2u_1 - u_2}{h^2} &= f(x_1) + \frac{α}{h^2}\\
-j&=N: & \frac{-u_{N-1} + 2u_N - β}{h^2} &= f(x_N) \quad &\Leftrightarrow \quad \frac{-u_{N-1} +2u_N}{h^2} &= f(x_N) + \frac{β}{h^2}\\
+j&=1: & \frac{-b_0 + 2u_1 - u_2}{h^2} &= f(x_1) \quad &\Leftrightarrow \quad \frac{2u_1 - u_2}{h^2} &= f(x_1) + \frac{b_0}{h^2}\\
+j&=N: & \frac{-u_{N-1} + 2u_N - b_L}{h^2} &= f(x_N) \quad &\Leftrightarrow \quad \frac{-u_{N-1} +2u_N}{h^2} &= f(x_N) + \frac{b_L}{h^2}\\
 \end{aligned}
 ```
 Collecting everything we obtain the system of equations
@@ -229,9 +229,9 @@ Collecting everything we obtain the system of equations
 \tag{5}
 \left\{
 \begin{aligned}
-\frac{2u_1 - u_2}{h^2} &= f(x_1) + \frac{α}{h^2} && j=1\\
+\frac{2u_1 - u_2}{h^2} &= f(x_1) + \frac{b_0}{h^2} && j=1\\
 \frac{-u_{j-1} + 2u_j - u_{j+1}}{h^2} &= f(x_j)  && \forall\, 2 ≤ j ≤ N-1 \\
-\frac{-u_{N-1} +2u_N}{h^2} &= f(x_N) + \frac{β}{h^2} && j=N
+\frac{-u_{N-1} +2u_N}{h^2} &= f(x_N) + \frac{b_L}{h^2} && j=N
 \end{aligned}
 \right.
 ```
@@ -243,19 +243,19 @@ md"""
 An important question in the mathematical literature for problems such as (5)
 is whether this problem is **well-posed**, that is whether a unique solution to such problems even exists at all.
 
-For the boundary value problems we consider in this chapter it turns out that such a solution always exists, provided that the incoming heat $f$ and the boundary values $α$ and $β$ are finite. More precisely we have the following result:
+For the boundary value problems we consider in this chapter it turns out that such a solution always exists, provided that the incoming heat $f$ and the boundary values $b_0$ and $b_L$ are finite. More precisely we have the following result:
 
 !!! info "Theorem 1"
 	For every $\mathbf{f} = (f(x_1), f(x_2), \ldots f(x_n))^T \in \mathbb{R}^N$
-	and all $α, β \in \mathbb{R}$, the system of equations shown in (5)
+	and all $b_0, b_L \in \mathbb{R}$, the system of equations shown in (5)
 	admits a unique solution
 	$\mathbf{u} = (u_1, \ldots, u_N)^T \in \mathbb{R}^N$ with
 	```math
 	\tag{6}
-	\max_{j=1,\ldots,N} |u_j| ≤ \frac18 \max_{j=1,\ldots,N} |f(x_j)| + \max(|α|, |β|).
+	\max_{j=1,\ldots,N} |u_j| ≤ \frac18 \max_{j=1,\ldots,N} |f(x_j)| + \max(|b_0|, |b_L|).
 	```
 
-Colloquially speaking this Theorem ensures that the solution $\mathbf{u}$ cannot take too large values and moreover it tells us that the solution values are always controlled by the norm of the vector $\mathbf{f}$ and the boundary values $α$ and $β$.
+Colloquially speaking this Theorem ensures that the solution $\mathbf{u}$ cannot take too large values and moreover it tells us that the solution values are always controlled by the norm of the vector $\mathbf{f}$ and the boundary values $b_0$ and $b_L$.
 """)
 
 # ╔═╡ cbcd1b1e-7755-4177-b52a-f361ee025e01
@@ -274,7 +274,7 @@ as well as the **right-hand side** $\mathbf{b} \in \mathbb{R}^N$ with
 \end{pmatrix}
 \qquad\qquad
 \mathbf{b} = \begin{pmatrix}
-f(x_1) + \frac{α}{h^2} \\ f(x_2) \\ \vdots \\ f(x_{N-1}) \\ f(x_N) + \frac{β}{h^2}
+f(x_1) + \frac{b_0}{h^2} \\ f(x_2) \\ \vdots \\ f(x_{N-1}) \\ f(x_N) + \frac{b_L}{h^2}
 \end{pmatrix}.
 ```
 With these objects the problem can be written as a linear system
@@ -302,14 +302,14 @@ We summarise:
 	\left\{
 	\begin{aligned}
 	- \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L)\\
-	u(0) &= α, \quad u(L) = β,
+	u(0) &= b_0, \quad u(L) = b_L,
 	\end{aligned}
 	\right.
 	```
 	and nodes $x_j = j\, h$ with $j = 0, \ldots, N$ and $h = \frac{L}{N+1}$
 	solve the linear system $\mathbf{A} \mathbf{u} = \mathbf{b}$
 	with $\mathbf{A}$ and $\mathbf{b}$ given in (7)
-	for $\mathbf{u} = (u_1, \ldots, u_N)^T$ and $u_0 = α$, $u_{N+1} = β$.
+	for $\mathbf{u} = (u_1, \ldots, u_N)^T$ and $u_0 = b_0$, $u_{N+1} = b_L$.
 
 	The values $u_0, u_1, \ldots, u_{N+1}$ approximate the solution $u(x)$
 	at the nodal points $\{x_j\}_{j=0}^{N+1}$.
@@ -321,11 +321,11 @@ One implementation of Algorithm 1, which solves the linear system using LU facto
 """
 
 # ╔═╡ 3bc63106-3d1c-4b4e-a6a6-682e09475cb4
-function fd_dirichlet(f, L, α, β, N)
+function fd_dirichlet(f, L, b₀, bₗ, N)
 	# f:  Function describing the external heat source
 	# L:  Length of the metal rod
-	# α:  Left-hand side boundary value
-	# β:  Right-hand side boundary value
+	# b₀: Left-hand side boundary value
+	# bₗ: Right-hand side boundary value
 	# N:  Number of nodal points for the finite-differences scheme
 	
 	h = L / (N+1)             # Step size
@@ -340,8 +340,8 @@ function fd_dirichlet(f, L, α, β, N)
 	b = [f(xⱼ) for xⱼ in x]  # Evaluate function f at nodal points
 
 	# Set terms due to boundary conditions
-	b[1] = f(x[1]) + α / h^2
-	b[N] = f(x[N]) + β / h^2
+	b[1] = f(x[1]) + b₀ / h^2
+	b[N] = f(x[N]) + bₗ / h^2
 
 	# Solve problem using LU factorisation
 	u = A \ b
@@ -365,8 +365,8 @@ i.e. the case of
 
 # ╔═╡ 9f4df9d4-e0cb-4706-8158-0da7a6505442
 begin
-	α = 1
-	β = 2
+	b₀ = 1
+	bₗ = 2
 	L = 2π
 	f(x) = sin(x)
 end;
@@ -391,7 +391,7 @@ md"and plot the result:"
 md"`N = ` $(@bind N Slider(10:5:100; default=10, show_value=true))"
 
 # ╔═╡ b0342965-0c56-4ae8-a092-9f4ac565d249
-res_fd = fd_dirichlet(f, L, α, β, N);
+res_fd = fd_dirichlet(f, L, b₀, bₗ, N);
 
 # ╔═╡ 474dee17-627a-49b1-84e8-d692346d8aa0
 let
@@ -401,7 +401,7 @@ let
 
 	plot!(res_fd.x, res_fd.u; label="Finite differences N=$N", mark=:o, lw=2, ls=:dash)
 
-	scatter!([0, L], [α, β], label="Boundary values", mark=:o, c=3)
+	scatter!([0, L], [b₀, bₗ], label="Boundary values", mark=:o, c=3)
 end
 
 # ╔═╡ 814ac12b-5ed7-4512-b053-fbe729b90ce6
@@ -432,7 +432,7 @@ let
 	Ns = [ round(Int, 5 * 10^k) for k in 0:0.5:4 ]
 	errors = Float64[]
 	for N in Ns
-		res_fd = fd_dirichlet(f, L, α, β, N)
+		res_fd = fd_dirichlet(f, L, b₀, bₗ, N)
 		x = res_fd.x
 		u = res_fd.u
 		error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
@@ -458,10 +458,10 @@ In line with this discussion we define convergence for numerical schemes for bou
 
 !!! info "Definition: Convergence order for boundary value problems"
 	A numerical scheme approximating a boundary value problem (9)
-	**converges with order $p$** if there exists a constant $C>0$
+	**converges with order $p$** if there exists a constant $α>0$
 	such that
 	```math
-	\max_{j=0,\ldots,N+1} |u(x_j) - u_j| ≤ C \, h^p
+	\max_{j=0,\ldots,N+1} |u(x_j) - u_j| ≤ α \, h^p
 	```
 	provided that the solution $u$ is sufficiently regular.
 
@@ -480,7 +480,7 @@ let
 	Ns = [ round(Int, 5 * 10^k) for k in 2:0.1:5.2 ]
 	errors = Float64[]
 	for N in Ns
-		res_fd = fd_dirichlet(f, L, α, β, N)
+		res_fd = fd_dirichlet(f, L, b₀, bₗ, N)
 		x = res_fd.x
 		u = res_fd.u
 		error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
@@ -520,7 +520,7 @@ As it turns out the **condition number of the system matrix $\mathbf{A}$ grows**
 # ╔═╡ f3819d92-c61a-49b2-a77b-9837cbed0cae
 let
 	Ns = [5, 10, 50, 80, 200, 500, 1000]
-	condition_numbers = [cond(fd_dirichlet(f, L, α, β, N).A) for N in Ns]
+	condition_numbers = [cond(fd_dirichlet(f, L, b₀, bₗ, N).A) for N in Ns]
 
 	p = plot(Ns, condition_numbers; mark=:o, yaxis=:log, xaxis=:log, lw=2, xlabel=L"N", ylabel=L"κ(A)", legend=:topleft, label=L"Condition number of $A$", ylims=(1, 10^13), xlims=(1, 3e6), yticks=(10.0 .^ (0:2:12)), xticks=(10.0 .^ (0:1:6)))
 	plot!(p, Ns -> Ns^2, ls=:dash, lw=2, label=L"O(N^2) = O(h^{-2})")
@@ -556,7 +556,7 @@ Ignoring thus the floating-point error we conclude that the global error
 ```math
 |e_j| = |u(x_j) - u_j| \qquad \text{for $j = 1, \ldots, N$}.
 ```
-should scale as $\max_{j=1,\ldots,N} |u(x_j) - u_j| ≤ C h^2$ for some constant $C$.
+should scale as $\max_{j=1,\ldots,N} |u(x_j) - u_j| ≤ α\, h^2$ for some constant $α$.
 In this section we will make this more quantitative.
 """
 
@@ -637,7 +637,7 @@ Subtracting (4) from (12) thus leads to
 = \tau^h_j 	\qquad j = 1, \ldots, N,
 ```
 where we used the definition of the error $e_j = u(x_j) - u_j$.
-At the boundary, where we set $u_0 = α = u(0)$ and $u_{N+1} = β = u(L)$
+At the boundary, where we set $u_0 = b_0 = u(0)$ and $u_{N+1} = b_L = u(L)$
 we have $e_0 = e_{N+1} = 0$, such that the error satisfies
 ```math
 \tag{13}
@@ -649,7 +649,7 @@ we have $e_0 = e_{N+1} = 0$, such that the error satisfies
 \end{aligned}
 \right.
 ```
-which is again a discretised Dirichlet bounary value problem (5) with the conditions that $f(x_j) = τ^h_j$ and $α=β=0$.
+which is again a discretised Dirichlet bounary value problem (5) with the conditions that $f(x_j) = τ^h_j$ and $b_0=b_L=0$.
 
 We can therefore apply equation (14) of Theorem 1 
 (see the folded section *Optional: Does the problem (5) always have a solution ?*)
@@ -670,9 +670,9 @@ Combining this result with Lemma 2 yields
 	the finite differences scheme of Algorithm 1 converges as
 	```math
 	\tag{16}
-	\max_{j=1,\ldots,N} |u(x_j) - u_j| ≤ C h^2
+	\max_{j=1,\ldots,N} |u(x_j) - u_j| ≤ α \, h^2
 	```
-	where $C = \frac{1}{96} \|u''''\|_\infty$.
+	where $α = \frac{1}{96} \|u''''\|_\infty$.
 	It thus achieves **quadratic convergence**.
 """
 
@@ -687,7 +687,7 @@ Let us return to the general heat equation using Dirichlet boundary conditions:
 \left\{
 \begin{aligned}
 -k \, \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L).\\
-u(0) &= α, \quad u(L) = β
+u(0) &= b_0, \quad u(L) = b_L
 \end{aligned}
 \right.
 ```
@@ -730,7 +730,7 @@ If $u : [0, L] \to \mathbb{R}$ is a solution to (17) than our discussion implies
 \begin{aligned}
 \int_0^L k\, u'(x)\, \psi'(x)\, dx &= \int_{0}^L f(x)\, \psi(x)\, dx
 \qquad \forall\,\psi \in V_0\\
-u(0) &= α, \quad u(L) = β
+u(0) &= b_0, \quad u(L) = b_L
 \end{aligned}
 \right.
 ```
@@ -747,7 +747,7 @@ md"""
 	\begin{aligned}
 	\int_0^L k\, u'(x)\, \psi'(x)\, dx &= \int_{0}^L f(x)\, \psi(x)\, dx
 	\qquad \forall\,\psi \in V_0\\
-	u(0) &= α, \quad u(L) = β,
+	u(0) &= b_0, \quad u(L) = b_L,
 	\end{aligned}
 	\right.
 	```
@@ -789,7 +789,7 @@ where some of this is discussed.
 md"""
 ### Discretisation of the weak form
 
-In order to solve (19) our goal is to rewrite the problem in the form of linear algebra --- vectors and matrices. For simplicity we will only consider the case $α=β=0$ in this section, i.e. we restrict ourselves to the **heat equation with a zero Dirichlet boundary**
+In order to solve (19) our goal is to rewrite the problem in the form of linear algebra --- vectors and matrices. For simplicity we will only consider the case $b_0=b_L=0$ in this section, i.e. we restrict ourselves to the **heat equation with a zero Dirichlet boundary**
 ```math
 \tag{20}
 \left\{
@@ -1070,8 +1070,6 @@ end
 md"""We see that already for 5 $\sin$ basis functions it becomes visually very hard to see the difference to the reference solution with $300$ basis functions.
 
 Numerically we observe a **quadratic convergence** in a log-log plot:
-
-- Show finite difference approximation of same size ($N = m$) $(@bind show_fd CheckBox(; default=false))
 """
 
 # ╔═╡ 1d55c98e-4ed9-4ac4-a847-b18432483472
@@ -1092,18 +1090,6 @@ let
 	ylims!(p, (1e-6, 1e-1))
 	xticks!(p, 10.0 .^ (0:0.5:3))
 	yticks!(p, 10.0 .^ (0:-1:-6))
-
-	if show_fd
-		errors_fd = Float64[]
-		for N in ms
-			res_fd = fd_dirichlet(f, L, α, β, N)
-			x = res_fd.x
-			u = res_fd.u
-			error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
-			push!(errors_fd, maximum(error))
-		end
-		plot!(p, ms, errors_fd; lw=2, mark=:o, c=3, label="Error finite-differences")
-	end
 
 	p
 end

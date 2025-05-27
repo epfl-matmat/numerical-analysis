@@ -186,12 +186,12 @@ We just proved the linear convergence of $D^+_h$:
 # ╔═╡ 544bfd07-d57c-45f3-9a1a-37ea0bb7c0e3
 md"""
 !!! info "Theorem 1: Convergence of forward finite differences"
-	Given $f : [a, b] \to \mathbb{R}$ a $C^2$ function, then
+	Given $f : [a, b] \to \mathbb{R}$ a twice differentiable function, then
 	the forward finite difference formula (1) converges linearly
     ```math
-	\left| f'(x) - D^+_h f(x)\right| \leq C h
+	\left| f'(x) - D^+_h f(x)\right| \leq α\, h
 	```
-	with constant $C = \frac12 \|f''\|_\infty$.
+	with constant $α = \frac12 \|f''\|_\infty$.
 """
 
 # ╔═╡ 10295701-a493-43bc-ae0c-977b27151902
@@ -367,12 +367,12 @@ md"""
 Therefore central finite differences is of second order:
 
 !!! info "Theorem 2: Convergence of central finite differences"
-	Given $f : [a, b] \to \mathbb{R}$ a $C^3$ function, then
+	Given $f : [a, b] \to \mathbb{R}$ a three times differentiable function, then
 	the central finite difference formula (3) converges **quadratically**
     ```math
-	\left| f'(x) - D^c_h f(x)\right| \leq C h^2
+	\left| f'(x) - D^c_h f(x)\right| \leq α \, h^2
 	```
-	with constant $C = \frac13 \|f'''\|_\infty = \frac13 \max_{x\in [a, b]} |f'''(x)|$.
+	with constant $α = \frac13 \|f'''\|_\infty = \frac13 \max_{x\in [a, b]} |f'''(x)|$.
 
 """
 
@@ -383,10 +383,10 @@ In light of this discussion let us formalise the definition of convergence order
 !!! info "Definition: Convergence order of finite differences"
 	A finite differences formula $D_h \, f$ of the form (2)
 	with equally spaced nodes of separation $h$ is of **order $p$**
-	if a constant $C$ indepentent of $h$
+	if a constant $α > 0$ indepentent of $h$
 	(but possibly dependent on $f$) exists, such that
 	```math
-	\left| f'(x) - D_h f(x) \right| \leq C h^p
+	\left| f'(x) - D_h f(x) \right| \leq α \, h^p
 	```
 	as long as the function $f$ is sufficiently regular.
 """
@@ -926,7 +926,7 @@ This formula is also of **second order** as can be checked using a Taylor series
 
 # ╔═╡ 2adfac60-ec91-4c70-ae0c-f460f47d37dc
 md"""
-!!! danger
+!!! danger "Potential confusion: n-th derivative versus order n"
     Do not confuse the **derivation order** (how many times we differentiate) and the **approximation order** (the leading power of $h$ in the approximation error).
 
     In this case, we are approximating a second derivative, so the derivation order is 2, and it turns out that this formula has an approximation error in $\mathcal O (h^2)$ so the approximation order is also 2.

@@ -679,10 +679,10 @@ Notably Chebyshev nodes enjoy the following convergence result:
     analytic in an open interval containing $[-1, 1]$,
     that is the Talyor series of $f$ converges to
     $f(x)$ for any $x$ from this open interval.
-    Then we can find constants $C > 0$ and $K > 0$
+    Then we can find constants $α > 0$ and $0 < C < 1$
     such that
     ```math
-	\| f - p_n \|_\infty = \max_{x\in[-1,1]} \left|f(x) - p_n(x)\right| \leq C K^{-n}
+	\| f - p_n \|_\infty = \max_{x\in[-1,1]} \left|f(x) - p_n(x)\right| \leq α C^{n}
     ```
     where $p_n$ is the unique polynomial of degree $n$ defined by
     interpolation on $n+1$ Chebyshev points.
@@ -723,11 +723,11 @@ is one of the **desired properties**.
 
 !!! danger "Potential confusion: Convergence terminology"
     When discussing convergences rates of iterative numerical algorithms and
-    the accuracy of numerical approximation schemes (interpolation, differentiation, integration, discretisation) unfortunately a different terminology is employed. In the following let $C > 0$ and $K > 0$ denote appropriate constants.
+    the accuracy of numerical approximation schemes (interpolation, differentiation, integration, discretisation) unfortunately a different terminology is employed. In the following let $α > 0$ and $0 < C < 1$ denote appropriate constants.
 	- **Iterative schemes:** Linear convergence
-	  * If the error scales as $C K^{-n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to the last chapter.)
+	  * If the error scales as $α C^{n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to the last chapter.)
     - **Approximation schemes:** Exponential convergence
-	  * If the error scales as $C K^{-n}$ where $n$ is some accuracy parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
+	  * If the error scales as $α C^{n}$ where $n$ is some accuracy parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
 """
 
 # ╔═╡ a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
@@ -1130,9 +1130,9 @@ We summarise in a Theorem:
     $(x_i, f(x_i))$ satisfies the error estimate
     ```math
     \tag{13}
-    \|f - p_{1,h}\|_\infty \leq C h^2 \| f'' \|_\infty
+    \|f - p_{1,h}\|_\infty \leq α h^2 \| f'' \|_\infty
     ```
-    with $C = 1/8$.
+    with $α = 1/8$.
 
 Note, that this theorem is only true if the second derivative of $f$
 is continuous. Usually the second derivative $f''$
@@ -1165,16 +1165,16 @@ md"""
 # ╔═╡ 7e317807-d3ee-4197-91fb-9fc03f7297e8
 md"""
 Let us finally illustrate the quadratic convergence of piecewise polynomial
-interpolation graphically. Since the error $\|f - p_{1,h}\|_\infty \sim C h^2$ as $h\to0$, taking logarithms on both sides we obtain
+interpolation graphically. Since the error $\|f - p_{1,h}\|_\infty \sim α h^2$ as $h\to0$, taking logarithms on both sides we obtain
 ```math
-\log \left(\|f - p_{1,h}\|_\infty\right) \sim \log(C) + 2 \log(h).
+\log \left(\|f - p_{1,h}\|_\infty\right) \sim \log(α) + 2 \log(h).
 ```
 Therefore the logarithm of the error is a *linear function*
 in the logarithm of the discretisation parameter.
 Moreover the **slope** gives us the convergence order,
 here $m = 2$.
 Note, that to obtain this behaviour any logarithm would suffice.
-We choose a $log_{10}$-$\log_{10}$ plot as this is most easily realised in `Plots.jl`
+We choose a $\log_{10}$-$\log_{10}$ plot as this is most easily realised in `Plots.jl`
 and indeed exhibits a slope of $2$, meaning quadratic convergence (note that the $x$-axis is reversed in the plot.)
 """
 

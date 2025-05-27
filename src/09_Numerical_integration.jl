@@ -214,15 +214,16 @@ md"""
 Recall that in Theorem 4 of [chapter 05 (Interpolation)](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html) we found that
 the piecewise polynomial interpolation shows quadratic convergence
 ```math
-\|f - p_{1,h}\|_\infty \leq C h^2 \| f'' \|_\infty.
+\|f - p_{1,h}\|_\infty \leq α h^2 \| f'' \|_\infty,
 ```
+where $α > 0$.
 With this in mind we can bound the error of the trapezoidal rule as
 ```math
 \begin{aligned}
 I - T_n(f) &= \int_a^b f(x)\,dx - \int_a^b p_{1,h}(x)\,dx\\
 &= \int_a^b [f(x) - p_{1,h}(x)] \, dx\\
 &\leq \|f-p_{1,h}\|_\infty\, \int_a^b\, dx\\
-&\leq \underbrace{(b-a)\, C\, \|f''\|_\infty}_{=\widetilde{C}} \, h^2 = \widetilde{C} \, h^2 = O(h^2).
+&\leq \underbrace{(b-a)\, α\, \|f''\|_\infty}_{=\widetilde{α}} \, h^2 = \widetilde{α} \, h^2 = O(h^2).
 \end{aligned}
 ```
 We thus expect **quadratic convergence** with $h$.
@@ -414,11 +415,11 @@ In line with the definition of algebraic convergence (and convergence order) for
 
 !!! info "Definition: Convergence order of numerical integration"
 	A numerical integration formula $Q_a^b(f)$ of the form (2)
-	with equally spaced quadrature notes of separation $h$ is of **order $m$**
-	if a constant $C$ indepentent of $h$
+	with equally spaced quadrature notes of separation $h$ is of **order $p$**
+	if a constant $α>0$ indepentent of $h$
 	(but possibly dependent on $f$) exists, such that
 	```math
-	\left| \int_a^b f(x)\,dx - Q_a^b(f) \right| \leq C h^m
+	\left| \int_a^b f(x)\,dx - Q_a^b(f) \right| \leq α\, h^p
 	```
 	as long as the function $f$ is sufficiently regular.
 """
@@ -428,8 +429,8 @@ md"""
 We notice that our numerical investigation suggests:
 
 !!! info "Convergence order of common numerical integration techniques"
-	- **Trapezoidal rule:** Convergence order $m=2$
-	- **Simpon's rule:** Convergence order $m=4$
+	- **Trapezoidal rule:** Convergence order $p=2$
+	- **Simpon's rule:** Convergence order $p=4$
 """
 
 # ╔═╡ adf895be-b9d1-40e1-9c2b-146b30b996be
@@ -539,14 +540,14 @@ In (5) the first non-zero error term is thus
 \left|\int_{t_i}^{t_{i+1}} q_{r+1}(x) \,dx - Q_{t_i}^{t_{i+1}}(q_{r+1})\right|
 &\stackrel{(\ast)}{=} \left|\int_{t_i}^{t_{i+1}} x^{r+1} \,dx - Q_{t_i}^{t_{i+1}}(x^{r+1})\right| \\
 &\stackrel{(\S)}{\leq}
-\widetilde{C}_i h^{r+2}
+\widetilde{α}_i h^{r+2}
 \end{aligned}
 ```
 where in $(\ast)$ all powers in $x$ less than $r+1$ drop again because of $Q$'s degree of exactness and in $(\S)$ we skipped a few non-trivial steps,
 which are optional and will be presented below.
 This is also the leading-order error term, such that
 ```math
-\left|\int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)\right| ≤ \widetilde{C}_i h^{r+2}
+\left|\int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)\right| ≤ \widetilde{α}_i h^{r+2}
 ```
 """
 
@@ -559,12 +560,12 @@ we obtain the total error as
 \begin{aligned}
 \left|\int_a^b f(x)\,dx - Q_a^b(f)\right|
 &\leq \sum_{i=0}^{N-1} \left|\int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)\right|\\
-&\leq h^{r+2} \underbrace{\sum_{i=0}^{N-1} \widetilde{C}_i}_\text{$N$ terms}\\
-&\leq h^{r+1} \frac{b-a}{N} N \, \max_i \widetilde{C}_i \\
+&\leq h^{r+2} \underbrace{\sum_{i=0}^{N-1} \widetilde{α}_i}_\text{$N$ terms}\\
+&\leq h^{r+1} \frac{b-a}{N} N \, \max_i \widetilde{α}_i \\
 &= C \, h^{r+1}
 \end{aligned}
 ```
-where $C = (b-a)\, \max_i \widetilde{C}_i$.
+where $α = (b-a)\, \max_i \widetilde{α}_i$.
 
 We notice:
 """
@@ -591,9 +592,9 @@ md"""
 	continuously differentiable on the interval $[a, b]$.
 	In particular we have
 	```math
-	\left| \int_a^b f(x)\,dx - Q(f) \right| \leq C \, \|f^{(r+1)}\|_\infty \, h^{r+1}
+	\left| \int_a^b f(x)\,dx - Q(f) \right| \leq α \, \|f^{(r+1)}\|_\infty \, h^{r+1}
 	```
-	where the constant $C = \frac{b-a}{2^r \, (r+1)!}$ depends neither on $f$ nor on $h$.
+	where the constant $α = \frac{b-a}{2^r \, (r+1)!}$ depends neither on $f$ nor on $h$.
 
 		 
 **Proof:**

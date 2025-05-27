@@ -711,7 +711,7 @@ When performing numerical methods one is usually not only interested whether an 
     \tag{7}
     \lim_{k \to \infty} \frac{|x^{(k+1)} - x_\ast|}{|x^{(k)} - x_\ast|^q} = C
     ```
-    If $q = 1$ (convergence order 1) we additionally require $C < 1$.
+    If $q = 1$ (convergence order 1) we additionally require $0 < C < 1$.
 """
 
 # ╔═╡ deff7837-e80e-4fcc-8eb2-baafc047a992
