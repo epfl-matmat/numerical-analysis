@@ -323,7 +323,7 @@ This scheme is known as the **forward Euler method**:
 # ╔═╡ 0f2b87f4-8bc0-459c-a60d-29d523e60844
 md"""
 !!! info "Algorithm 1: Forward Euler method"
-	Given an initial value problem $\frac{d u}{d t} = f(u, t)$, $u(0) = u_0$
+	Given an initial value problem $\frac{d u}{d t} = f(u, t)$, $u(a) = u_0$
 	with $t \in [a, b]$ and nodes $t_n = a+n\, h$, $h = \frac{b-a}{N}$
 	iteratively compute the sequence
 	```math

@@ -36,6 +36,9 @@ md"""
 # ╔═╡ 13298dc4-9800-476d-9474-182359a7671b
 TableOfContents()
 
+# ╔═╡ 1980cffb-4b56-4b66-8100-a730da0c89f5
+TODO(md"""If we do this chapter *after* boundary value problems, we can actually motivate eigenvalue problems from solving an equation like $-\Delta u = f$ in a bounded domain (discretised e.g. using sine functions). This is nice because (a) it is related to the Resonance phaenomena equations, that lead to the resonance catastrophe in bridges (if $f$ hits an eigenvector of the laplacian) and (b) it makes the whole eigenvalue problems better embedded into the rest of the course and as an "application". """)
+
 # ╔═╡ a138fb39-aae0-41b4-bd7b-d2f7eaad7a53
 md"""
 # Eigenvalue problems
@@ -631,6 +634,9 @@ Ashift = [ 0.4 -0.6 0.2;
 
 # ╔═╡ 8290d531-bad1-40b8-a1e9-49cb3a9dae4c
 md"Its eigenvalues and eigenvectors are:"
+
+# ╔═╡ 506145ea-399a-4f22-bae3-25257fd0b154
+TODO("Maybe pick a matrix with simpler eigenvalues")
 
 # ╔═╡ 2f97e0aa-e9b1-4bdf-bc81-968a3217b2e6
 eigen(Ashift)
@@ -2318,6 +2324,7 @@ version = "1.4.1+2"
 # ╟─34beda8f-7e5f-42eb-b32c-73cfc724062e
 # ╠═4949225a-ccf2-11ee-299b-9b834eb6bd42
 # ╟─13298dc4-9800-476d-9474-182359a7671b
+# ╠═1980cffb-4b56-4b66-8100-a730da0c89f5
 # ╟─a138fb39-aae0-41b4-bd7b-d2f7eaad7a53
 # ╟─a702d4b6-e70c-417d-ac98-92c534d52770
 # ╟─73889935-2e4c-4a15-a281-b155cf1ca1c9
@@ -2366,6 +2373,7 @@ version = "1.4.1+2"
 # ╟─385b07d6-15ef-40ee-8d2e-b3b6505a4171
 # ╠═5d4697b4-2f3e-452b-afb8-78443efa1f25
 # ╟─0e4a443b-e99d-436f-8151-d6cfed9b773b
+# ╠═506145ea-399a-4f22-bae3-25257fd0b154
 # ╠═4fbed8eb-a929-4afb-a971-d37a75377d8f
 # ╟─8290d531-bad1-40b8-a1e9-49cb3a9dae4c
 # ╠═2f97e0aa-e9b1-4bdf-bc81-968a3217b2e6

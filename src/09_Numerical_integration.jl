@@ -320,6 +320,9 @@ md"""
 ## Simpson's rule
 """
 
+# ╔═╡ 4fdd346f-a279-4686-b775-675cfe9f9f21
+TODO("Show an illustrative drawing as well")
+
 # ╔═╡ becdcc4e-ecff-46ad-8f3a-92d117e374f7
 md"""
 Considering the construction of the trapezoidal rule
@@ -768,6 +771,12 @@ We will discuss one systematic technique to obtain higher-order quadrature formu
 called **extrapolation**.
 """
 
+# ╔═╡ 1080859f-c505-46ea-9d21-1a336325d8da
+TODO("Make the general treatment optional and focus mostly directly applying this to the Trapezoidal rule.")
+
+# ╔═╡ 635ae6b3-1770-431b-a799-0eefe20dfd0d
+TODO("What is confusing here is that before we did expansions (I - T_n(f) = stuff, but now we do I = T_n(f) + stuff. )")
+
 # ╔═╡ 9587ec30-95b1-4bcd-b8b3-18c0ce089e3c
 md"""
 Suppose a quantity $A_0$ is approximated by an algorithm $A_h$ with error expansion
@@ -978,6 +987,9 @@ On the others the function values are already known (as they were needed at the 
 
 # ╔═╡ 57e9518b-b8d8-4d4e-911c-9034afd807f6
 RobustLocalResource("https://github.com/epfl-matmat/numerical-analysis/blob/30a76271c3fa3be9d24896ecd2450d18fa505df3/src/img/node-doubling.svg", "img/node-doubling.svg", :width => 600)
+
+# ╔═╡ ea69e253-ff02-45b8-a760-4467260f36b4
+TODO("Using the drawing above this can be better explained, in particular T_{2n} easily re-written from T_n if one considers halfing the interval size ... perhaps some extra labels need to be introduced in the drawing above")
 
 # ╔═╡ d5885f27-7171-4a78-a32f-ead4a4791b0b
 md"""
@@ -2479,6 +2491,7 @@ version = "1.4.1+2"
 # ╟─f189cf70-d72e-483c-af61-a3346ddd201d
 # ╟─5f0178ad-c05b-4ac4-a008-b35d105cc7b2
 # ╟─c31c7012-6986-441f-ae99-5e2bb2b469e5
+# ╠═4fdd346f-a279-4686-b775-675cfe9f9f21
 # ╟─becdcc4e-ecff-46ad-8f3a-92d117e374f7
 # ╟─5ee0ec01-54c3-48d8-8ba8-4460144002dd
 # ╟─abcafa59-e8a1-4438-9ff6-3e8fc9fbd28d
@@ -2498,6 +2511,8 @@ version = "1.4.1+2"
 # ╟─a4cf020a-bb95-4fed-ad50-11ebae1934f5
 # ╟─1c5167d5-0475-4522-bc5f-28df2f806d6b
 # ╟─145edec6-a9c9-4d36-99fb-cb4c914ef603
+# ╠═1080859f-c505-46ea-9d21-1a336325d8da
+# ╠═635ae6b3-1770-431b-a799-0eefe20dfd0d
 # ╟─9587ec30-95b1-4bcd-b8b3-18c0ce089e3c
 # ╟─15b22584-5f21-4f00-ac04-0643fb1dfd56
 # ╟─70eddba0-82fd-4b5e-8d52-a961c03db5a6
@@ -2506,6 +2521,7 @@ version = "1.4.1+2"
 # ╟─b265c24f-9b37-48ed-9241-1a95b1902048
 # ╟─5534dfa0-f5fb-47d7-9b43-b0f97adf76be
 # ╟─57e9518b-b8d8-4d4e-911c-9034afd807f6
+# ╠═ea69e253-ff02-45b8-a760-4467260f36b4
 # ╟─d5885f27-7171-4a78-a32f-ead4a4791b0b
 # ╟─18d1f510-0395-4ce9-8ae8-087bd11468a5
 # ╠═64bf6442-2b6d-4052-8756-6190f7570038

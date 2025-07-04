@@ -932,6 +932,17 @@ md"""
     In this case, we are approximating a second derivative, so the derivation order is 2, and it turns out that this formula has an approximation error in $\mathcal O (h^2)$ so the approximation order is also 2.
 """
 
+# ╔═╡ 9ff5697a-90a0-4fb3-a93b-e99e3c14b11e
+md"""
+## Side-stepping the finite precision problem: Going complex
+
+TODO("Include this fantastic remark by Nick Highham:
+
+https://www.siam.org/publications/siam-news/articles/differentiation-without-a-difference
+")
+
+"""
+
 # ╔═╡ 9c8ad9b0-50eb-478e-b63c-26a868765230
 let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
@@ -2836,6 +2847,7 @@ version = "1.4.1+2"
 # ╟─ca3564d3-059e-40ce-bbcd-a04594e8ac24
 # ╟─56368f98-6f51-49be-8333-6fa1b9c64cf1
 # ╟─2adfac60-ec91-4c70-ae0c-f460f47d37dc
+# ╠═9ff5697a-90a0-4fb3-a93b-e99e3c14b11e
 # ╟─9c8ad9b0-50eb-478e-b63c-26a868765230
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

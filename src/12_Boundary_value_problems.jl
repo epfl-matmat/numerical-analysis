@@ -676,6 +676,13 @@ Combining this result with Lemma 2 yields
 	It thus achieves **quadratic convergence**.
 """
 
+# ╔═╡ b3d4248c-6f83-4594-a41a-d6c3c7e8d405
+TODO("Show application of finite difference method to a second example Boundary Value Problem.
+
+	 A good example could be the Allan-Cahn equation (Demo 10.5.5 in Driscoll Brown)
+	 
+")
+
 # ╔═╡ 23307b35-c76e-487d-906a-18f65b691d79
 md"""
 ## Galerkin methods 
@@ -1093,6 +1100,328 @@ let
 
 	p
 end
+
+# ╔═╡ 5f23627d-1d8e-4705-a9b8-155bb745cca9
+md"""
+## Comparison and conclusion
+"""
+
+# ╔═╡ 27fb5fde-566d-481b-b0d6-41c78c198eac
+TODO("Some conclusion chapter to provide direct comparison between finite differences and Galerkin methods and from that some conclusion why Galerkin methods can be better (numerical stability, less unknowns for a targeted accuracy etc.)")
+
+# ╔═╡ e88a64b8-1259-4320-9914-664bf30122a5
+TODO("To introduce FEM we need the concept of a mass matrix in the Galerkin development above as the basis functions are not orthonormal.
+
+	 See chapter 10.5 of Driscoll Brown
+	 ")
+
+# ╔═╡ 83fdd745-33e1-4e77-80a2-9008b0eb59b8
+md"""
+### Optional: Finite elements
+
+A widely employed set of basis functions for Galerkin approximations
+are the hat functions $φ_i = H_i$,
+which we already discussed in the chapter
+on [Interpolation (chapter 5)](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html).
+Recall, that given a set of nodes $x_0 < x_1 < \cdots < x_{n}$
+the hat functions are defined as
+```math
+H_i(x) = \left\{ \begin{array}{ll}
+\frac{x - x_{i-1}}{x_i - x_{i-1}} & \text{if $i>0$ and $x\in [x_{i-1}, x_i]$}\\
+\frac{x_{i+1} - x}{x_{i+1} - x_{i}} & \text{if $i< n$ and $x\in [x_{i}, x_{i+1}]$}\\
+0 & \text{otherwise}
+\end{array}\right.
+```
+for $i = 0, \ldots, n$.
+In this discussion we will again only consider equispaced nodes
+for simplicity, i.e. we take the case with
+$0 = x_0 < x_1 < \cdots < x_{n} = L$ and where $x_{i+1} - x_i = \frac{L}{n}$.
+Defining $h = \frac{L}{n}$ the hat functions can thus equally be expressed as
+```math
+\tag{28}
+H_i(x) = \left\{ \begin{array}{ll}
+\frac{x - x_{i-1}}{\textcolor{red}{h}} & \text{if $i>0$ and $x\in [x_{i-1}, x_i]$}\\
+\frac{x_{i+1} - x}{\textcolor{red}{h}} & \text{if $i<n$ and $x\in [x_{i}, x_{i+1}]$}\\
+0 & \text{otherwise}
+\end{array}\right.
+```
+for $i = 0, \ldots, n$.
+"""
+
+# ╔═╡ 57d511cc-aaae-42b3-80ec-7caf7d6f68ac
+md"""
+Due to the cardinality property of the hat functions $φ_i = H_{i}(x)$,
+i.e. $H_i(x_j) = δ_{ij}$, the expansion (24) of the unknown solution function
+can be simplified to
+```math
+\tag{29}
+u(x) = \sum_{j=1}^{m} c_j φ_j(x) = \sum_{i=\textcolor{red}{1}}^{\textcolor{red}{n-1}} u_i\, H_i(x),
+```
+where $u_i = u(x_i)$, i.e. the numerical solution at the nodal points.
+Note that the last sum in (29) is deliberately truncated to omit
+the hat functions $H_0$ and $H_n$.
+The nodal points of these two functions are $x_0 = 0$ and $x_n = L$,
+respectively,
+where these functions take by definition the value $1$.
+As a result these functions are unable to satisfy
+the condition $0 = φ_j(0) = φ_j(L)$ underlying $V_0$
+and are thus excluded.
+"""
+
+# ╔═╡ 40c8b1a5-b61c-4af2-8b4b-f8b2b5e182dc
+md"""
+The importance of the hat functions for Galerkin methods stems from the fact that each hat function $H_i(x)$ is only non-zero in the interval $[x_{i-1}, x_{i+1}]$.
+As a result when evaluating the Galerkin conditions (26) one never has to integrate over the entire domain $[0, L]$, but only a much smaller subset of this interval where the involved hat functions are non-zero
+--- a noteworthy reduction of the computational effort.
+"""
+
+# ╔═╡ 4de7a48b-e825-4115-9269-edcbcaace19a
+md"""
+As an example consider the evaluation of the elements of the matrix $\mathbf{A} \in \mathbb{R}^{m\times m} = \mathbb{R}^{(n-1) \times (n-1)}$.
+First note that the derivatives $H'_{i}$ are non-zero only where $H_{i}$
+itself is non-zero, i.e. $[x_{i-1}, x_{i+1}]$.
+Therefore the product $H'_{i}\, H'_{j}$
+is only non-zero in the intersection
+of $[x_{i-1}, x_{i+1}]$ and $[x_{j-1}, x_{j+1}]$.
+"""
+
+# ╔═╡ e72ea328-9ab3-4fc1-ad80-59091074c6f5
+md"""
+This intersection is empty, thus the matrix element $A_{ij}$ zero,
+whenever $|i - j| > 2$, i.e. when the two indices are more than two
+apart from each other.
+For $|i - j| = 2$ the intersection contains only a single point,
+which similarly implies $A_{ij} = 0$.
+As a consequence
+```math
+A_{i,i+d} = \int_0^L k\,H_{i}'(x)\,H_{i+d}'(x)\,dx = 0
+\qquad \text{if $d ≥ 2$}.
+```
+where $i = 1, \ldots, n-3$ and similarly by symmetry
+```math
+A_{i+d,i} = \int_0^L k\,H_{i+d}'(x)\,H_{i}'(x)\,dx = 0
+\qquad \text{if $d ≥ 2$}.
+```
+again for $i = 1, \ldots, n-3$
+
+"""
+
+# ╔═╡ 153850e9-8b5c-45f2-a27f-0cf0b7389b21
+md"""
+Now we consider the remaining three cases, namely
+```math
+\begin{aligned}
+A_{ii} &= \int_0^L k\,H_{i}'(x)\,H_{i}'(x)\,dx\\
+	    &= \int_{x_{i-1}}^{x_{i}} k\,  H_{i}'(x)\,H_{i}'(x)\,dx
+			+ \int_{x_{i}}^{x_{i+1}} k\,  H_{i}'(x)\,H_{i}'(x)\,dx \\
+	    &= \int_{x_{i-1}}^{x_{i}} k\cdot  \frac{1}{h} \cdot\frac{1}{h}\,dx
+			+ \int_{x_{i}}^{x_{i+1}} k\cdot \frac{-1}{h}\cdot\frac{-1}{h}\,dx \\ 
+		&= \frac{k}{h^2} \left[ \int_{x_{i-1}}^{x_{i}} 1 \, dx
+			+ \int_{x_{i}}^{x_{i+1}} 1 \, dx
+		\right] \\
+		&= \frac{2k}{h}
+\end{aligned}
+```
+for $i=1,\ldots,n-1$ as well as
+"""
+
+# ╔═╡ 64977b68-8822-43e2-b2de-06b83b8a64e8
+md"""
+```math
+\begin{aligned}
+A_{i+1,i} =
+A_{i,i+1} &= \int_0^L k\,H_{i}'(x)\,H_{i+1}'(x)\,dx\\
+	    &= \int_{x_{i}}^{x_{i+1}} k\, H_{i}'(x)\,H_{i+1}'(x)\,dx\\
+		&= \int_{x_{i}}^{x_{i+1}} k\cdot \frac{-1}{h} \cdot \,\frac{1}{h}\,dx\\
+		&= -\frac{k}{h}.
+\end{aligned}
+```
+for $i=1,\ldots,n-2$. We recover a tridiagonal matrix
+```math
+\tag{30}
+\mathbf{A} = \frac{k}{h} \begin{pmatrix}
+2  & -1 \\
+-1 & 2 & -1\\
+   & -1 & 2 & \ddots \\
+   &  &  \ddots & \ddots & -1 \\
+&&& -1 & 2
+\end{pmatrix} \in \mathbb{R}^{(n-1)\times(n-1)}
+```
+"""
+
+# ╔═╡ a30354e0-6254-46fd-a10b-f28d1c9dd6d4
+TODO("Properly work the mass matrix stuff into this.")
+
+# ╔═╡ 8af2b992-5072-47e0-85fc-dd7d332d505f
+md"""
+Mass matrix
+```math
+\begin{aligned}
+M_{ii} &= \int_0^L H_{i}(x)\,H_{i}(x)\,dx\\
+	    &= \int_{x_{i-1}}^{x_{i}} H_{i}(x)\,H_{i}(x)\,dx
+			+ \int_{x_{i}}^{x_{i+1}} H_{i}(x)\,H_{i}(x)\,dx \\
+	    &= \int_{x_{i-1}}^{x_{i}} \frac{(x-x_{i-1}) (x-x_{i-1})}{h^2} \,dx
+			+ \int_{x_{i}}^{x_{i+1}} \frac{(x_{i+1}-x) (x_{i+1}-x)}{h^2} \,dx \\ 
+		&= \frac{(x_i-x_{i-1})^3}{3h^2} + \frac{(x_{i+1}-x_i)^3}{3h^2}\\
+		&= \frac{h^3}{3h^2} + \frac{h^3}{3h^2}\\
+		&= \frac{2}{3}h
+\end{aligned}
+```
+and
+```math
+\begin{aligned}
+M_{i,i+1} &= \int_0^L H_{i}(x)\,H_{i+1}(x)\,dx
+	    = \int_{x_{i}}^{x_{i+1}} H_{i}(x)\,H_{i+1}(x)\,dx \\
+	    &= \int_{x_{i}}^{x_{i+1}} \frac{(x_{i+1}-x)(x-x_{i+1})}{h^2}\,dx\\ 
+		&= - \frac{(x_{i+1} - x_i)^3}{3h^2}\\
+		&= - \frac{h}{3}
+\end{aligned}
+```
+
+"""
+
+# ╔═╡ fade56d1-7270-4070-baf8-9b32c07a0b9d
+md"""
+Finally we consider the elements of the vector $\mathbf{f}$.
+Since again $H_i$ is only non-zero in $[i-1, i+1]$,
+we need to perform the two integrals
+```math
+f_i  = \int_{0}^{L} f(x)\,H_i(x)\,dx
+= \int_{x_{i-1}}^{x_i} f(x)\,H_i(x)\,dx + \int_{x_i}^{x_{i+1}} f(x)\,H_i(x)\,dx
+```
+for $i = 1, \ldots, n-1$.
+One can show that to a very good approximation one can replace
+$f(x)$ by the average value of the function over the respective integrals, i.e.
+```math
+\begin{aligned}
+\int_{x_{i-1}}^{x_i} f(x)\,H_i(x)\,dx &≈  \frac{f(x_{i-1}) + f(x_{i})}{2} \int_{x_{i-1}}^{x_i} H_i(x)\,dx = \frac{f(x_{i-1}) + f(x_{i})}{2} \cdot \frac{h}{2} \\
+\int_{x_{i}}^{x_{i+1}} f(x)\,H_i(x)\,dx &≈  \frac{f(x_i) + f(x_{i+1})}{2}\int_{x_{i}}^{x_{i+1}}  H_i(x)\,dx = \frac{f(x_i) + f(x_{i+1})}{2} \cdot \frac{h}{2}.
+\end{aligned}
+```
+In particular this approximation converges quadratically as $h\to0$,
+which turns out to be exactly the order of approximation of the finite element method itself. Therefore putting in additional efforts to compute these integrals more accurately would not even improve the accuracy of our final result.
+"""
+
+# ╔═╡ 5a91ecbb-7ad9-4253-8dfb-f9afe2664f9b
+md"""
+Putting these developments tothere we obtain for $i=1,\ldots,n-1$ that
+```math
+\tag{31}
+\begin{aligned}
+f_i &= \frac{f(x_i) + f(x_{i-1})}{2} \frac{h}{2   }
++ \frac{f(x_{i+1}) + f(x_{i})}{2} \frac{h}{2}  \\
+&= \frac{h}{4} \Big( f(x_{i-1}) + 2f(x_i) + f(x_{i+1}) \Big).
+\end{aligned}
+```
+"""
+
+# ╔═╡ 387244c2-2824-44cd-b413-45be7e447902
+md"""
+By solving the linear system
+```math
+(\mathbf{A} + \mathbf{M})\, \mathbf{u} = \mathbf{f}
+```
+we then obtain the coefficients $\mathbf{u} = (u_1, u_2, \ldots, u_{n-1})^T$
+in the expansion (29).
+Notably, due to the cardinality property of the hat functions $u_i = u(x_i)$, i.e. these coefficients are equal to evaluating our numerical approximation $u(x)$
+at the nodal points $\{x_i\}_{i=1}^{n-1}$.
+
+
+An implementation of this approch is given below:
+"""
+
+# ╔═╡ 563e2c1f-3c51-4be4-9693-5a2cfb8e6eda
+function heat_equation_1d_fem(f, k, L, n)
+	# f:  Function describing the external heat source
+	# k:  thermal conductivity
+	# L:  Length of the metal rod
+	# N:  Number of nodal points for the finite element scheme
+	
+	h = L / n                 # Step size
+	x = [i * h for i in 0:n]  # Nodal points (x₀, x₁, ..., xₙ)
+	x_inner = x[2:n]          # Inner nodal points (x₁, ..., xₙ₋₁)
+	
+
+	# Build A and f: Note that these are a (n-1) × (n-1) matrix
+	# respectively a vector of length (n-1)
+	A = k/h * SymTridiagonal(2ones(n-1), -ones(n-2))
+	M = h/3 * SymTridiagonal(2ones(n-1), -ones(n-2))
+	f = h/4 * [f(x[i-1]) + 2f(x[i]) + f(x[i+1])
+	           for i in 2:n]   # Skip first/last nodal point, i.e. x[1] = x₀
+
+	u = (A + M) \ f
+	(; x=x_inner, u)
+end
+
+# ╔═╡ d1115511-a798-47e7-aeea-fc87ad77d2f7
+md"""
+Let us return to the example we considered with the sine basis, i.e.
+```math
+\left\{
+\begin{aligned}
+- \frac{\partial^2 u}{\partial x^2}(x) &= x \qquad x \in (0, π)\\
+u(0) &= u(L) = 0,
+\end{aligned}
+\right.
+```
+i.e. the Dirichlet heat equation (20) with $k=1$, $L=π$ and $f(x) = x$.
+
+As a reference solution we consider the solution using the sine basis with $m=300$, which we know to be very accurate for this problem:
+"""
+
+# ╔═╡ 72b37ada-df37-4bfa-a2da-ae56026625dd
+reference(x) = sine_solution(300, x)
+
+# ╔═╡ 4042ff5d-3da6-418f-816b-905318e10f39
+md"""
+- `n = ` $(@bind n Slider(4:2:50; show_value=true, default=6))
+"""
+
+# ╔═╡ 1c8966d7-8a12-4b25-9c51-93dea0faeb14
+let
+	# Parameters of the problem
+	f(x) = x
+	k = 1
+	L = π
+
+	# Plot the reference
+	p = plot(reference; lw=2.5, label="Reference", title="Solution", xlims=(-0.05, L + 0.05))
+
+	# Compute FEM solution and plot it
+	result = heat_equation_1d_fem(f, k, L, n)
+	plot!(p, result.x, result.u; lw=1.5, ls=:dash, label="Solution n=$n", mark=:o)
+
+	scatter!([0, L], [0, 0], label="Boundary values", mark=:o, c=3)
+end
+
+# ╔═╡ 25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
+let
+	f(x) = x
+	k = 1
+	L = π
+
+	ns = [5, 10, 20, 40, 50, 60, 80, 100, 200, 300, 500, 700]
+	errors = Float64[]
+	for n in ns
+		result = heat_equation_1d_fem(f, k, L, n)
+		error = abs.(result.u - reference.(result.x))
+		push!(errors, maximum(error))
+	end
+	
+	p = plot(ns, errors, yaxis=:log, xaxis=:log, lw=2, mark=:o, title=L"Convergence in $n$", xlabel=L"n", ylabel="maximal error", label="Error")
+	plot!(p, ns, 1 ./ns.^2, ls=:dash, lw=2, label=L"O(n^2)")
+
+	xticks!(p, 10.0 .^ (0:0.5:3))
+	yticks!(p, 10.0 .^ (0:-1:-6))
+end
+
+# ╔═╡ 8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
+md"""
+The finite element method is one of the most widely employed approaches in science and engineering to solve differential equations. With this short instroduction we only scratched the surface.
+
+More information on the approach can be found for example in
+[chapter 10.6](https://tobydriscoll.net/fnc-julia/bvp/galerkin.html) of Driscoll, Brown: *Fundamentals of Numerical Computation*.
+"""
 
 # ╔═╡ 3348115a-2fd4-4935-9dba-b85d9e0c95f5
 let
@@ -2360,6 +2689,7 @@ version = "1.4.1+2"
 # ╟─5fa3718d-d58c-492f-9e04-1bca93d8b9fd
 # ╟─b811d679-e80b-41e1-8e85-dd81d01f00a7
 # ╟─f472502a-678f-479a-ab18-9ba0af7cde2f
+# ╠═b3d4248c-6f83-4594-a41a-d6c3c7e8d405
 # ╟─23307b35-c76e-487d-906a-18f65b691d79
 # ╟─7ae614fb-f2e0-46af-a557-6a378f6553e8
 # ╟─962ca311-c2ed-46eb-b043-827ecfb64ac3
@@ -2383,6 +2713,28 @@ version = "1.4.1+2"
 # ╟─aa589aa5-1a5c-4782-af66-2509f21ac891
 # ╟─4fee47fc-077d-4921-8572-7820ab84988e
 # ╠═1d55c98e-4ed9-4ac4-a847-b18432483472
+# ╟─5f23627d-1d8e-4705-a9b8-155bb745cca9
+# ╠═27fb5fde-566d-481b-b0d6-41c78c198eac
+# ╠═e88a64b8-1259-4320-9914-664bf30122a5
+# ╟─83fdd745-33e1-4e77-80a2-9008b0eb59b8
+# ╟─57d511cc-aaae-42b3-80ec-7caf7d6f68ac
+# ╟─40c8b1a5-b61c-4af2-8b4b-f8b2b5e182dc
+# ╟─4de7a48b-e825-4115-9269-edcbcaace19a
+# ╟─e72ea328-9ab3-4fc1-ad80-59091074c6f5
+# ╟─153850e9-8b5c-45f2-a27f-0cf0b7389b21
+# ╟─64977b68-8822-43e2-b2de-06b83b8a64e8
+# ╠═a30354e0-6254-46fd-a10b-f28d1c9dd6d4
+# ╟─8af2b992-5072-47e0-85fc-dd7d332d505f
+# ╟─fade56d1-7270-4070-baf8-9b32c07a0b9d
+# ╟─5a91ecbb-7ad9-4253-8dfb-f9afe2664f9b
+# ╟─387244c2-2824-44cd-b413-45be7e447902
+# ╠═563e2c1f-3c51-4be4-9693-5a2cfb8e6eda
+# ╟─d1115511-a798-47e7-aeea-fc87ad77d2f7
+# ╠═72b37ada-df37-4bfa-a2da-ae56026625dd
+# ╟─4042ff5d-3da6-418f-816b-905318e10f39
+# ╠═1c8966d7-8a12-4b25-9c51-93dea0faeb14
+# ╠═25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
+# ╟─8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
 # ╟─3348115a-2fd4-4935-9dba-b85d9e0c95f5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

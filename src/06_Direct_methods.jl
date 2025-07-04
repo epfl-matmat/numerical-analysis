@@ -1800,6 +1800,9 @@ First we need some notation:
 	where $\lambda_i(\mathbf{M})$ for $i=1,\ldots,n$ are the eigenvalues of $\mathbf{M}$.
 """
 
+# ╔═╡ 3b63cbf0-a40d-4aea-b963-aa4700c364d8
+TODO(md"Introduce and consistently use $λ^\text{abs}_\text{max}(\mathbf{M}) = \max_{i=1,\ldots,n} |\lambda_i(\mathbf{M})|$ instead of $λ_\text{max}$ everywhere ... as this is the thing that matters in our arguments. Similarly $λ^\text{abs}_\text{min}(\mathbf{M}) = \min_{i=1,\ldots,n} |\lambda_i(\mathbf{M})|$.")
+
 # ╔═╡ fab51c98-55c8-4bdc-a206-3456de4a324e
 md"""
 It turns out that the minimal and maximal eigenvalues provide
@@ -2500,6 +2503,7 @@ version = "17.4.0+2"
 # ╟─52280937-94b1-4259-93f8-d0d9214c27fc
 # ╟─86954ae7-a870-4695-8162-d9436cd19a33
 # ╟─8c327ba8-ea35-4acf-8774-a1f45126f040
+# ╟─3b63cbf0-a40d-4aea-b963-aa4700c364d8
 # ╟─fab51c98-55c8-4bdc-a206-3456de4a324e
 # ╟─9be40396-9ace-4088-ac7b-8e0a0117e4f4
 # ╟─6f077373-cc53-4e9d-8849-c59c45b40178
