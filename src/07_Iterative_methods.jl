@@ -108,7 +108,8 @@ We formulate Richardson's iterations:
 !!! info "Algorithm 1: Richardson iteration"
     Let $\mathbf{A} \in \mathbb{R}^{n\times n}$ be a system matrix,
     right-hand side $\mathbf{b} \in \mathbb{R}^n$, an invertible
-    preconditioner $\mathbf{P} \in \mathbb{R}^{n\times n}$
+    preconditioner $\mathbf{P} \in \mathbb{R}^{n\times n}$,
+    an initial guess $\mathbf{x}^{(0)} \in \mathbb{R}^n$
     as well as the desired convergence tolerance $ε$.
     For $k = 0, 1, \ldots$ iterate:
     1. Compute residual $\mathbf{r}^{(k)} = \mathbf{b} - \mathbf{A} \mathbf{x}^{(k)}$
