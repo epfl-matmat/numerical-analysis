@@ -1,0 +1,72 @@
+%
+% Package for defining default colors.
+%
+%
+
+\NeedsTeXFormat{LaTeX2e}
+
+% update when new stuff added
+\ProvidesPackage{MFHcolours}[2016/08/02]
+
+%
+% Required packages
+%
+\usepackage[dvipsnames]{xcolor}
+
+%
+% Parse options
+%
+\ProcessOptions\relax
+
+%
+% The package
+%
+
+% Various greys:
+\definecolor{grey2}{gray}{0.2}
+\definecolor{grey3}{gray}{0.3}
+\definecolor{grey4}{gray}{0.4}
+\definecolor{grey5}{gray}{0.5}
+\definecolor{grey6}{gray}{0.6}
+\definecolor{grey7}{gray}{0.7}
+\definecolor{grey8}{gray}{0.8}
+\definecolor{grey9}{gray}{0.9}
+\definecolor{grey95}{gray}{0.95}
+
+% Other colours:
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{fuchsia}{rgb}{1.0,0,1.0}
+\definecolor{dkfuchsia}{rgb}{0.80,0,0.88}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{dkred}{rgb}{0.6,0,0}
+\definecolor{dkblue}{rgb}{0,0.0,0.6}
+
+% For beamer colour theme
+\definecolor{MfhGray}{rgb}{0.4,0.4,0.4}
+\definecolor{MfhDarkGray}{rgb}{0.2,0.2,0.2}
+\definecolor{MfhLightGray}{rgb}{0.6549,0.6667,0.6588}
+\definecolor{MfhVeryLightGray}{rgb}{0.8275,0.8333,0.8294}
+
+\definecolor{MfhRed}{rgb}{0.62745,0,0}
+\definecolor{MfhDarkRed}{rgb}{0.4706,0,0}
+\definecolor{MfhLightRed}{rgb}{0.8863,0.2706,0.2706}
+
+\definecolor{MfhGreen}{rgb}{0.0745,0.6314,0.1177}
+\definecolor{MfhDarkGreen}{rgb}{0.0,0.3961,0.0314}
+\definecolor{MfhLightGreen}{rgb}{0.3059,0.9020,0.3529}
+
+\definecolor{MfhBlue}{rgb}{0.0745,0.0745,0.6314}
+\definecolor{MfhDarkBlue}{rgb}{0,0,0.4157}
+\definecolor{MfhLightBlue}{rgb}{0.3882,0.3882,1}
+
+\definecolor{MfhOrange}{rgb}{0.9333,0.6235,0}
+\definecolor{MfhLightOrange}{rgb}{1.0,0.8,0.4}
+\definecolor{MfhBrown}{rgb}{0.5255,0.3451,0}
+\colorlet{MfhDarkOrange}{MfhOrange!70!MfhBrown}
+
+\definecolor{MfhCyan}{rgb}{0.0314,0.6510,0.7843}
+\definecolor{MfhMagenta}{rgb}{0.8,0,0.6941}
+\definecolor{MfhYellow}{rgb}{1,0.8706,0}
+\colorlet{MfhDarkYellow}{MfhYellow!80!MfhBrown}
+
+\endinput
