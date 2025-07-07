@@ -1393,7 +1393,7 @@ md"""
 	*any iterative procedure*. 
 
 We will consider this aspect further,
-for example in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.html).
+for example in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html).
 """
 
 # ╔═╡ bdff9554-58b6-466e-9c93-6b1367262b50
@@ -1616,7 +1616,7 @@ end
 md"""
 Note that he linear system $\textbf{A}^{(k)} \textbf{r}^{(k)} = - \textbf{y}^{(k)}$ is solved in Julia using the backslash operator `\`, which employs a numerically more stable algorithm than explicitly computing the inverse `inv(A)` and then applying this to `y`.
 We will discuss these methods in
-[Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html).
+[Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html).
 """
 
 # ╔═╡ 702ffb33-7fbe-4673-aed7-d985a76b455a

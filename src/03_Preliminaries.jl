@@ -227,7 +227,7 @@ This indeed can be shown to be the case.
 
 - In comparing with (5) we notice the **monomials** $1 = x^0, x = x^1, x^2, x^3, \ldots, x^n$ to be a possible choice for a basis.
 - Similar to Euclidean vector spaces this is not the only choice of basis and in fact many families of polynomials are known, which are frequently employed as basis functions (e.g. [Lagrange polynomials](https://en.wikipedia.org/wiki/Lagrange_polynomial), [Chebyshev polynomials](https://en.wikipedia.org/wiki/Chebyshev_polynomials), [Hermite polynomials](https://en.wikipedia.org/wiki/Hermite_polynomials), ...)
-- One basis we will discuss in the context of [polynomial interpolation](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html) are Lagrange polynomials, which have the form 
+- One basis we will discuss in the context of [polynomial interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html) are Lagrange polynomials, which have the form 
   ```math
   \begin{aligned}
   L_{\textcolor{red}{i}}(x) &= \prod_{\stackrel{j=1}{\textcolor{red}{j\neq i}}}^{n+1} \frac{x-x_j}{\textcolor{red}{x_i} - x_j} \\

@@ -30,7 +30,7 @@ end
 # ╔═╡ 46b46b8e-b388-44e1-b2d8-8d7cfdc3b475
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/05_Interpolation.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/07_Interpolation.pdf)
 """
 
 # ╔═╡ 61e5ef66-a213-4b23-9406-9cc63a58104c
@@ -827,7 +827,7 @@ md"""
 
 	Since for Chebyshev nodes $\Lambda_n$ stays relatitvely small, we would call Chebyshev interpolation **well-conditioned**. In contrast interpolation using equally spaced nodes is **ill-conditioned** as the condition number $\Lambda_n$ can get very large, thus **even small input errors can amplify** and **drastically reduce the accuracy** of the obtained polynomial.
 
-	We will meet other condition numbers later in the lecture, e.g. in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.html).
+	We will meet other condition numbers later in the lecture, e.g. in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html).
 """
 
 # ╔═╡ 5e19f1a7-985e-4fb7-87c4-5113b5615521
@@ -1954,7 +1954,7 @@ md"""
   * The typical approach are **Chebyshev nodes**
   * These lead to **exponential convergence**
 
-Notice that all of these problems lead to linear systems $\textbf A \textbf x = \textbf b$ that we need to solve. How this can me done numerically we will see in [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html).
+Notice that all of these problems lead to linear systems $\textbf A \textbf x = \textbf b$ that we need to solve. How this can me done numerically we will see in [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html).
 """
 
 # ╔═╡ 2240f8bc-5c0b-450a-b56f-2b53ca66bb03

@@ -28,7 +28,7 @@ end
 # ╔═╡ ca2c949f-a6a0-485f-bd52-5dae3b050612
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.pdf)
 """
 
 # ╔═╡ 21c9a859-f976-4a93-bae4-616122712a24

@@ -17,7 +17,7 @@ end
 # ╔═╡ 63bb7fe9-750f-4d2f-9d18-8374b113373e
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.pdf)
 """
 
 # ╔═╡ 7d9c9392-3aec-4efd-a9ba-d8965687b163
@@ -357,7 +357,7 @@ md"""
 From Theorem 1 we take away that the norm of iteration matrix
 $\|\mathbf{B}\|$ is the crucial quantity to determine not only *if*
 Richardson iterations converge, but also *at which rate*.
-Recall in Lemma 4 of [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html)
+Recall in Lemma 4 of [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html)
 we had the result that for any matrix  $\mathbf{B} \in \mathbb{R}^{m \times n}$
 ```math
 \tag{5}
@@ -469,7 +469,7 @@ obtained by solving the system $\mathbf{A} \mathbf{x}_\ast = \mathbf{b}$ employi
 
 We are thus in exactly the same setting as our
 final section on *Numerical stability* in our discussion
-on [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html)
+on [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html)
 where instead of solving $\mathbf{A} \mathbf{x}_\ast = \mathbf{b}$
 we are only able to solve the perturbed system
 $\mathbf{A} \widetilde{\textbf{x}} = \widetilde{\mathbf{b}}$.
@@ -478,7 +478,7 @@ $\mathbf{A} \widetilde{\textbf{x}} = \widetilde{\mathbf{b}}$.
 # ╔═╡ 55a69e52-002f-40dc-8830-7fa16b7af081
 md"""
 We can thus directly apply Theorem 2
-from [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html), which states that
+from [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html), which states that
 ```math
 \frac{\|\mathbf{x}_\ast - \widetilde{\mathbf{x}} \|}{\| \mathbf{x}_\ast \|}
 ≤ κ(\mathbf{A}) 
@@ -839,7 +839,7 @@ Importantly there is thus a **relation between optimisation problems** and **sol
 
 # ╔═╡ bf9a171a-8aa4-4f21-bde3-56ccef40de24
 md"""
-SPD matrices are not unusual. For example, recall that in polynomial regression problems (see least-squares problems in [Interpolation](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html)),
+SPD matrices are not unusual. For example, recall that in polynomial regression problems (see least-squares problems in [Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html)),
 where we wanted to find the best polynomial through the points
 $(x_i, y_i)$ for $i=1, \ldots n$ by minimising the least-squares error,
 we had to solve the *normal equations*

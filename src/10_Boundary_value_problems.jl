@@ -29,7 +29,7 @@ end
 # ╔═╡ b72b45ad-6191-40cb-9e9f-950bf1bfe212
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/12_Boundary_value_problems.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/10_Boundary_value_problems.pdf)
 """
 
 # ╔═╡ 206ae56c-fcfa-4d6f-93e4-30f03dee8f90
@@ -176,7 +176,7 @@ u(0) &= b_0, \quad u(L) = b_L,
 \right.
 ```
 were $b_0, b_L \in \mathbb{R}$.
-Similar to our approach when [solving initial value problems (chapter 11)](https://teaching.matmat.org/numerical-analysis/11_Initial_value_problems.html)
+Similar to our approach when [solving initial value problems (chapter 12)](https://teaching.matmat.org/numerical-analysis/12_Initial_value_problems.html)
 we **divide the full interval $[0, L]$ into $N+1$ subintervals** $[x_j, x_{j+1}]$
 of uniform size $h$, i.e. 
 ```math
@@ -201,7 +201,7 @@ These internal nodes $u(x_j)$ need to satisfy
 - \frac{\partial^2 u}{\partial x^2}(x_j) = f(x_j) \qquad \forall\, 1 ≤ j ≤ N.
 ```
 As the derivatives of $u$ are unknown to us we employ a
-**[central finite-difference formula](https://teaching.matmat.org/numerical-analysis/10_Numerical_differentiation.html)**
+**[central finite-difference formula](https://teaching.matmat.org/numerical-analysis/09_Numerical_differentiation.html)**
 to replace this derivative by the approximation
 ```math
 \tag{3}
@@ -288,7 +288,7 @@ which is to be solved for the unknows $\mathbf{u}$.
 # ╔═╡ c21502ce-777f-491a-a536-ff499fc172fc
 md"""
 We notice that $\mathbf{A}$ is **symmetric and tridiagonal**. Additionally one can show $\mathbf{A}$ to be **positive definite**.
-Problem (8) can therefore be **efficiently solved** using [direct methods based on (sparse) LU factorisation (chapter 6)](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html) or an [iterative approaches (chapter 7)](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.html), e.g. the conjugate gradient method.
+Problem (8) can therefore be **efficiently solved** using [direct methods based on (sparse) LU factorisation (chapter 5)](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html) or an [iterative approaches (chapter 6)](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html), e.g. the conjugate gradient method.
 """
 
 # ╔═╡ c2bb42b3-4fee-4ad4-84c0-06f58c7f7665
@@ -505,7 +505,7 @@ md"""
 While initially the convergence thus nicely follows the expected convergence curve, **for larger $N$ the convergence degrades and the error starts increasing again**.
 
 Similar to our discussion on numerical stability
-in the [chapter on numerical differentiation](https://teaching.matmat.org/numerical-analysis/10_Numerical_differentiation.html)
+in the [chapter on numerical differentiation](https://teaching.matmat.org/numerical-analysis/09_Numerical_differentiation.html)
 this error plot is the result of a balance between two error contributions:
 - The **discretisation error** due to the choice of $N$, where as $N$ gets larger
   this error **decreases** as $O(N^{-2})$.
@@ -1122,7 +1122,7 @@ md"""
 A widely employed set of basis functions for Galerkin approximations
 are the hat functions $φ_i = H_i$,
 which we already discussed in the chapter
-on [Interpolation (chapter 5)](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html).
+on [Interpolation (chapter 7)](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html).
 Recall, that given a set of nodes $x_0 < x_1 < \cdots < x_{n}$
 the hat functions are defined as
 ```math
