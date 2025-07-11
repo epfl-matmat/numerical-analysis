@@ -38,6 +38,8 @@ TableOfContents()
 md"""
 # Direct methods for linear systems
 
+TODO polynomial interpolation now comes later
+
 In the previous chapter on polynomial interpolation we were already
 confronted with the need to solve linear systems, that is a system
 of equations of the form

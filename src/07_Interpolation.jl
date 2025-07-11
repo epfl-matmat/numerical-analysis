@@ -689,6 +689,8 @@ Notably Chebyshev nodes enjoy the following convergence result:
 
 This is an example of **exponential convergence**: The error of the approximation scheme reduces by a *constant factor* whenever the polynomial degree $n$ is increased by a constant increment. 
 
+TODO: "previous chapter" remark likely outdated after pushing interpolation back
+
 The **graphical characterisation** is similar to the iterative schemes we discussed in the previous chapter: We employ a **semilog plot** (using a linear scale for $n$ and a logarithmic scale for the error), where exponential convergence is characterised by a straight line:
 """
 
@@ -724,6 +726,9 @@ is one of the **desired properties**.
 !!! danger "Potential confusion: Convergence terminology"
     When discussing convergences rates of iterative numerical algorithms and
     the accuracy of numerical approximation schemes (interpolation, differentiation, integration, discretisation) unfortunately a different terminology is employed. In the following let $α > 0$ and $0 < C < 1$ denote appropriate constants.
+
+	TODO "Last chapter" reference is likely outdated after pushing interpolation back
+
 	- **Iterative schemes:** Linear convergence
 	  * If the error scales as $α C^{n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to the last chapter.)
     - **Approximation schemes:** Exponential convergence

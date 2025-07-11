@@ -176,6 +176,9 @@ u(0) &= b_0, \quad u(L) = b_L,
 \right.
 ```
 were $b_0, b_L \in \mathbb{R}$.
+
+TODO IVP is now after BCP, adjust reference accordingly
+
 Similar to our approach when [solving initial value problems (chapter 12)](https://teaching.matmat.org/numerical-analysis/12_Initial_value_problems.html)
 we **divide the full interval $[0, L]$ into $N+1$ subintervals** $[x_j, x_{j+1}]$
 of uniform size $h$, i.e. 
