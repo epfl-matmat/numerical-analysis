@@ -31,7 +31,7 @@ end
 # ╔═╡ 4103c9d2-ef89-4c65-be3f-3dab59d1cc47
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/10_Numerical_differentiation.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/09_Numerical_differentiation.pdf)
 """
 
 # ╔═╡ e9151d3f-8d28-4e9b-add8-43c713f6f068

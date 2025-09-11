@@ -31,7 +31,7 @@ end
 # ╔═╡ ba9b6172-0234-442c-baaa-876b12f689bd
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/11_Initial_value_problems.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/12_Initial_value_problems.pdf)
 """
 
 # ╔═╡ d8406b01-e36f-4953-a5af-cd563005c2a1
@@ -293,7 +293,7 @@ Our task is to find $u(t_{n+1})$.
 md"""
 We make progress by approximating the dervative of $u$
 using one of the finite differences formulas
-discussed in the chapter on [Numerical differentiation](https://teaching.matmat.org/numerical-analysis/10_Numerical_differentiation.html).
+discussed in the chapter on [Numerical differentiation](https://teaching.matmat.org/numerical-analysis/09_Numerical_differentiation.html).
 
 The simplest approach is to employ forward finite differences, i.e.
 ```math

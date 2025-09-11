@@ -30,7 +30,7 @@ end
 # ╔═╡ 46b46b8e-b388-44e1-b2d8-8d7cfdc3b475
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/05_Interpolation.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/07_Interpolation.pdf)
 """
 
 # ╔═╡ 61e5ef66-a213-4b23-9406-9cc63a58104c
@@ -692,6 +692,9 @@ This is an example of **exponential convergence**: The error of the approximatio
 The **graphical characterisation** is similar to the iterative schemes we discussed in the previous chapter: We employ a **semilog plot** (using a linear scale for $n$ and a logarithmic scale for the error), where exponential convergence is characterised by a straight line:
 """
 
+# ╔═╡ 21c98bd4-b3eb-4406-bcd2-0abfbeb9bb93
+TODO("'previous chapter' remark likely outdated after pushing interpolation back")
+
 # ╔═╡ d4cf71ef-576d-4900-9608-475dbd4d933a
 let
 	fine = range(-1.0, 1.0; length=3000)
@@ -729,6 +732,9 @@ is one of the **desired properties**.
     - **Approximation schemes:** Exponential convergence
 	  * If the error scales as $α C^{n}$ where $n$ is some accuracy parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
 """
+
+# ╔═╡ 647f96ee-c0ad-4bd8-9de1-f24a7dcf6b24
+TODO("'Last chapter' reference is likely outdated after pushing interpolation back")
 
 # ╔═╡ a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
 md"""
@@ -827,7 +833,7 @@ md"""
 
 	Since for Chebyshev nodes $\Lambda_n$ stays relatitvely small, we would call Chebyshev interpolation **well-conditioned**. In contrast interpolation using equally spaced nodes is **ill-conditioned** as the condition number $\Lambda_n$ can get very large, thus **even small input errors can amplify** and **drastically reduce the accuracy** of the obtained polynomial.
 
-	We will meet other condition numbers later in the lecture, e.g. in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/07_Iterative_methods.html).
+	We will meet other condition numbers later in the lecture, e.g. in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html).
 """
 
 # ╔═╡ 5e19f1a7-985e-4fb7-87c4-5113b5615521
@@ -1954,7 +1960,7 @@ md"""
   * The typical approach are **Chebyshev nodes**
   * These lead to **exponential convergence**
 
-Notice that all of these problems lead to linear systems $\textbf A \textbf x = \textbf b$ that we need to solve. How this can me done numerically we will see in [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html).
+Notice that all of these problems lead to linear systems $\textbf A \textbf x = \textbf b$ that we need to solve. How this can me done numerically we will see in [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html).
 """
 
 # ╔═╡ 2240f8bc-5c0b-450a-b56f-2b53ca66bb03
@@ -3307,8 +3313,10 @@ version = "1.4.1+2"
 # ╟─25b82572-b27d-4f0b-9be9-323cd4e3ce7a
 # ╟─c38b9e48-98bb-4b9c-acc4-7375bbd39ade
 # ╟─479a234e-1ce6-456d-903a-048bbb3de65a
+# ╠═21c98bd4-b3eb-4406-bcd2-0abfbeb9bb93
 # ╟─d4cf71ef-576d-4900-9608-475dbd4d933a
 # ╟─56685887-7866-446c-acdb-2c20bd11d4cd
+# ╠═647f96ee-c0ad-4bd8-9de1-f24a7dcf6b24
 # ╟─a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
 # ╟─7f855423-72ac-4e6f-92bc-73c12e5007eb
 # ╟─eaaf2227-1a19-4fbc-a5b4-45503e832280

@@ -18,7 +18,7 @@ end
 # ╔═╡ d34833b7-f375-40f7-a7a6-ab925d736320
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/09_Numerical_integration.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/08_Numerical_integration.pdf)
 """
 
 # ╔═╡ 47114a9b-0e74-4e48-bb39-b49f526f1e9b
@@ -107,7 +107,7 @@ and **then integrate that** instead of $f$ itself.
 Since the integration of the polynomial is essentially exact,
 the error of such a scheme is **dominated by the error of the polynomial
 interpolation**.
-Recall the [chapter on Interpolation](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html), where we noted polynomials
+Recall the [chapter on Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html), where we noted polynomials
 through equispaced nodes to become numerically unstable and
 possibly inaccurate for large $n$ due to Runge's phaenomenon.
 
@@ -211,7 +211,7 @@ end
 
 # ╔═╡ a1d83cb2-6e0d-4a53-a11f-60dc020249d4
 md"""
-Recall that in Theorem 4 of [chapter 05 (Interpolation)](https://teaching.matmat.org/numerical-analysis/05_Interpolation.html) we found that
+Recall that in Theorem 4 of [chapter 07 (Interpolation)](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html) we found that
 the piecewise polynomial interpolation shows quadratic convergence
 ```math
 \|f - p_{1,h}\|_\infty \leq α h^2 \| f'' \|_\infty,

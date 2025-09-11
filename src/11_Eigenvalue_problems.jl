@@ -30,7 +30,7 @@ end
 # ╔═╡ 34beda8f-7e5f-42eb-b32c-73cfc724062e
 md"""
 !!! info ""
-    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/08_Eigenvalue_problems.pdf)
+    [Click here to view the PDF version.](https://teaching.matmat.org/numerical-analysis/11_Eigenvalue_problems.pdf)
 """
 
 # ╔═╡ 13298dc4-9800-476d-9474-182359a7671b
@@ -59,7 +59,7 @@ then we find
 \sqrt{λ_\text{max}(\mathbf A^T \mathbf A)} \, \| \mathbf x \|
 = λ_\text{max}(\mathbf A) \, \| \mathbf x \|
 ```
-where we used the inequalities introduced at the end of  [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html).
+where we used the inequalities introduced at the end of  [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html).
 We note that the **largest eigenvalue of $\mathbf A$**
 provides a **bound to the action of $\mathbf{A}$**.
 """
@@ -849,7 +849,7 @@ the iterative loop.
 Since for dense matrices
 computing the factorisation scales $O(n^3)$,
 but solving linear systems based on the factorisation only scales $O(n^2)$
-([recall chapter 6](https://teaching.matmat.org/numerical-analysis/06_Direct_methods.html)), this reduces the cost per iteration.
+([recall chapter 5](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html)), this reduces the cost per iteration.
 """
 
 # ╔═╡ 8e01a98d-c49f-43b3-9681-07d8e4b7f12a
