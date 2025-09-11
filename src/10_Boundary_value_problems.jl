@@ -177,8 +177,6 @@ u(0) &= b_0, \quad u(L) = b_L,
 ```
 were $b_0, b_L \in \mathbb{R}$.
 
-TODO IVP is now after BCP, adjust reference accordingly
-
 Similar to our approach when [solving initial value problems (chapter 12)](https://teaching.matmat.org/numerical-analysis/12_Initial_value_problems.html)
 we **divide the full interval $[0, L]$ into $N+1$ subintervals** $[x_j, x_{j+1}]$
 of uniform size $h$, i.e. 
@@ -187,6 +185,9 @@ x_j = j\, h \quad j = 0, \ldots, N+1, \qquad h = \frac{L}{N+1}.
 ```
 Our goal is thus to find approximate points $u_j$ such that $u_j ≈ u(x_j)$ at the nodes $x_j$.
 """
+
+# ╔═╡ 782dff7d-76f5-4977-98cb-81881a05331a
+TODO("IVP is now after BCP, adjust reference accordingly")
 
 # ╔═╡ 82788dfd-3462-4f8e-b0c8-9e196dac23a9
 md"""
@@ -2659,6 +2660,7 @@ version = "1.4.1+2"
 # ╟─3e10cf8e-d5aa-4b3e-a7be-12ccdc2f3cf7
 # ╟─7fd851e6-3180-4008-a4c0-0e08edae9954
 # ╟─52c7ce42-152d-40fd-a910-78f755fcae47
+# ╠═782dff7d-76f5-4977-98cb-81881a05331a
 # ╟─82788dfd-3462-4f8e-b0c8-9e196dac23a9
 # ╟─d43ecff3-89a3-4edd-95c2-7262e317ce29
 # ╟─1fb53091-89c8-4f70-ab4b-ca2371b830b2

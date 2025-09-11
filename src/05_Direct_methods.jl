@@ -38,8 +38,6 @@ TableOfContents()
 md"""
 # Direct methods for linear systems
 
-TODO polynomial interpolation now comes later
-
 In the previous chapter on polynomial interpolation we were already
 confronted with the need to solve linear systems, that is a system
 of equations of the form
@@ -51,6 +49,9 @@ where we are given a matrix $\mathbf{A} \in \mathbb{R}^{n\times n}$
 as well as a right-hand side $\mathbf{b} \in \mathbb{R}^n$.
 As the solution we seek the unknown $\mathbf{x} \in \mathbb{R}^n$.
 """
+
+# ╔═╡ adb09dc3-a074-4b5f-9757-85c05d22ee83
+TODO("polynomial interpolation now comes later")
 
 # ╔═╡ 419d11bf-2561-49ca-a6e7-40c8d8b88b24
 md"""
@@ -2330,6 +2331,7 @@ version = "17.4.0+2"
 # ╠═3295f30c-c1f4-11ee-3901-4fb291e0e4cb
 # ╟─21c9a859-f976-4a93-bae4-616122712a24
 # ╟─b3cb31aa-c982-4454-8882-5b840c68df9b
+# ╠═adb09dc3-a074-4b5f-9757-85c05d22ee83
 # ╟─be5d3f98-4c96-4e69-af91-fa2ae5f74af5
 # ╟─419d11bf-2561-49ca-a6e7-40c8d8b88b24
 # ╠═011c25d5-0d60-4729-b200-cdaf3dc89faf

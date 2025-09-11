@@ -689,10 +689,11 @@ Notably Chebyshev nodes enjoy the following convergence result:
 
 This is an example of **exponential convergence**: The error of the approximation scheme reduces by a *constant factor* whenever the polynomial degree $n$ is increased by a constant increment. 
 
-TODO: "previous chapter" remark likely outdated after pushing interpolation back
-
 The **graphical characterisation** is similar to the iterative schemes we discussed in the previous chapter: We employ a **semilog plot** (using a linear scale for $n$ and a logarithmic scale for the error), where exponential convergence is characterised by a straight line:
 """
+
+# ╔═╡ 21c98bd4-b3eb-4406-bcd2-0abfbeb9bb93
+TODO("'previous chapter' remark likely outdated after pushing interpolation back")
 
 # ╔═╡ d4cf71ef-576d-4900-9608-475dbd4d933a
 let
@@ -727,13 +728,14 @@ is one of the **desired properties**.
     When discussing convergences rates of iterative numerical algorithms and
     the accuracy of numerical approximation schemes (interpolation, differentiation, integration, discretisation) unfortunately a different terminology is employed. In the following let $α > 0$ and $0 < C < 1$ denote appropriate constants.
 
-	TODO "Last chapter" reference is likely outdated after pushing interpolation back
-
 	- **Iterative schemes:** Linear convergence
 	  * If the error scales as $α C^{n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to the last chapter.)
     - **Approximation schemes:** Exponential convergence
 	  * If the error scales as $α C^{n}$ where $n$ is some accuracy parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
 """
+
+# ╔═╡ 647f96ee-c0ad-4bd8-9de1-f24a7dcf6b24
+TODO("'Last chapter' reference is likely outdated after pushing interpolation back")
 
 # ╔═╡ a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
 md"""
@@ -3312,8 +3314,10 @@ version = "1.4.1+2"
 # ╟─25b82572-b27d-4f0b-9be9-323cd4e3ce7a
 # ╟─c38b9e48-98bb-4b9c-acc4-7375bbd39ade
 # ╟─479a234e-1ce6-456d-903a-048bbb3de65a
+# ╠═21c98bd4-b3eb-4406-bcd2-0abfbeb9bb93
 # ╟─d4cf71ef-576d-4900-9608-475dbd4d933a
 # ╟─56685887-7866-446c-acdb-2c20bd11d4cd
+# ╠═647f96ee-c0ad-4bd8-9de1-f24a7dcf6b24
 # ╟─a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
 # ╟─7f855423-72ac-4e6f-92bc-73c12e5007eb
 # ╟─eaaf2227-1a19-4fbc-a5b4-45503e832280
