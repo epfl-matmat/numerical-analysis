@@ -727,7 +727,6 @@ is one of the **desired properties**.
 !!! danger "Potential confusion: Convergence terminology"
     When discussing convergences rates of iterative numerical algorithms and
     the accuracy of numerical approximation schemes (interpolation, differentiation, integration, discretisation) unfortunately a different terminology is employed. In the following let $α > 0$ and $0 < C < 1$ denote appropriate constants.
-
 	- **Iterative schemes:** Linear convergence
 	  * If the error scales as $α C^{n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to the last chapter.)
     - **Approximation schemes:** Exponential convergence
