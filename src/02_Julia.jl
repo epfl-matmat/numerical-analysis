@@ -148,11 +148,8 @@ for example:
 # ╔═╡ c17c25e1-bae2-4ec5-9d1d-1b9d4cb03a57
 md"""
 ## Installing Julia
-For EPFL students a working Julia+Pluto installation is available on the EPFL noto platform, <https://noto.epfl.ch>.
 
-However, **our recommendation** is that you install Julia on your own computer. This is not difficult and will be a nicer experience than working inside a browser. 
-
-Assistants are there to provide support during the first week and you are welcome to ask for help. After that, Julia is assumed to be installed and working, and there will be a check in the second exercise session.
+For this class, you will have to install Julia on your own computer. Assistants are there to provide support during the first week and you are welcome to ask for help. After that, Julia is assumed to be installed and working, and there will be a check in the second exercise session.
 
 ### Installing on your own computer
 Take a look at the [installation notes](https://computationalthinking.mit.edu/Fall24/installation/) of MIT's computational thinking class or watch:
@@ -179,7 +176,7 @@ Essentially this boils down to:
   ```
 See the [installation notes](https://computationalthinking.mit.edu/Fall24/installation/) of MIT's computational thinking class for more details.
 
-The exercise notebooks are written and tested with **Julia 1.12.4** and **Pluto 0.20.21**. These are also the versions installed on <https://noto.epfl.ch/>. Prefer those.
+The exercise notebooks are written and tested with **Julia 1.12.4** and **Pluto 0.20.21**. Prefer those.
 """
 
 # ╔═╡ 14e88ee8-8505-483e-bf68-0c19990cae40
