@@ -170,7 +170,7 @@ md"""
 	$x_2 = 2x_1^2$ (parabola) and $x_1^2 + x_2^2 = 1$ (circle).
 	We restrict ourselves to the upper-right quadrant, i.e. we will assume $x_1 \geq 0$ and $x_2 \geq 0$.
 
-	- Rearranging the circle equation to $x_1 = \sqrt{1-x_2}$
+	- Rearranging the circle equation to $x_1 = \sqrt{1-x_2^2}$
 	  thus leads to the fixed-point problem
 	  ```math
 	  \mathbf{x} = {g}_D(\mathbf{x})
@@ -179,7 +179,7 @@ md"""
 	  = \begin{pmatrix} \sqrt{1-x_2^2} \\ 2x_1^2 \end{pmatrix}.
 	  ```
 	- Rearranging instead the parabola equation to $x_1 = \sqrt{\frac{x_2}2}$
-	  and the circle equation to $x_2 = \sqrt{1-x_1}$ yields the problem
+	  and the circle equation to $x_2 = \sqrt{1-x_1^2}$ yields the problem
 	  ```math
 	  \mathbf{x} = {g}_C(\mathbf{x})
 	  \qquad \text{with}\qquad
@@ -315,60 +315,8 @@ We notice:
 We will make this observation more precise in the section on [Convergence analysis](#Convergence-analysis).
 """
 
-# ╔═╡ b385d67b-c7e0-4a5e-87e1-b11f00ba638a
-md"""
-### Optional: Rewriting root-finding and fixed-point problems
-"""
-
-# ╔═╡ c6d53a9e-0b6d-4ad3-a7c8-c34070f75ff6
-md"""
-We consider solving non-linear equation $f(x) = 0$ with
-```math
-\tag{1}
-f(x) = x + \log(x + 1) - 2
-```
-"""
-
-# ╔═╡ 1319313d-e7da-4ff5-9725-548df0e7f699
-md"""
-In this one can construct four equivalent fixed-point equations $x = g_i(x)$ with $i=1,2,3,4$, namely
-"""
-
-# ╔═╡ 858510eb-7768-4521-ba20-af5b1aa33e08
-begin
-	g₁(x) = x - (1/2) * (log(x + 1) + x - 2)
-	g₂(x) = 2 - log(x + 1)
-	g₃(x) = exp(2-x) - 1
-	g₄(x) = (1/2) * x * (log(x+1) + x)
-end;
-
-# ╔═╡ 7bdb39f4-4fab-43a1-a9d9-12e198cef107
-md"""
-We show how to construct $g_3$ and $g_4$ explicitly.
-
-First $g_3$. At convergence we have that
-```math
-\begin{aligned}
-&& 0 &= f(x) = x + \log(x + 1) - 2 && \text{(add $2-x$)} \\
-\Leftrightarrow && 2-x &= \log(x+1) && \text{(take $\exp$)}\\
-\Leftrightarrow && \exp(2-x) &= x+1 && \text{(subtract $1$)}\\
-\Leftrightarrow && \exp(2-x) -1 &= x
-\end{aligned}
-```
-This is now a fixed-point problem in $x$ where we seek a fixed point
-of the function $g_3(x) = \exp(2-x) -1$,
-which is just the left-hand side of the expression.
-
-Now $g_4$. Again starting from
- ```math
-\begin{aligned}
-&& 0 &= f(x) = x + \log(x + 1) - 2 && \text{(add $2$)} \\
-\Leftrightarrow && 2 &= x + \log(x+1) && \text{(divide by $2$)}\\
-\Leftrightarrow && 1 &= \frac12 \left(x + \log(x+1) \right) && \text{(multiply by $x$)}\\
-\Leftrightarrow && x &= \underbrace{\frac x 2 \left(x + \log(x+1)\right)}_{g_4(x)} 
-\end{aligned}
-```
-where again we get a problem $x = g_4(x)$, i.e. finding a fixed point of $g_4$.
+# ╔═╡ e49a6345-827f-4dcb-b2b3-1c385a7efdf5
+md"""For other ways of visualising fixed-point iterations, see [chapter 4.2 of Driscoll, Brown: Fundamentals of Numerical Computation](https://tobydriscoll.net/fnc-julia/nonlineqn/fixed-point.html).
 """
 
 # ╔═╡ 5e21e4c5-5538-40cf-a955-837809f7c3c3
@@ -393,40 +341,30 @@ The hope is this enables to find a condition for $g$ that tells us when the fixe
 # ╔═╡ 05989b7d-e694-4860-9a8e-6e6cb52aea8b
 md"""
 First we note $x^{(k)} = x_\ast + e^{(k)}$ and we develop the 
-Taylor expansion of $g$ around $x_\ast$:
+**Taylor expansion** of $g$ around $x_\ast$:
 ```math
 \tag{3}
 \begin{align*}
-g(x^{(k)}) &= \underbrace{g(x_\ast)}_{=x_\ast} + g'(x_\ast) (x^{(k)}-x_\ast) + R(x^{(k)}) \\
+g(x^{(k)}) &= {g(x_\ast)} + g'(x_\ast) (x^{(k)}-x_\ast) + O((x - x_\ast)^2)
 \end{align*}
 ```
-where 
-```math
-R(x) = O(|x - x_\ast|^2) \qquad \text{as $x \to x_\ast$},
-```
-which means that there exist positive constants $M, δ > 0$ such that
-```math
-|R(x)| ≤ M |x - x_\ast|^2 \qquad \forall 0 < |x-x_\ast| < δ,
-```
-i.e. that $R(x)$ stays bounded by the next term of the Taylor expansion
-(up to a multiplicative constant).
-The notation $O(|x - x_\ast|^2)$ is thus a
-mathematically precise way of saying
-that there are more terms that we don't show
-but their order is at most $|x - x_\ast|^2$.
-See also the discussion in [Revision and preliminaries](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.html) on Taylor approximations.
+where the Big O notation $O((x - x_\ast)^2)$ indicates that there are higher-order terms, which we don't show explicitly, but their order is at least $(x - x_\ast)^2$.
+See also the discussion in [Revision and preliminaries](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.html) on Taylor approximations and Big O notation.
+
+Sometimes being fully precise in the big O notation will be too distracting. In this case we will use a generic "$O(\text{small})$" to remind ourselves that there are additional terms and we will specify in the surrounding text what this term stands for. 
 """
 
 # ╔═╡ 01db98ec-daf2-4779-9f31-c3271039f44c
 md"""
-Using (3) and the key fixed-point iterations equation, $x^{(k+1)} = g(x^{(k)})$
+Using (3), the fact that $g(x_\ast) = x_\ast$,
+and the key fixed-point iterations equation, $x^{(k+1)} = g(x^{(k)})$,
 we obtain
 ```math
 \begin{aligned}
 e^{(k+1)}
 &= x^{(k+1)} - x_\ast = g(x^{(k)}) - x_\ast \\
-&\stackrel{(3)}{=} x_\ast + g'(x_\ast) \underbrace{(x^{(k)}-x_\ast)}_{=e^{(k)}} + O(|e^{(k)}|^2) - x_\ast \\
-&=  g'(x_\ast)\, e^{(k)} + O(|e^{(k)}|^2).
+&\stackrel{(3)}{=} x_\ast + g'(x_\ast) \underbrace{(x^{(k)}-x_\ast)}_{=e^{(k)}} + O((e^{(k)})^2) - x_\ast \\
+&=  g'(x_\ast)\, e^{(k)} + O((e^{(k)})^2).
 \end{aligned}
 ```
 Taking moduli on both sides:
@@ -436,10 +374,10 @@ Taking moduli on both sides:
 
 We employ this relation now in a recursive argument.
 Assume we choose a good initial guess,
-then $x^{(0)}$ is close enough to $x_\ast$, such that $O(|e^{(0)}|^2)$
+then $x^{(0)}$ is close enough to $x_\ast$, such that $O((e^{(0)})^2)$
 is neglibile compared to $|g'(x_\ast)| \ |e^{(0)}|$.
 Similarly, provided that the iteration makes progress,
- $O(|e^{(1)}|^2)$ is in turn
+ $O((e^{(1)})^2)$ is in turn
 smaller than $|g'(x_\ast)| \ |e^{(1)}|$ and so forth.
 Therefore
 ```math
@@ -484,9 +422,10 @@ First recall that for a vector-valued function the Taylor expansion to first ord
 \tag{4}
 {g}(\textbf{y})
 = {g}(\textbf{x}) + \textbf{J}_{g}(\textbf{x}) \, (\textbf{y} - \textbf{x})
-+ O\Big(( \textbf{y} - \textbf{x} )^2\Big).
++ O(\text{small})
 ```
-In this the **Jacobian matrix**
+In this we used "$O(\text{small})$" to denote that we suppressed
+higher-order terms and the **Jacobian matrix**
 $\textbf{J}_{g}(\textbf{x}) \in \mathbb{R}^{n\times n}$
 is the collection of all partial derivatives of ${g}$ *evaluated at $\mathbf{x}$*, i.e.
 ```math
@@ -511,12 +450,13 @@ is the collection of all partial derivatives of ${g}$ *evaluated at $\mathbf{x}$
 ```
 See also the discussion on multi-dimensional Talyor approximations in [Revision and preliminaries](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.html).
 
-The Jacobian very much plays the role of a generalised derivative
-of a multidimensional function ${g}$. This is why we will sometimes also
-borrow the notation $g'$ from the scalar case to denote the Jacobian.
-
-Also not that (just like any derivative) it is a function of an independent
+Note that the Jacobian (just like any derivative) is a function of an independent
 variable (here $\textbf{x}_\ast$).
+
+Since the Jacobian very much plays the role of a generalised derivative
+of a multidimensional function ${g}$, we will sometimes also
+borrow the notation $g'$ from the scalar case to denote the Jacobian, i.e.
+we sometimes write $g'(\mathbf{x}) = \textbf{J}_{g}(\textbf{x})$.
 """
 
 # ╔═╡ c7068f2e-7313-44bc-85a4-785f4d4adc60
@@ -574,9 +514,9 @@ we obtain analogously to the scalar case for the **error in the fixed-point iter
 \tag{5}
 \begin{aligned}
 \mathbf{e}^{(k+1)}
-&= \mathbf{g}(\mathbf{x}_\ast + \mathbf{e}^{(k)}) - \mathbf{x}_\ast \\
-&\stackrel{(4)}{=} {g}(\mathbf{x}_\ast) + \mathbf{J}_{g}(\mathbf{x}_\ast) \, \mathbf{e}^{(k)} + O\Big((\mathbf{e}^{(k)})^2\Big) - \mathbf{x}_\ast \\
-&=  \mathbf{J}_{g}(\mathbf{x}_\ast)\, \mathbf{e}^{(k)} + O\Big((\mathbf{e}^{(k)})^2\Big).
+&= {g}(\mathbf{x}_\ast + \mathbf{e}^{(k)}) - \mathbf{x}_\ast \\
+&\stackrel{(4)}{=} {g}(\mathbf{x}_\ast) + \mathbf{J}_{g}(\mathbf{x}_\ast) \, \mathbf{e}^{(k)}  - \mathbf{x}_\ast + O(\text{small}) \\
+&=  \mathbf{J}_{g}(\mathbf{x}_\ast)\, \mathbf{e}^{(k)} + O(\text{small}).
 \end{aligned}
 ```
 i.e. we see the Jacobian indeed play the role of the derivative of $\mathbf{g}$.
@@ -605,10 +545,10 @@ The definition of the matrix norm implies in particular that
 
 # ╔═╡ 9c9719e3-ec6c-4bdc-b05b-ab4bd4119cb9
 md"""
-We now take vector norms on either side of (5) and make use of this last inequality to obtain
+We now take vector norms on either side of (5) and make use of this last inequality to obtain to first order
 
 ```math
-\|\mathbf{e}^{(k+1)}\| \leq \left\| \mathbf{J}_{g}(\mathbf{x}_\ast) \right\| \, \left\| \mathbf{e}^{(k)} \right\| + O(\|\mathbf{e}^{(k)}\|^2 ).
+\|\mathbf{e}^{(k+1)}\| \leq \left\| \mathbf{J}_{g}(\mathbf{x}_\ast) \right\| \, \left\| \mathbf{e}^{(k)} \right\| + O(\text{small})
 ```
 
 Under the assumption that our initial guess $\mathbf{x}^{(0)}$ is sufficiently close
@@ -721,7 +661,7 @@ JgC*JgC'
 # ╔═╡ fffd0bd2-7b66-4a21-8311-2965e974d88b
 md"""
 !!! warning ""
-	Therefore $\left\| \mathbf{J}_{g_C}(\mathbf{x}_\ast) \right\| \approx \sqrt{0.640} \approx 0.400 < 1$
+	Therefore $\left\| \mathbf{J}_{g_C}(\mathbf{x}_\ast) \right\| \approx \sqrt{0.640} \approx 0.800 < 1$
 """
 
 # ╔═╡ 50639d02-55d5-4fcb-8335-13fd7f6b7624
@@ -740,6 +680,9 @@ md"""
 	fixed-point iterations for $g_C$ therefore converge
 	while fixed-point iterations for $g_D$ diverge.
 """
+
+# ╔═╡ b7ee0316-5e6b-4615-a934-8a4716b00b2d
+# TODO(md"Table contrast scalar versus multi-dimensional case.")
 
 # ╔═╡ 5d7b3d35-3456-48df-ad22-0ffccaa2f529
 md"""
@@ -821,7 +764,7 @@ function fixed_point_iterations(g, xstart; tol=1e-6, maxiter=100)
 	rᵏ = Inf     # For initial pass in while loop
 	xᵏ = xstart  # Starting point of iterations
 	k  = 0
-	while k < maxiter && abs(rᵏ) ≥ tol
+	while k < maxiter && norm(rᵏ) ≥ tol
 		xᵏ⁺¹ = g(xᵏ)
 		rᵏ   = xᵏ⁺¹ - xᵏ
 		push!(history_r, rᵏ)
@@ -834,6 +777,9 @@ function fixed_point_iterations(g, xstart; tol=1e-6, maxiter=100)
 	# Return results as a named tuple
 	(; fixed_point=xᵏ, residual=rᵏ, n_iter=k, history_x, history_r)
 end
+
+# ╔═╡ 685cf9f0-9869-49aa-b232-cc7009c2a484
+fixed_point_iterations(gC, [0.5, 0.5]; tol=1e-6, maxiter=100)
 
 # ╔═╡ 54f314c1-d1cf-41f1-96e5-5aca90d82b95
 fixed_point_iterations_simple(gC, [0.4, 0.3]; tol=1e-14)
@@ -869,7 +815,7 @@ md"""
   desired accuracy $\epsilon$.
 - In contracst if $|g'(x_\ast)| = 0$ than $|r^{(k)}| < \epsilon$
   is an excellent stopping criterion as $|x^{(k)} - x_\ast| = |r^{(k)}|$ as $k\to\infty$.
-- For the **higher-dimensional case** (see detailed discussion below) the conclusion is similarly that **the residual is a reliable error indicator** if **no eigenvalue of the Jacobian** $\mathbf{J}_g$ **is close to 1**. See below for a more detailed discussion.
+- For the **multi-dimensional case** *(see detailed discussion below)* the conclusion is similarly that **the residual is a reliable error indicator** if **no eigenvalue of the Jacobian** $\mathbf{J}_g$ **is close to 1**. See below for a more detailed discussion.
 """
 
 # ╔═╡ 62ec67d7-10d4-4624-8dd7-d4dd0507d6c2
@@ -905,9 +851,9 @@ can thus be considerably larger than the residual** !
 )
 
 # ╔═╡ de918a0d-05ee-40b3-8cbd-f45274c37ed3
-Foldable("In-depth discussiong of the higher-dimensional case",
+Foldable("In-depth discussiong of the multi-dimensional case",
 md"""
-We now consider a function $g : \mathbb{R}^n \to \mathbb{R}^n$. We first derive the residual-error relationship for the higher-dimensional case.
+We now consider a function $g : \mathbb{R}^n \to \mathbb{R}^n$. We first derive the residual-error relationship for the multi-dimensional case.
 		 
 For this consider the expansion of the function $t \mapsto g\big(\mathbf{x}_\ast + t (\mathbf{x}^{(k)} - \mathbf{x}_\ast)\big)$ around $t = 0$ to 0-th order. By the chain rule and again invoking the Lagrange form of the remainder we obtain
 ```math
@@ -950,9 +896,6 @@ md"""
     procedure** as we will see.
 """
 
-# ╔═╡ 36860565-f44b-452b-a97f-e2ae356319cb
-TODO("Vectorify from here")
-
 # ╔═╡ 91060f66-9540-43dd-bffa-3ecc022efbdc
 md"""
 ### Convergence order
@@ -960,13 +903,13 @@ md"""
 When performing numerical methods one is usually not only interested whether an iteration converges, but also how quickly, i.e. how the error approaches zero.
 
 !!! info "Definition: Convergence order and rate"
-    A sequence $x^{(k)}$, which converges to $x_\ast$, is said to have
-    **convergence order $q$** and **convergence rate $C$**
+    A sequence $\mathbf{x}^{(k)}$, which converges to $\mathbf{x}_\ast$,
+    is said to have **convergence order $q$** and **convergence rate $C$**
     when there exists a $q > 1$ and $C > 0$,
     such that
     ```math
     \tag{7}
-    \lim_{k \to \infty} \frac{|x^{(k+1)} - x_\ast|}{|x^{(k)} - x_\ast|^q} = C
+    \lim_{k \to \infty} \frac{\|\mathbf{x}^{(k+1)} - \mathbf{x}_\ast\|}{\|\mathbf{x}^{(k)} - \mathbf{x}_\ast\|^q} = C
     ```
     If $q = 1$ (convergence order 1) we additionally require $0 < C < 1$.
 """
@@ -980,29 +923,57 @@ Some remarks:
   - These names become more apparent if one considers a logarithmic scale.
     Suppose for simplicity that $q=1$ and all ratios in (7) are equal to $C$
     (perfect linear convergence), then
-    $|x^{(k+1)} - x_\ast| = α C^k$
+    ```math
+    \|\mathbf{x}^{(k+1)} - \mathbf{x}_\ast\| = C \|\mathbf{x}^{(k)} - \mathbf{x}_\ast\|
+    = C^2 \|\mathbf{x}^{(k-1)} - \mathbf{x}_\ast\|
+    = α\, C^k
+    ```
     where $α$ is some constant. Taking the logs we get
     ```math
-    \log |x^{(k)} - x_\ast| = k \log(C) + \log(α)
+    \log \|\mathbf{x}^{(k)} - \mathbf{x}_\ast\| = k \log(C) + \log(α)
     ```
     which is a straight line.
 """
 
-# ╔═╡ 7f2c43c0-a87e-44bb-ac52-77dc70302cd2
+# ╔═╡ 5bb0761d-5b8b-49c2-aecc-2015b4716a6e
 md"""
 #### Visual inspection: Log of error
 
 The last remark provides an idea how to **visually inspect the convergence order**,
-namely by plotting the error $|x^{(k)} - x_\ast|$ on a logscale. For our fixed point iterations,
-the (hopefully) converging sequence is exactly generated by the relationship $x^{(k+1)} = g(x^{(k)})$.
+namely by plotting the error $\|\mathbf{x}^{(k)} - \mathbf{x}_\ast\|$ on a logscale. For our fixed point iterations,
+the (hopefully) converging sequence is exactly generated by the relationship $\mathbf{x}^{(k+1)} = g(\mathbf{x}^{(k)})$.
 
-So let us inspect the convergence of $g_1$ and $g_2$ graphically:
+So let us inspect graphically the convergence of the fixed-point map $g_1$
+in comparison to another fixed-point map $g_{2}$ defined as
 """
+
+# ╔═╡ 2bf42d74-c70f-4df2-9c6e-9ce33ecc0f52
+g₁(x) = x - (1/2) * (log(x + 1) + x - 2)
+
+# ╔═╡ 8a8b04f5-a967-4ef9-85d0-b9e44d6916ff
+g₂(x) = 2 - log(x + 1)
+
+# ╔═╡ edf533e2-dd18-4afa-854f-879b51004c71
+md"""
+Both converge to the same fixed point.
+"""
+
+# ╔═╡ d72fa3f8-9234-4f83-bb50-9704f40022a9
+fp = 1.2079400315693  # Approximate fixed point
+
+# ╔═╡ e45458eb-c0d2-4e70-9ef4-63f4f5edf059
+g₁(fp) - fp
+
+# ╔═╡ c79867cc-71b3-4359-86fa-25480cc14c11
+g₂(fp) - fp
+
+# ╔═╡ bc1fdec1-79e5-47ee-9d9d-daf5cb752356
+md"We notice:"
 
 # ╔═╡ b2e96aa1-69a6-4d07-89b5-15ecc9a41398
 let
 	fp = 1.2079400315693  # Approximate fixed point
-	p = plot(; yaxis=:log, xlabel="k", ylabel=L"|x^{(k)} - x_\ast|")
+	p = plot(; yaxis=:log, xlabel="k", ylabel=L"\|x^{(k)} - x_\ast|")
 
 	results_g₁ = fixed_point_iterations(g₁, 4.0; maxiter=15)
 	errors_g₁ = [abs(xn - fp) for xn in results_g₁.history_x]
@@ -1017,7 +988,7 @@ end
 
 # ╔═╡ 86f4c162-41bd-4e20-9e3f-681ff36bac75
 md"""
-So clearly both $g_1$ and $g_2$ converge linearly,
+So clearly both $g_1$ and $g_{2}$ converge linearly,
 but $g_1$ has a larger convergence rate.
 """
 
@@ -1026,7 +997,7 @@ md"""
 #### Visual inspection: Residual ratio
 
 One caveat with this analysis is that we cheated a little by assuming that we already *know* the solution. An alternative approach is to **build upon our 
-residual-error relationship** (6), i.e.
+residual-error relationship**, i.e. for the scalar case (5)
 ```math
 |x^{(k)} - x_\ast| = \frac{1}{|1 - g'(\xi^{(k)})|} r^{(k)}.
 ```
@@ -1036,20 +1007,25 @@ and investigate the limit of the **residual ratio**
 \frac{|r^{(k+1)}|}{\big| r^{(k)} \big|^q}
 = \lim_{k\to\infty} \frac{|1 - g'(\xi^{(k+1)})|}{|1 - g'(\xi^{(k)})|^q}
 \frac{|x^{(k+1)} - x_\ast|}{|x^{(k)} - x_\ast|^q}
-\stackrel{(7)}{=} \frac{1}{|1 - g'(x_\ast)|^{q-1}} C .
+\stackrel{(5)}{=} \frac{1}{|1 - g'(x_\ast)|^{q-1}} C .
 ```
 In other words if the residual ratios approach a constant for a chosen
 $q$, then we have $q$-th order convergence.
-
-In particular for **linear order** ($q=1$) we have
+For the **multi-dimensional case** we would equivalently study the ratio
+of the norms
 ```math
-\lim_{k\to\infty} \frac{|r^{(k+1)}|}{\big| r^{(k)} \big|} = C,
+\lim_{k\to\infty} \frac{\|\mathbf{r}^{(k+1)}\|}{\big\| \mathbf{r}^{(k)} \big\|^q}.
+```
+
+Specifically for **linear order** ($q=1$) we have
+```math
+\lim_{k\to\infty} \frac{\|\mathbf{r}^{(k+1)}\|}{\big\| \mathbf{r}^{(k)} \big\|} = C,
 ```
 i.e. that the **residual ratio should approach a constant** as $k\to\infty$,
 which is the **convergence rate**.
 
 This is a condition we can check also
-*without* knowing the solution:
+*without* knowing the solution.
 """
 
 # ╔═╡ d22a7de4-67ef-4664-951b-8fb46116a7bc
@@ -1101,7 +1077,7 @@ f(x) =  R \, i_0 \left( e^{x/v_0} - 1 \right) + x - V.
 """
 
 # ╔═╡ b96fd4b2-13d1-4e42-ac6c-074d595f4750
-md"We select the parameters"
+md"We select the parameters and define $f$"
 
 # ╔═╡ 7839caac-64e9-443d-bd49-03930fbe7aba
 begin
@@ -1109,13 +1085,12 @@ begin
 	v0 = 0.1
 	R = 1.0
 	V = 1.0
+
+	f(x) = R*i0*(exp(x/v0) - 1) + x - V
 end;
 
 # ╔═╡ 19327a6c-c552-4115-8d69-1a08491d3bc4
-md"and first plot $f$ to get an idea of the function:"
-
-# ╔═╡ 0a9b876e-31de-4199-9804-7837ff9fe8a1
-f(x) = R*i0*(exp(x/v0) - 1) + x - V
+md"followed by a plot to get an idea of the function:"
 
 # ╔═╡ ccc8345d-9db8-443e-837f-af631aa9f41c
 plot(f, ylims=(-3, 1), xlims=(-1, 0.5), label=L"f", lw=2)
@@ -1243,10 +1218,13 @@ md"""
 [^2]: Our analysis does not include the effect of finite-precision floating point arithmetic, which in theory and in practice can inhibit convergence for some tricky cases.
 """
 
-# ╔═╡ d365a1b6-ca5d-4719-99af-ce16b078b6b2
+# ╔═╡ b39400a1-ee91-4a14-b97b-da684dd6a23e
 md"""
 ## Newton's method
+"""
 
+# ╔═╡ 02f916a6-5e46-4aa3-9ecb-fc2a9cb87a13
+md"""
 ### Achieving higher-order convergence
 
 So far we we only constructed methods with linear convergence order.
@@ -1254,24 +1232,24 @@ In this subsection we first want to understand what is required
 to achieve quadratic or higher-order convergence
 and then use this to construct a second-order method.
 
-Let us return to the fixed-point iterations
-$x^{(k+1)} = g(x^{(k)})$ and revisit
-the **Taylor expansion** (3) of the **fixed-point map** $g$.
-Continuing the expansion to **second order**
-we notice for the error
+We consider the case of a scalar **fixed-point map** $g : \mathbb{R} \to \mathbb{R}$
+and revisit the **Taylor expansion** (3) of $g$,
+which we used to analyse the convergence of the fixed-point iterations
+$x^{(k+1)} = g(x^{(k)})$.
+Continuing the expansion to **second order** we notice for the error
 ```math
 \tag{9}
 \begin{aligned}
 x^{(k+1)} - x_\ast &= g(x^{(k)}) - x_\ast\\
 &= g'(x_\ast) \, (x^{(k)} - x_\ast)
 + \frac12 g''(x_\ast) \, (x^{(k)} - x_\ast)^2
-+ O(|x^{(k)} - x_\ast|^3).
++ O((x^{(k)} - x_\ast)^3).
 \end{aligned}
 ```
 **Assume** now that $g'(x_\ast) = 0$, such that
 ```math
 x^{(k+1)} - x_\ast = \frac12 g''(x_\ast) \, (x^{(k)} - x_\ast)^2
-+ O(|x^{(k)} - x_\ast|^3).
++ O((x^{(k)} - x_\ast)^3).
 ```
 By neglecting the small terms and rearranging we observe
 ```math
@@ -1293,9 +1271,9 @@ We summarise in a theorem:
 # ╔═╡ ac5a79d7-07e0-499e-9dab-519ae0b5f638
 md"""
 !!! info "Theorem 3"
-    Let $g : [a, b] \to \mathbb{R}$ be a $p$ times
+    Let $g : \mathbb{R} \to \mathbb{R}$ be a $p$ times
     continuously differentiable fixed-point map
-    with fixed point $x_\ast \in [a, b]$.
+    with fixed point $x_\ast \in \mathbb{R}$.
     If
     ```math
     g'(x_\ast) = g''(x_\ast) = \cdots = g^{(q-1)}(x_\ast) = 0
@@ -1312,7 +1290,7 @@ md"""
       = \frac{1}{q!} \left|g^{(q)}(x_\ast)\right|
       ```
 
-Recall the residual-error relationship (6)
+Recall the residual-error relationship (5)
 ```math
 |x^{(k)} - x_\ast| = \frac{1}{|1 - g'(\xi^{(k)})|} r^{(k)}.
 ```
@@ -1322,8 +1300,8 @@ $x_\ast$ (and thus $\xi^{(k)} \simeq x_\ast$) we have that
 ```math
 |x^{(k)} - x_\ast| \simeq r^{(k)}.
 ```
-As a result for superlinear methods a residual-based stopping criterion
-becomes extremely reliable.
+As a result **for superlinear methods a residual-based stopping criterion
+becomes extremely reliable**.
 """
 
 # ╔═╡ 92f0e4d8-46b1-45ae-9c0a-1c3485713c94
@@ -1331,46 +1309,67 @@ md"""
 ### Construction of Newton's method
 
 Newton's method and its variants are the **most common approaches**
-to **solve non-linear equations** $f(x) = 0$.
+to **solve non-linear equations** $f(\mathbf{x}) = \mathbf{0}$.
 
-To develop these methods assume that the fixed-point is $x_\ast$
-and we are given a point $x$, which is close to $x_\ast$.
-We consider a Taylor expansion of $f$ around $x$:
+To develop these methods assume that the root of a function $f : \mathbb{R}^n \to \mathbb{R}^n$ is $\mathbf{x}_\ast$
+and we are given a point $\mathbf{x}$, which is close to $\mathbf{x}_\ast$.
+We consider a Taylor expansion of $f$ around $\mathbf{x}$ to first order:
 ```math
-0 = f(x_\ast) = f(x) + f'(x) (x_\ast - x) + O\big( (x_\ast - x)^2 \big)
+\tag{10}
+\textbf{0} = {f}(\textbf{x}_\ast)
+= {f}(\textbf{x}) + \textbf{J}_{f}(\textbf{x}) \, (\textbf{x}_\ast - \textbf{x})
++ O(\text{small}).
 ```
-Where we made the condition $f(x_\ast) = 0$ has been made explicict.
-Now assume $f'(x) \neq 0$ to rearrange this to
+Where we made the condition $f(\mathbf{x}_\ast) = \mathbf{0}$ explicict.
+
+Assuming that $\det \textbf{J}_\textbf{f}(\textbf{x}) \neq 0$,
+i.e. that the Jacobian is non-singular, we can rearrange this to
 ```math
-0 = \frac{f(x)}{f'(x)} + (x_\ast - x) + O\big( (x - x_\ast)^2 \big).
+\mathbf{0} = \left( \textbf{J}_\textbf{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x}) + (\textbf{x}_\ast - \textbf{x}) + O(\text{small}).
 ```
-If $x$ is close to $x_\ast$, thus $x - x_\ast$ is small,
-then the last $O \big((x - x_\ast)^2\big)$ term is even smaller.
-Neglecting it we can further develop this to an approximation for $x_\ast$ as
+If $\mathbf{x}$ is close to $\mathbf{x}_\ast$, thus $\mathbf{x} - \mathbf{x}_\ast$ is small,
+then the last term $O(\text{small})$, which actually depends
+on $(\textbf{x}_\ast - \textbf{x})^2$ and higher powers of
+$(\textbf{x}_\ast - \textbf{x})$ is even smaller.
+
+Neglecting it completely we can further develop this to an approximation for $x_\ast$ as
 ```math
-0 \simeq \frac{f(x)}{f'(x)} + x_\ast - x
+\mathbf{0} \simeq \left( \textbf{J}_\textbf{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x}) + \mathbf{x}_\ast - \mathbf{x}
 \qquad
 \Longrightarrow
 \qquad
-x_\ast \simeq x - \frac{f(x)}{f'(x)}.
+\mathbf{x}_\ast \simeq \mathbf{x} - \left( \textbf{J}_\textbf{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x}).
 ```
-If we denote the RHS by $g_\text{Newton}(x) = x - \frac{f(x)}{f'(x)}$,
+If we denote the RHS by $g_\text{Newton}(\mathbf{x}) =  \mathbf{x} - \left( \textbf{J}_{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x})$,
 then a root of $f$ is a fixed point of $g_\text{Newton}$
 and vice versa.
 Performing fixed-point iterations on $g_\text{Newton}$
 is the idea of Newton's method:
 
 !!! info "Algorithm 1: Newton's method (fixed-point formulation)"
-    Given a  $C^1$ function $f$ and an initial guess $x^{(0)}$
-    perform fixed-point iterations
+    Given a once differentiable function ${f} : \mathbb{R}^n \to \mathbb{R}^n$,
+	a starting value $\textbf{x}^{(0)} \in \mathbb{R}^n$
+	perform fixed-point iterations
     ```math
-    x^{(k+1)} = g_\text{Newton}(x^{(k)})
+    \mathbf{x}^{(k+1)} = g_\text{Newton}(\mathbf{x}^{(k)})
     ```
     on the map
     ```math
-    \tag{10}
-    g_\text{Newton}(x) = x - \frac{f(x)}{f'(x)}.
+    \tag{11}
+    g_\text{Newton}(\mathbf{x}) =  \mathbf{x} - \left( \textbf{J}_{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x}).
     ```
+
+For scalar problems, i.e. when we consider finding the root of $f : \mathbb{R} \to \mathbb{R}$, we can identify the Jacobian
+(which formally is a $1 \times 1$ matrix) by the single element
+$\frac{\partial f}{\partial x_1} = f'(x_1)$.
+Inversion of such a  $1 \times 1$ matrix is simply division.
+
+Therefore **for scalar problems** we can equivalently write
+```math
+g_\text{Newton}(x) = x - \frac{f(x)}{f'(x)}
+```
+provided that $f'(x) \neq 0$
+--- which is equivalent to the requirement that $\textbf{J}_{f}$ is invertible in the scalar case.
 """
 
 # ╔═╡ 7930a403-bd4d-4f64-a79b-54cff28b869b
@@ -1389,8 +1388,13 @@ md"""
 
 Our goal is to apply Theorem 3 in order to obtain both the result
 that Newton's method converges as well as an understanding of its
-convergence order. We thus study the
-derivatives of $g_\text{Newton}$ at the fixed point $x_\ast$.
+convergence order. 
+
+For simplicity we will only consider the scalar version of Newton's method
+```math
+g_\text{Newton}(x) = x - \frac{f(x)}{f'(x)}.
+```
+To apply Theorem 3 we study its derivatives at the fixed point $x_\ast$.
 We obtain
 ```math
 \begin{aligned}
@@ -1414,22 +1418,30 @@ g_\text{Newton}''(x_\ast) &= \frac{f''(x_\ast)}{f'(x_\ast)}  \neq 0
 \end{aligned}
 ```
 where we used $f(x_\ast) = 0$.
+
+A similar line of argument can be formulated for the multi-dimensional case.
 We summarise
 
 !!! info "Theorem 4: Convergence of Newton's method" 
-    Let $f$ be a twice differentiable ($C^2$) function and $x_\ast$ a root of $f$.
-    If $f'(x_\ast) \neq 0$ and $f''(x_\ast) \neq 0$, then
-    Newton's method converges quadratically for every $x^{(0)}$
-    sufficiently close to $x_\ast$. The rate is
-    ```math
-    \lim_{k\to\infty} \frac{|x^{(k+1)} - x_\ast|}{|x^{(k)} - x_\ast|^2}
-    = \frac12 \left|\frac{f''(x_\ast)}{f'(x_\ast)}\right|
-    ```
+    Let $f : \mathbb{R}^n \to \mathbb{R}^n$ be a twice differentiable
+	function and $\mathbf{x}_\ast$ a root of $f$.
+	If $\mathbf{J}_f(\mathbf{x}_\ast)$ is invertible 
+	(respectively $f'(x_\ast) \neq 0$ for the scalar case)
+	and the second derivative of $f$ is non-zero at $\mathbf{x}_\ast$,
+	then Newton's method converges quadratically for every $\mathbf{x}^{(0)}$
+    sufficiently close to $\mathbf{x}_\ast$.
+
 Some remarks:
 - Theorem 4 only makes a *local* convergence statement,
   i.e. it requires the initial value $x^{(0)}$ to be close enough
   to $x_\ast$.
-- If $f'(x_\ast) = 0$ we can show that Newton's method is only
+- We further noted that for the scalar case $f : \mathbb{R} \to \mathbb{R}$
+  the convergence rate is
+  ```math
+  \lim_{k\to\infty} \frac{|x^{(k+1)} - x_\ast|}{|x^{(k)} - x_\ast|^2}
+  = \frac12 \left|\frac{f''(x_\ast)}{f'(x_\ast)}\right|.
+  ```
+- Importantly, if $f'(x_\ast) = 0$ we can show that Newton's method is only
   of first order.
 """
 
@@ -1440,19 +1452,17 @@ md"""
 Since in our construction Newton's method (Algorithm 1) is obtained in form of the fixed-point map $g_\text{Newton}$ the implementation is straightforward by employing the `fixed_point_iterations` function we already implemented above:
 """
 
-# ╔═╡ 88cf8bbf-55cd-45f0-9ab4-ae2bdf6c554a
-TODO(md"""Code up this next algorithm live""")
-
 # ╔═╡ 929010af-2af6-4b63-bfb4-7987f1b790ca
-function newton_fp(f, df, xstart; maxiter=40, tol=1e-6)
-	# f:  Function of which we seek the roots
-	# df: Function, which evaluates its derivatives
+function newton_fp(f, jac, xstart; maxiter=40, tol=1e-6)
+	# f: Function of which we seek the roots
+	# jac: Function, which evaluates its Jacobian or derivative
 	# xstart: Start of the iterations
 	# maxiter: Maximal number of iterations
 	# tol: Convergence tolerance
 
 	# Define the fixed-point function g_Newton using f and df
-	g_Newton(x) = x - f(x) / df(x)
+	# Here "\" is the operator for solving linear systems, see discussion below.
+	g_Newton(x) = x - jac(x) \ f(x) 
 
 	# Solve for its fixed point:
 	fixed_point_iterations(g_Newton, xstart; tol, maxiter)
@@ -1460,37 +1470,58 @@ end
 
 # ╔═╡ 2b04681b-6704-4172-9bf1-279051fc1d78
 md"""
-In this setting where $g_\text{Newton}$ exhibits quadratic convergence,
-the **residual-based stopping criterion** of `fixed_point_iterations` is actually
-**extremely reliable**, see the discussion after Theorem 3.
+Note, that the formal definition of the fixed-point function
+```math
+g_\text{Newton}(\mathbf{x}) =  \mathbf{x} - \left( \textbf{J}_{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x})
+```
+asked us to compute the expression $\mathbf{z}^{(k)} = \Big( \textbf{J}_{f}(\textbf{x}^{(k)}) \Big)^{-1} \, f(\mathbf{x})$,
+i.e. the inverse of $\Big( \textbf{J}_{f}(\textbf{x}^{(k)}) \Big)$ followed by a  matrix-vector product with the vector $f(\mathbf{x})$.
+However, the implementation achieves this by invoking the `\` Julia operator,
+which solves the linear system
+```math
+\tag{12}
+\textbf{J}_{f}(\textbf{x}^{(k)}) \ \mathbf{z}^{(k)} = f(\mathbf{x})
+```
+for the vector $\mathbf{z}^{(k)}$. On paper both computations are equivalent, but in practice using the `\` operator is more numerically stable.
+We will discuss more on solving linear systems in the chapter
+[Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html).
 """
 
-# ╔═╡ 0d61a532-e185-49bc-baf9-c22b8443a979
-begin
-	text_algo2_newton = md"""
-!!! info "Algorithm 2: Newton's method (conventional)"
-	Given a once differentiable function $f : \mathbb{R} \to \mathbb{R}$,
-	a starting value $x^{(0)}$ and a convergence tolerance $\epsilon$,
-    perform for $k = 1, 2, 3, \ldots$:
-    1. Compute the residual $r^{(k)} = - \frac{f(x^{(k)})}{f'(x^{(k)})}$
-    2. Update ${x}^{(k+1)} = {x}^{(k)} + {r}^{(k)}$
-    Loop 1. and 2. until $|{r}^{(k)}| < \epsilon$.
-"""
-	
+# ╔═╡ 803b3413-a9e5-463e-b9be-5464d21ead2c
 md"""
-	More conventionally one "inlines" the function $g_\text{Newton}$ into the fixed point iterations and expresses the problem as $text_algo2_newton
-	A corresponding implementation of Algorithm 2 is:
-	"""
-end
+More conventionally, one "inlines" the function $g_\text{Newton}$ into the fixed point iterations and expresses the problem as
 
-# ╔═╡ d8091ef9-7350-45e9-8381-55c9297429cd
-function newton(f, df, xstart; maxiter=40, tol=1e-6)
-	# f:  Function of which we seek the roots
-	# df: Function, which evaluates its derivatives
+!!! info "Algorithm 2: Newton's method (conventional)"
+    Given a once differentiable function ${f} : \mathbb{R}^n \to \mathbb{R}^n$,
+	a starting value $\textbf{x}^{(0)}$ and a convergence tolerance $\epsilon$,
+    perform for $k = 1, 2, 3, \ldots$:
+    1. Compute
+       the right-hand side $\textbf{y}^{(k)} = {f}(\textbf{x}^{(k)})$
+       and Jacobian
+       $\textbf{A}^{(k)} = \textbf{J}_{f}(\textbf{x}^{(k)})$.
+    2. **Newton step:** Solve the linear system $\textbf{A}^{(k)} \textbf{r}^{(k)} = - \textbf{y}^{(k)}$ for $\textbf{r}^{(k)}$.
+    3. Update $\textbf{x}^{(k+1)} = \textbf{x}^{(k)} + \textbf{r}^{(k)}$
+    Loop 1. to 3. until $\|\textbf{r}^{(k)}\| < \epsilon$. 
+
+Some remarks:
+- To compare Algorithm 2 to Algorithm 1 note that steps 1 and 2 jointly apply the function $g_\text{Newton}$ and that the residual is defined as
+  ```math
+  \mathbf{r}^{(k)} = g_\text{Newton}(\mathbf{x}^{(k)}) - \mathbf{x}^{(k)} = \mathbf{x}^{(k)} - \left( \textbf{J}_{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x}) - \mathbf{x}^{(k)} = - \left( \textbf{J}_{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x}),
+  ```
+  and that $\mathbf{r}^{(k)} = -\mathbf{z}^{(k)}$ with the $\mathbf{z}^{(k)}$ we employed in equation (12).
+- Since in the Newton setting $g_\text{Newton}$ exhibits quadratic convergence,
+  the **residual-based stopping criterion** $\|\textbf{r}^{(k)}\| < \epsilon$ is   actually **extremely reliable**, see the discussion after Theorem 3.
+
+A corresponding implementation of Algorithm 2 is:
+"""
+
+# ╔═╡ a29e748e-cbed-4807-8fd3-3e181e0cae1b
+function newton(f, jac, xstart; maxiter=40, tol=1e-8) 
+	# f: Function of which we seek the roots
+	# jac: Function, which evaluates its Jacobian or derivative
 	# xstart: Start of the iterations
 	# maxiter: Maximal number of iterations
 	# tol: Convergence tolerance
-
 	history_x = [float(xstart)]
 	history_r = empty(history_x)
 
@@ -1502,72 +1533,54 @@ function newton(f, df, xstart; maxiter=40, tol=1e-6)
 	# and we have not yet reached maxiter
 	while norm(r) ≥ tol && k < maxiter
 		k = k + 1
-
-		# Evaluate function, gradient and residual
-		r = - f(x) / df(x)
-
-		# Evaluate next iterate
-		x = x + r
 		
-		push!(history_r, r)  # Push residual and
+		y = f(x)      # Function value
+		A = jac(x)    # Jacobian
+		r = -(A \ y)  # Newton step
+		x = x + r     # Form next iterate
+		
+		push!(history_r, r)  # Push newton step and
 		push!(history_x, x)  # next iterate to history
 	end
 
 	(; root=x, n_iter=k, history_x, history_r)
 end
 
-# ╔═╡ ecd71729-ea89-40f6-86c8-598e42cd787d
+# ╔═╡ d6913907-38af-4b2c-bc37-e4a0de8dfc32
 md"""
-To compare Algorithm 2 to Algorithm 1 note that steps 1 and 2 jointly apply the function $g_\text{Newton}$ and that the residual is defined as
+To see how this method performs we compare against plain fixed-point iterations on the function 
 ```math
-r^{(k)} = g_\text{Newton}(x^{(k)}) - x^{(k)} =  x^{(k)} - \frac{f(x^{(k)})}{f'(x^{(k)})} - x^{(k)} = - \frac{f(x^{(k)})}{f'(x^{(k)})}
+g_1(x) = x - \frac{1}2  (\log(x + 1) + x - 2)
+```
+which we also employed earlier. An equivalent root-finding problem
+is $f₁(x) = 0$ with 
+```math
+f_1(x) = g_1(x) - x = - \frac{1}2 (\log(x + 1) + x - 2).
 ```
 """
 
-# ╔═╡ baabfa2d-04b8-4305-9a73-2008cd018a09
-md"""
-To see how this method performs we compare against bisection
-and the plain fixed-point iterations in $g_\text{log}$ we saw earlier.
-"""
-
-# ╔═╡ e50fb224-63c1-4885-8165-21491110b804
-md"""
-```math
-g_\text{log}(x) = v_0 \log\left( \frac{V - x}{R \, i_0} + 1 \right)
-```
-Let's code up this function in Julia:
-"""
-
-# ╔═╡ 03d48dc9-a7a6-480b-a755-2c4e049d3f7b
-function glog(vD)
-	v0 * log((V - vD) / (R * i0) + 1)
-end
+# ╔═╡ ddcc50fd-c3ac-4cdc-843a-92cb2c9eec0f
+f₁(x) = g₁(x) - x
 
 # ╔═╡ 2e1751b5-a2cd-4a39-a7a8-4601f4448ff4
 let
-	# First get an almost exact root
-	reference = bisection_method(f, -0.5, 0.5; tol=1e-14)
+	reference = 1.2079400315693  # Approximate root
 
 	p = plot(yaxis=:log, xlims=(0, 20), ylims=(1e-12, Inf),
 	         xlabel="k", ylabel=L"|x^{(k)} - x_\ast|")
 
-	# Run bisection
-	result = bisection_method(f, -0.5, 0.5; tol=1e-12)
-	errors = [abs(xn - reference.root) for xn in result.history_x]
-	plot!(p, errors, label="Bisection", mark=:x, lw=2)
-
-	# Run fixed-point on glog
-	result = fixed_point_iterations(glog, 0.0; tol=1e-12)
-	errors  = [abs(xn - reference.root) for xn in result.history_x]
+	# Run fixed-point on g₁
+	result = fixed_point_iterations(g₁, 0.0; tol=1e-12)
+	errors  = [abs(xn - reference) for xn in result.history_x]
 	plot!(p, errors, label="Fixed point", mark=:x, lw=2)
 
 	# For Newton we need the derivative of f.
 	# An easy way to obtain this derivative is to use algorithmic differentiation:
-	df(x) = ForwardDiff.derivative(f, x)
+	df(x) = ForwardDiff.derivative(f₁, x)
 
 	# With this we run Newton
-	result = newton(f, df, 0.0; tol=1e-12)
-	errors = [abs(xn - reference.root) for xn in result.history_x]
+	result = newton(f₁, df, 0.0; tol=1e-12)
+	errors = [abs(xn - reference) for xn in result.history_x]
 	plot!(p, errors, label="Newton", mark=:x, lw=2)
 	yticks!(p, 10.0 .^ (-12:-1))
 
@@ -1610,30 +1623,96 @@ end
 
 # ╔═╡ e5725d2b-527f-4a50-9a2a-89d0514ae6bb
 md"""
-Finally, let us investigate what quadratic convergence
-means in terms of our error estimate,
-the residuals of the Newton fixed-point map. Since Newton converges
-fast and thus very quickly maxes out the roughly 16 digits of precision
-in standard `Float64` numbers, we employ Julia's arbitrary precision
-`BigFloat` type to see more closely what is going on:
+Finally, let us investigate on a more involved problem what quadratic convergence means in practice.
+
+We will consider the problem 
+${f}(\textbf{x}) = \textbf{0}$
+with $\textbf{f} : \mathbb{R}^3 \to \mathbb{R}^3$ given by
+```math
+\left\{ \begin{aligned}
+f_1(x_1, x_2, x_3) &= -x_1 \cos(x_2) - 1\\
+f_2(x_1, x_2, x_3) &= x_1 \, x_2 + x_3\\
+f_3(x_1, x_2, x_3) &= e^{-x_3} \, \sin(x_1 + x_2) + x_1^2 - x_2^2
+\end{aligned} \right. .
+```
+The Jacobian can be computed as
+```math
+\textbf{J}_\textbf{f}(\textbf{x})
+= \left(\begin{array}{ccc}
+-\cos(x_2) & x_1 \sin(x_2) & 0 \\
+x_2 & x_1 & 1 \\
+e^{-x_3} \, \cos(x_1 + x_2) + 2x_1 &
+e^{-x_3} \, \cos(x_1 + x_2) - 2x_2 &
+- e^{-x_3} \, \sin(x_1 + x_2)
+\end{array}\right)
+```
+This example can be implemented in Julia as follows:
 """
 
-# ╔═╡ b5a13fb0-6d04-411f-ab9e-5ed61f2451e5
+# ╔═╡ 1307929a-f151-4868-a43a-85488599f0df
+begin
+	func(x) = [
+		-x[1] * cos(x[2]) - 1,
+		x[1] * x[2] + x[3],
+		exp(-x[3]) * sin(x[1] + x[2]) + x[1]^2 - x[2]^2
+	]
+	jac_func(x) = [
+		-cos(x[2])       x[1]*sin(x[2])    0;
+		x[2]             x[1]              1;
+		exp(-x[3])*cos(x[1]+x[2]) + 2x[1]  exp(-x[3])*cos(x[1]+x[2]) - 2x[2] exp(-x[3])*sin(x[1]+x[2]) 
+	]
+end;
+
+# ╔═╡ 2b871a61-d5bd-44e0-b63a-bbfd9a145ffc
+md"""
+Since Newton converges fast and thus very quickly maxes out the roughly 16 digits of precision in standard `Float64` numbers, we employ Julia's arbitrary precision
+`BigFloat` type in this example to see more closely what is going on:
+"""
+
+# ╔═╡ c6df62a0-b3c5-42b2-9ec6-d05119cb9146
+res = newton(func, jac_func, BigFloat.([1.5, -1.5, 5]), tol=1e-50);
+
+# ╔═╡ 42216744-eaed-4bb5-b882-dc4589d8e63d
+md"""
+Plotting the residual norm (our estimate of the error) in a log-plot gives a strong indication this is again quadratic convergence:
+"""
+
+# ╔═╡ 9bc67152-9220-4905-9d2b-ec3f37b43707
+plot(norm.(res.history_r); yaxis=:log, label="", xlabel=L"k", ylabel=L"\Vert  e^{(k)} \Vert \simeq \Vert r^{(k)} \Vert", mark=:o, lw=2, yticks=10.0 .^ (0:-5:-60))
+
+# ╔═╡ 9be996e7-9a33-4399-9043-28d1f93cd890
+md"Notice the *extremely* small error norms of less than $10^{-50}$: From our chosen starting point it takes **only $7$ iterations** to get the result **accurate to more than 50 digits** !"
+
+# ╔═╡ b6edac36-ee05-4efa-8d75-7840e9e185e4
+md"""
+Using the residual norms stored in the Newton result, we can now also
+look at the ratios
+```math
+\frac{\| \textbf{x}^{(k+1)} - \textbf{x}^{(k)} \| }
+{\| \textbf{x}^{(k)} - \textbf{x}^{(k-1)} \|^q }
+= \frac{\| \textbf{r}^{(k)} \| }{\| \textbf{r}^{(k-1)} \|^q }
+```
+of two consecutive increments.
+Recall that for a $q$-th order convergence these should converge to a constant.
+"""
+
+# ╔═╡ 95120495-15c7-4567-84f1-cb6f535c3885
 let
-	# We want to solve e^x * x = 2, which has a solution near 1.
-	f(x)  = x*exp(x) - 2
-	df(x) = (x+1) * exp(x)
-
-	xstart = BigFloat(1.0)
-	result = newton(f, df, xstart; tol=1e-60)
-
-	for (i, r) in enumerate(result.history_r)
-		@printf "%3i %e\n" i r
+	for q in (1, 2, 3)
+		println("# Checking order q=$q")
+		for k in 2:length(res.history_r)
+			ratio = norm(res.history_r[k]) / norm(res.history_r[k-1])^q
+			@printf "%i  %.5f\n" k ratio
+		end
+		println()
 	end
 end
 
-# ╔═╡ 9be996e7-9a33-4399-9043-28d1f93cd890
-md"We observe that from the starting point only $7$ iterations are required to get the result accurate to 61 digits."
+# ╔═╡ 6686d3bc-abc8-4a3a-a3cd-f6cac50fdf34
+md"""
+As can be see the most constant is the sequence corresponding to $q=2$,
+such that we conclude that the method converges quadratically.
+"""
 
 # ╔═╡ efcd0f6a-4c48-49c8-9c7a-f49421170a33
 md"""
@@ -1641,11 +1720,20 @@ md"""
     - For quadratic convergence the error roughly squares in each iteration
     - Newton only converges well if the initial guess is chosen sufficiently
       close to the fixed point.
-	- Unlike the bisection algorithm the convergence behaviour of Newton
-	  is thus sometimes less reliable. In particular if $f$ has **multiple roots** it is
+	- The convergence behaviour of Newton
+	  can be less reliable. In particular if $f$ has **multiple roots** it is
 	  **not guaranteed**, that **Newton converges to the *closest* root**.
 	  A good graphical representation of this phaenomenon
 	  are [Newton fractals](https://en.wikipedia.org/wiki/Newton_fractal).
+"""
+
+# ╔═╡ bdff9554-58b6-466e-9c93-6b1367262b50
+md"""
+## Optional: Secant method
+
+See [chapter 4.4](https://tobydriscoll.net/fnc-julia/nonlineqn/secant.html)
+of Driscoll, Brown: *Fundamentals of Numerical Computation*.
+
 """
 
 # ╔═╡ 04cbf165-4786-4980-8055-5efca14dfa3f
@@ -1681,279 +1769,12 @@ We will consider this aspect further,
 for example in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html).
 """
 
-# ╔═╡ bdff9554-58b6-466e-9c93-6b1367262b50
-md"""
-## Optional: Secant method
-
-See [chapter 4.4](https://tobydriscoll.net/fnc-julia/nonlineqn/secant.html)
-of Driscoll, Brown: *Fundamentals of Numerical Computation*.
-
-"""
-
-# ╔═╡ 6c823b3d-2332-4299-8fef-bc392d13da94
-md"""
-## Non-linear equation systems
-"""
-
-# ╔═╡ 74ff4f4f-66a9-4de7-826b-4cc66d445a73
-md"""
-!!! warning "Running example: Definition"
-	As the running example in this section we will consider the problem 
-	$\textbf{f}(\textbf{x}) = \textbf{0}$
-	with $\textbf{f} : \mathbb{R}^3 \to \mathbb{R}^3$ given by
-	```math
-	\left\{ \begin{aligned}
-	f_1(x_1, x_2, x_3) &= -x_1 \cos(x_2) - 1\\
-	f_2(x_1, x_2, x_3) &= x_1 \, x_2 + x_3\\
-	f_3(x_1, x_2, x_3) &= e^{-x_3} \, \sin(x_1 + x_2) + x_1^2 - x_2^2
-	\end{aligned} \right. .
-	```
-"""
-
-# ╔═╡ 0449d301-0896-4c2e-952c-0d380e60c0b9
-md"""
-This example very much illustrates the previous point of the increased complexity:
-Even guessing an approximate solution is not obvious,
-so we proceed to develop a numerical technique.
-Taking inspiration from Newton's method in 1D
-we proceed to solve such equation systems **by linearisation**.
-That is to say we start by developing $\textbf{f}$ to first order
-around some initial point $\textbf{x}$,
-which we assume to be close enough to the solution $\textbf{x}_\ast$
-```math
-\tag{11}
-\textbf{0} = \textbf{f}(\textbf{x}_\ast)
-= \textbf{f}(\textbf{x}) + \textbf{J}_\textbf{f}(\textbf{x}) \, (\textbf{x}_\ast - \textbf{x})
-+ O(\| \textbf{x}_\ast - \textbf{x} \|^2).
-```
-In this the **Jacobian matrix**
-$\textbf{J}_\textbf{f}(\textbf{x}) \in \mathbb{R}^{n\times n}$
-is the collection of all partial derivatives of $\textbf{f}$, i.e.
-```math
-\textbf{J}_\textbf{f} = \left(\begin{array}{cccc}
-\frac{\partial f_1}{\partial x_1} &
-\frac{\partial f_1}{\partial x_2} &
-\ldots &
-\frac{\partial f_1}{\partial x_n} \\
-
-\frac{\partial f_2}{\partial x_1} &
-\frac{\partial f_2}{\partial x_2} &
-\ldots &
-\frac{\partial f_2}{\partial x_n} \\
-
-\vdots & & \ddots & \vdots\\
-
-\frac{\partial f_n}{\partial x_1} &
-\frac{\partial f_n}{\partial x_2} &
-\ldots &
-\frac{\partial f_n}{\partial x_n}
-\end{array}\right).
-```
-See also the discussion on multi-dimensional Talyor approximations in [Revision and preliminaries](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.html).
-
-
-The Jacobian very much plays the role of a generalised derivative
-of a multidimensional function $\textbf{f}$.
-Also not that (just like any derivative) it is a function of the independent
-variable $\textbf{x}$.
-
-!!! warning "Running example: Computing the Jacobian"
-	For the running example identified above we can compute the Jacobian as
-	```math
-	\textbf{J}_\textbf{f}(\textbf{x})
-	= \left(\begin{array}{ccc}
-	-\cos(x_2) & x_1 \sin(x_2) & 0 \\
-	x_2 & x_1 & 1 \\
-	e^{-x_3} \, \cos(x_1 + x_2) + 2x_1 &
-	e^{-x_3} \, \cos(x_1 + x_2) - 2x_2 &
-	- e^{-x_3} \, \sin(x_1 + x_2)
-    \end{array}\right)
-    ```
-"""
-
-# ╔═╡ 4cf5f022-4047-49f1-8fc5-86eda6d61e30
-md"""
-In expansion (11) the terms $\textbf{f}(\textbf{x}) + \textbf{J}_\textbf{f}(\textbf{x}) \, (\textbf{x}_\ast - \textbf{x})$
-represent the linear part of $\textbf{f}$ around $\textbf{x}_\ast$.
-Assuming that these dominate, i.e. that the remaining term $O(\| \textbf{x}_\ast - \textbf{x} \|^2)$ is indeed small and can be neglected, we obtain:
-```math
-\textbf{0} \simeq \textbf{f}(\textbf{x}) + \textbf{J}_\textbf{f}(\textbf{x}) \, (\textbf{x}_\ast - \textbf{x})
-```
-In the same spirit as in the 1D Newton case we want to employ this relation
-in an iterative scheme, where in iteration $k$ we have $\textbf{x}^{(k)}$
-and want to compute an improved iterate $\textbf{x}^{(k+1)}$.
-Inserting
-$\textbf{x}^{(k)}$ as $\textbf{x}$ 
-and
-$\textbf{x}^{(k+1)}$ as $\textbf{x}_\ast$ 
-as in the 1D case, we obtain
-```math
-\textbf{0} =
-\textbf{f}(\textbf{x}^{(k)}) + \textbf{J}_\textbf{f}(\textbf{x}^{(k)}) \, (\textbf{x}^{(k+1)} - \textbf{x}^{(k)})
-```
-or
-```math
-\tag{12}
-\Big( \textbf{J}_\textbf{f}(\textbf{x}^{(k)}) \Big) \, (\textbf{x}^{(k+1)} - \textbf{x}^{(k)}) = - \textbf{f}(\textbf{x}^{(k)}).
-```
-Assuming that $\det \textbf{J}_\textbf{f}(\textbf{x}^{(k)}) \neq 0$,
-i.e. that the Jacobian is non-singular,
-this linear system can be solved and thus $\textbf{x}^{(k+1)}$ computed.
-"""
-
-# ╔═╡ 7e3558c8-b16d-47a4-87ea-d2af5614ea2e
-md"""
-Note, that in accordance with the 1D case the **residual in this
-multi-dimensional version** is $\textbf{r}^{(k)} = \textbf{x}^{(k+1)} - \textbf{x}^{(k)}$,
-i.e. exactly the solution to the linear system in (12).
-Similar to the 1D case we will thus employ the stopping criterion
-$\|\textbf{r}^{(k)}\| < \epsilon$,
-where $\|x\|$ denotes the Euclidean norm
-$\|x\| = \sqrt{x_1^2 + x_2^2 + \cdots + x_n^2}$.
-All combined we obtain the algorithm
-"""
-
-# ╔═╡ fa140f9b-af22-4060-9a66-027189f80dbc
-md"""
-!!! info "Algorithm 3: Multidimensional Newton's method"
-    Given a once differentiable function $\textbf{f} : \mathbb{R}^n \to \mathbb{R}^n$,
-	a starting value $\textbf{x}^{(0)}$ and a convergence tolerance $\epsilon$,
-    perform for $k = 1, 2, 3, \ldots$:
-    1. Compute
-       the right-hand side $\textbf{y}^{(k)} = \textbf{f}(\textbf{x}^{(k)})$
-       and Jacobian
-       $\textbf{A}^{(k)} = \textbf{J}_\textbf{f}(\textbf{x}^{(k)})$.
-    2. **Newton step:** Solve the linear system $\textbf{A}^{(k)} \textbf{r}^{(k)} = - \textbf{y}^{(k)}$ for $\textbf{r}^{(k)}$.
-    3. Update $\textbf{x}^{(k+1)} = \textbf{x}^{(k)} + \textbf{r}^{(k)}$
-    Loop 1. to 3. until $\|\textbf{r}^{(k)}\| < \epsilon$.
-"""
-
-# ╔═╡ fc9d11e1-b3b6-4d74-9cbe-1faf2d8f3abc
-md"""
-An implementation of this algorithm is given below:
-"""
-
-# ╔═╡ 4e746757-26a0-45c4-a190-04dd92b3cab0
-function newtonsys(f, jac, xstart; maxiter=40, tol=1e-8)
-	history_x = [float(xstart)]
-	history_r = empty(history_x)
-
-	r = Inf     # Dummy to enter the while loop
-	x = xstart  # Initial iterate
-	k = 0
-	while norm(r) ≥ tol && k < maxiter
-		k = k + 1
-		
-		y = f(x)      # Function value
-		A = jac(x)    # Jacobian
-		r = -(A \ y)  # Newton step
-		x = x + r     # Form next iterate
-		
-		push!(history_r, r)  # Push newton step and
-		push!(history_x, x)  # next iterate to history
-	end
-
-	(; root=x, n_iter=k, history_x, history_r)
-end
-
-# ╔═╡ f1850ccb-e682-40db-91f1-ca2c4f60b3f3
-md"""
-Note that he linear system $\textbf{A}^{(k)} \textbf{r}^{(k)} = - \textbf{y}^{(k)}$ is solved in Julia using the backslash operator `\`, which employs a numerically more stable algorithm than explicitly computing the inverse `inv(A)` and then applying this to `y`.
-We will discuss these methods in
-[Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html).
-"""
-
-# ╔═╡ 702ffb33-7fbe-4673-aed7-d985a76b455a
-Foldable("Remark: Connection to conventional 1D Newton algorithm (Algorithm 2)",
-md"""
-Algorithm 3 (Multidimensional Newton) is just a multi-dimensional generalisation of Algorithm 2 (conventional 1D Newton's method). 
-
-This can be easily seen by simplifying Algorithm 3 for the special case of a 1D problem, that is a function $f : \mathbb{R} \to \mathbb{R} : x_1 \mapsto f(x_1) $. In that case we can identify the Jacobian
-(which formally is a $1 \times 1$ matrix) by the single element
-$\frac{\partial f}{\partial x_1} = f'(x_1)$. With this in mind the three steps of Algorithm 3 become: For $k = 1, 2, 3, \ldots$
-1. Compute the right-hand side $y^{(k)} = f(x^{(k)})$ and $A^{(k)} = J_f(x^{(k)}) = f'(x^{(k)})$.
-2. Solve $A^{(k)} r^{(k)} = -y^{(k)}$ for $r^{(k)}$. Since all entities are real numbers this can be done by simple division, i.e. $r^{(k)} = - \frac{y^{(k)}}{A^{(k)}} = -\frac{f(x^{(k)})}{f'(x^{(k)})}$.
-3. Update $x^{(k+1)} = x^{(k)} + r^{(k)} = x^{(k)} - \frac{f(x^{(k)})}{f'(x^{(k)})}$.
-
-For reference recall Algorithm 2 was $text_algo2_newton
-
-We note that the algorithms are idential, in essence Algorithm 3 only uses two steps for what Algorithm 2 expressed as step "1.".
-""")
-
-# ╔═╡ 6192f3a8-b9ff-4187-9561-00c2638a483a
-md"""
-Let's apply `newtonsys` (Algorithm 2) to our running example. First we implement the functions computing $\textbf{f}(\textbf{x})$ and $\textbf{J}_\textbf{f}(\textbf{x})$ for a given $\textbf{x}$.
-"""
-
-# ╔═╡ 1307929a-f151-4868-a43a-85488599f0df
-begin
-	func(x) = [
-		-x[1] * cos(x[2]) - 1,
-		x[1] * x[2] + x[3],
-		exp(-x[3]) * sin(x[1] + x[2]) + x[1]^2 - x[2]^2
-	]
-	jac_func(x) = [
-		-cos(x[2])       x[1]*sin(x[2])    0;
-		x[2]             x[1]              1;
-		exp(-x[3])*cos(x[1]+x[2]) + 2x[1]  exp(-x[3])*cos(x[1]+x[2]) - 2x[2] exp(-x[3])*sin(x[1]+x[2]) 
-	]
-end;
-
-# ╔═╡ 8919edbb-5ea7-4956-ad75-3eb68a47408c
-md"""
-Since we want to estimate the convergence order we again
-run the Newton solver using arbitrary precision floating-point numbers
-by using Julia's `BigFloat` number type:
-"""
-
-# ╔═╡ b6510e80-6b64-421e-b8aa-bfa803d56e81
-res = newtonsys(func, jac_func, BigFloat.([1.5, -1.5, 5]), tol=1e-50);
-
-# ╔═╡ 42216744-eaed-4bb5-b882-dc4589d8e63d
-md"""
-Plotting the residual norm (our estimate of the error) in a log-plot gives a strong indication this is again quadratic convergence:
-"""
-
-# ╔═╡ 9bc67152-9220-4905-9d2b-ec3f37b43707
-plot(norm.(res.history_r); yaxis=:log, label="", xlabel=L"k", ylabel=L"\Vert  e^{(k)} \Vert \simeq \Vert r^{(k)} \Vert")
-
-# ╔═╡ b6edac36-ee05-4efa-8d75-7840e9e185e4
-md"""
-Using the residual norms stored in the Newton result, we can now also
-look at the ratios
-```math
-\frac{\| \textbf{x}^{(k+1)} - \textbf{x}^{(k)} \| }
-{\| \textbf{x}^{(k)} - \textbf{x}^{(k-1)} \|^q }
-= \frac{\| \textbf{r}^{(k)} \| }{\| \textbf{r}^{(k-1)} \|^q }
-```
-of two consecutive increments.
-Recall that for a $q$-th order convergence these should converge to a constant.
-"""
-
-# ╔═╡ 95120495-15c7-4567-84f1-cb6f535c3885
-let
-	for q in (1, 2, 3)
-		println("# Checking order q=$q")
-		for k in 2:length(res.history_r)
-			ratio = norm(res.history_r[k]) / norm(res.history_r[k-1])^q
-			@printf "%i  %.5f\n" k ratio
-		end
-		println()
-	end
-end
-
-# ╔═╡ 6686d3bc-abc8-4a3a-a3cd-f6cac50fdf34
-md"""
-As can be see the most constant is the sequence corresponding to $q=2$,
-such that we conclude that the method converges quadratically.
-"""
-
 # ╔═╡ 6d25666f-68c2-4a15-bf01-732fa2ebd4e3
 let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 530)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 480)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -3197,11 +3018,7 @@ version = "1.13.0+0"
 # ╟─1b35b5da-7e1d-42d9-a189-c20d6957e939
 # ╟─08578e28-28c0-4cb1-9934-734034dec251
 # ╟─2f670892-be3e-43f3-b49f-803d8ddf756e
-# ╟─b385d67b-c7e0-4a5e-87e1-b11f00ba638a
-# ╟─c6d53a9e-0b6d-4ad3-a7c8-c34070f75ff6
-# ╟─1319313d-e7da-4ff5-9725-548df0e7f699
-# ╠═858510eb-7768-4521-ba20-af5b1aa33e08
-# ╟─7bdb39f4-4fab-43a1-a9d9-12e198cef107
+# ╟─e49a6345-827f-4dcb-b2b3-1c385a7efdf5
 # ╟─5e21e4c5-5538-40cf-a955-837809f7c3c3
 # ╟─05989b7d-e694-4860-9a8e-6e6cb52aea8b
 # ╟─01db98ec-daf2-4779-9f31-c3271039f44c
@@ -3216,10 +3033,12 @@ version = "1.13.0+0"
 # ╟─29931ae9-bcb7-4ec0-b397-a89c491d950e
 # ╠═5409350b-4845-46e5-ac3a-f7342fc28d3d
 # ╠═9d7ca2e1-41b0-4651-a734-31bf883cee37
+# ╠═685cf9f0-9869-49aa-b232-cc7009c2a484
 # ╟─fffd0bd2-7b66-4a21-8311-2965e974d88b
 # ╠═50639d02-55d5-4fcb-8335-13fd7f6b7624
 # ╠═da60beec-74e7-4b3f-aa09-27b806054896
 # ╟─ec8b8273-3724-4ea9-91d3-259390abc55d
+# ╠═b7ee0316-5e6b-4615-a934-8a4716b00b2d
 # ╟─5d7b3d35-3456-48df-ad22-0ffccaa2f529
 # ╟─284f3fa4-ce24-4b99-8bb7-6f74a4589550
 # ╠═899698d1-9dee-4f82-9171-f1b49aefcabe
@@ -3236,20 +3055,25 @@ version = "1.13.0+0"
 # ╟─62ec67d7-10d4-4624-8dd7-d4dd0507d6c2
 # ╟─de918a0d-05ee-40b3-8cbd-f45274c37ed3
 # ╟─a377563c-63da-4a50-886b-002644085eab
-# ╠═36860565-f44b-452b-a97f-e2ae356319cb
 # ╟─91060f66-9540-43dd-bffa-3ecc022efbdc
 # ╟─deff7837-e80e-4fcc-8eb2-baafc047a992
-# ╟─7f2c43c0-a87e-44bb-ac52-77dc70302cd2
+# ╟─5bb0761d-5b8b-49c2-aecc-2015b4716a6e
+# ╠═2bf42d74-c70f-4df2-9c6e-9ce33ecc0f52
+# ╠═8a8b04f5-a967-4ef9-85d0-b9e44d6916ff
+# ╟─edf533e2-dd18-4afa-854f-879b51004c71
+# ╠═d72fa3f8-9234-4f83-bb50-9704f40022a9
+# ╠═e45458eb-c0d2-4e70-9ef4-63f4f5edf059
+# ╠═c79867cc-71b3-4359-86fa-25480cc14c11
+# ╟─bc1fdec1-79e5-47ee-9d9d-daf5cb752356
 # ╠═b2e96aa1-69a6-4d07-89b5-15ecc9a41398
 # ╟─86f4c162-41bd-4e20-9e3f-681ff36bac75
 # ╟─dc136c3d-4534-4d66-86ca-36114bb825bb
-# ╠═d22a7de4-67ef-4664-951b-8fb46116a7bc
+# ╟─d22a7de4-67ef-4664-951b-8fb46116a7bc
 # ╟─314f733c-c3c2-4679-bb7b-c94b96b54961
 # ╟─68f63b13-1326-4cb6-8db1-3b043b2ad78e
 # ╟─b96fd4b2-13d1-4e42-ac6c-074d595f4750
 # ╠═7839caac-64e9-443d-bd49-03930fbe7aba
 # ╟─19327a6c-c552-4115-8d69-1a08491d3bc4
-# ╠═0a9b876e-31de-4199-9804-7837ff9fe8a1
 # ╠═ccc8345d-9db8-443e-837f-af631aa9f41c
 # ╟─71c04ce7-bb99-4094-a04c-f53a15606cca
 # ╠═b89d2d83-7fb8-44da-b6c8-a4781b16a384
@@ -3258,51 +3082,37 @@ version = "1.13.0+0"
 # ╟─1bbe92e6-3a06-4c0f-bc7d-e2117da4f6c1
 # ╟─ac693757-bb8e-467e-b19d-c15ed7fd244a
 # ╟─46620c64-a43c-4d08-bb3e-5fda3c8ff57c
-# ╟─d365a1b6-ca5d-4719-99af-ce16b078b6b2
+# ╟─b39400a1-ee91-4a14-b97b-da684dd6a23e
+# ╟─02f916a6-5e46-4aa3-9ecb-fc2a9cb87a13
 # ╟─ac5a79d7-07e0-499e-9dab-519ae0b5f638
 # ╟─92f0e4d8-46b1-45ae-9c0a-1c3485713c94
 # ╟─7930a403-bd4d-4f64-a79b-54cff28b869b
 # ╟─06d37eb4-b3e6-4219-82bd-fc9d779885c9
 # ╟─0d4425d5-964a-4ce5-aab6-0b388b523ee3
-# ╠═88cf8bbf-55cd-45f0-9ab4-ae2bdf6c554a
 # ╠═929010af-2af6-4b63-bfb4-7987f1b790ca
 # ╟─2b04681b-6704-4172-9bf1-279051fc1d78
-# ╟─0d61a532-e185-49bc-baf9-c22b8443a979
-# ╠═d8091ef9-7350-45e9-8381-55c9297429cd
-# ╟─ecd71729-ea89-40f6-86c8-598e42cd787d
-# ╟─baabfa2d-04b8-4305-9a73-2008cd018a09
-# ╟─e50fb224-63c1-4885-8165-21491110b804
-# ╠═03d48dc9-a7a6-480b-a755-2c4e049d3f7b
+# ╟─803b3413-a9e5-463e-b9be-5464d21ead2c
+# ╠═a29e748e-cbed-4807-8fd3-3e181e0cae1b
+# ╟─d6913907-38af-4b2c-bc37-e4a0de8dfc32
+# ╠═ddcc50fd-c3ac-4cdc-843a-92cb2c9eec0f
 # ╠═2e1751b5-a2cd-4a39-a7a8-4601f4448ff4
 # ╟─28088d7f-cbcb-4c17-95bd-c3790da34ae2
 # ╟─82286823-1240-41b5-92d9-9b3e091129e5
 # ╟─e1a1e4a7-21b6-4a88-92f9-a4d3e0dacbb9
 # ╟─e5725d2b-527f-4a50-9a2a-89d0514ae6bb
-# ╠═b5a13fb0-6d04-411f-ab9e-5ed61f2451e5
-# ╟─9be996e7-9a33-4399-9043-28d1f93cd890
-# ╟─efcd0f6a-4c48-49c8-9c7a-f49421170a33
-# ╟─04cbf165-4786-4980-8055-5efca14dfa3f
-# ╟─a0390836-e86b-46fb-bb42-fe6e5b09bd64
-# ╟─bdff9554-58b6-466e-9c93-6b1367262b50
-# ╟─6c823b3d-2332-4299-8fef-bc392d13da94
-# ╟─74ff4f4f-66a9-4de7-826b-4cc66d445a73
-# ╟─0449d301-0896-4c2e-952c-0d380e60c0b9
-# ╟─4cf5f022-4047-49f1-8fc5-86eda6d61e30
-# ╟─7e3558c8-b16d-47a4-87ea-d2af5614ea2e
-# ╟─fa140f9b-af22-4060-9a66-027189f80dbc
-# ╟─fc9d11e1-b3b6-4d74-9cbe-1faf2d8f3abc
-# ╠═4e746757-26a0-45c4-a190-04dd92b3cab0
-# ╟─f1850ccb-e682-40db-91f1-ca2c4f60b3f3
-# ╟─702ffb33-7fbe-4673-aed7-d985a76b455a
-# ╟─6192f3a8-b9ff-4187-9561-00c2638a483a
 # ╠═1307929a-f151-4868-a43a-85488599f0df
-# ╟─8919edbb-5ea7-4956-ad75-3eb68a47408c
-# ╠═b6510e80-6b64-421e-b8aa-bfa803d56e81
+# ╟─2b871a61-d5bd-44e0-b63a-bbfd9a145ffc
+# ╠═c6df62a0-b3c5-42b2-9ec6-d05119cb9146
 # ╟─42216744-eaed-4bb5-b882-dc4589d8e63d
 # ╠═9bc67152-9220-4905-9d2b-ec3f37b43707
+# ╟─9be996e7-9a33-4399-9043-28d1f93cd890
 # ╟─b6edac36-ee05-4efa-8d75-7840e9e185e4
 # ╠═95120495-15c7-4567-84f1-cb6f535c3885
 # ╟─6686d3bc-abc8-4a3a-a3cd-f6cac50fdf34
+# ╟─efcd0f6a-4c48-49c8-9c7a-f49421170a33
+# ╟─bdff9554-58b6-466e-9c93-6b1367262b50
+# ╟─04cbf165-4786-4980-8055-5efca14dfa3f
+# ╟─a0390836-e86b-46fb-bb42-fe6e5b09bd64
 # ╟─6d25666f-68c2-4a15-bf01-732fa2ebd4e3
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

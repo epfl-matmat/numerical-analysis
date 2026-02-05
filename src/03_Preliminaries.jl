@@ -84,24 +84,24 @@ Mathematically one writes as:
 or more compactly using **big O notation** as
 
 > ```math
-> R(x) = O(|x - a|^3) \qquad \text{as $x \to a$}.
+> R(x) = O((x - a)^3) \qquad \text{as $x \to a$}.
 > ```
 
 Employing this within (2) we arrive at
 
 ```math
 \tag{3}
-f(x) = f(a) + (x-a) \  f'(a) + \frac12 f''(a) \  (x-a)^2 + O(|x-a|^3)
+f(x) = f(a) + (x-a) \  f'(a) + \frac12 f''(a) \  (x-a)^2 + O((x-a)^3)
 ```
 
 This **big O notation** is thus a mathematically precise way of saying
 that there are more terms in the expansion (3) that we don't show
-but their order is at most $|x - a|^3$.
+but their order is at most $(x - a)^3$.
 Or more generally
 
 ```math
 \tag{4}
-f(x) = \sum_{k=0}^n \frac{1}{k!} f^{(k)}(a) (x-a)^k + O(|x-a|^{n+1})
+f(x) = \sum_{k=0}^n \frac{1}{k!} f^{(k)}(a) (x-a)^k + O((x-a)^{n+1})
 ```
 """
 
