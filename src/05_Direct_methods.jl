@@ -2059,7 +2059,7 @@ let
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 615)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 635)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
