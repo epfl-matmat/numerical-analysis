@@ -596,11 +596,37 @@ only note the key result that
 !!! info ""
 	For any matrix  $\mathbf{M} \in \mathbb{R}^{m \times n}$
 	```math
-	\|\mathbf{M}\| = \sqrt{ \lambda_\text{max}(\mathbf{M}^T\mathbf{M}) }.
+	\|\mathbf{M}\| = \sqrt{ \lambda_\text{max}^\text{abs}(\mathbf{M}^T\mathbf{M}) }.
 	```
-	where $\lambda_\text{max}(\mathbf{M}^T \mathbf{M})$ is the *largest* eigenvalue
-	of the matrix $\mathbf{M}^T \mathbf{M}$.
+	where
+	```math
+	\lambda_\text{max}^\text{abs}(\mathbf{\mathbf{M}^T\mathbf{M}}) = \max_{i=1,\ldots,n} |\lambda_i(\mathbf{\mathbf{M}^T\mathbf{M}})|
+	\qquad \text{with $\lambda_i(\mathbf{M}^T\mathbf{M})$ eigenvalues of $\mathbf{M}^T\mathbf{M}$}
+	```
+	is the *largest absolute* eigenvalue of the matrix $\mathbf{M}^T \mathbf{M}$.
 """
+
+# ╔═╡ 0eb972ac-3cee-444f-9780-e302a4286e19
+md"""
+!!! warning "Examples"
+	To develop some intuition about $\lambda^\text{abs}_\text{max}$
+	we consider the diagonal matrices:
+	```math
+	\begin{aligned}
+	\mathbf{A} &= \begin{pmatrix} 5 & 0 \\ 0 & 10 \end{pmatrix}
+	& \lambda_\text{max}^\text{abs}(\mathbf{A}) &= 10 \\
+	%
+	\mathbf{B} &= \begin{pmatrix} -5 & 0 \\ 0 & 10 \end{pmatrix}
+	& \lambda_\text{max}^\text{abs}(\mathbf{B}) &= 10 \\
+	%
+	\mathbf{C} &= \begin{pmatrix} -500 & 0 \\ 0 & 10 \end{pmatrix}
+	& \lambda_\text{max}^\text{abs}(\mathbf{C}) &= 500 \\
+	\end{aligned}
+	```	
+"""
+
+# ╔═╡ 02c4801d-8ec7-4db8-9e5b-0344a280efdd
+md"""With this in place we go back to our circle example:"""
 
 # ╔═╡ 29931ae9-bcb7-4ec0-b397-a89c491d950e
 md"""
@@ -682,7 +708,7 @@ md"""
 """
 
 # ╔═╡ b7ee0316-5e6b-4615-a934-8a4716b00b2d
-# TODO(md"Table contrast scalar versus multi-dimensional case.")
+# TODO(md"Table contrast scalar versus multi-dimensional case in a table.")
 
 # ╔═╡ 5d7b3d35-3456-48df-ad22-0ffccaa2f529
 md"""
@@ -1545,6 +1571,39 @@ function newton(f, jac, xstart; maxiter=40, tol=1e-8)
 
 	(; root=x, n_iter=k, history_x, history_r)
 end
+
+# ╔═╡ cce6ab50-55a7-46f8-86fd-694d4560d4ca
+Foldable("Teacher hint: Live coding",
+md"""
+```julia
+function newton(f, jac, xstart; maxiter=40, tol=1e-8) 
+	# f: Function of which we seek the roots
+	# jac: Function, which evaluates its Jacobian or derivative
+	# xstart: Start of the iterations
+	# maxiter: Maximal number of iterations
+	# tol: Convergence tolerance
+	history_x = [float(xstart)]
+	history_r = empty(history_x)
+
+	r = Inf     # Dummy to enter the while loop
+	x = xstart  # Initial iterate
+	k = 0
+
+	# Keep running the loop when the residual norm is beyond the tolerance
+	# and we have not yet reached maxiter
+	while norm(r) ≥ tol && k < maxiter
+		k = k + 1
+		
+		# ....
+		
+		push!(history_r, r)  # Push newton step and
+		push!(history_x, x)  # next iterate to history
+	end
+
+	(; root=x, n_iter=k, history_x, history_r)
+end
+```
+""")
 
 # ╔═╡ d6913907-38af-4b2c-bc37-e4a0de8dfc32
 md"""
@@ -3030,6 +3089,8 @@ version = "1.13.0+0"
 # ╟─9c9719e3-ec6c-4bdc-b05b-ab4bd4119cb9
 # ╟─fe6a0ff6-f70d-404a-8fd5-8a9185da2ee7
 # ╟─33c6b6ed-267e-4062-8390-fa02b8624545
+# ╟─0eb972ac-3cee-444f-9780-e302a4286e19
+# ╟─02c4801d-8ec7-4db8-9e5b-0344a280efdd
 # ╟─29931ae9-bcb7-4ec0-b397-a89c491d950e
 # ╠═5409350b-4845-46e5-ac3a-f7342fc28d3d
 # ╠═9d7ca2e1-41b0-4651-a734-31bf883cee37
@@ -3093,6 +3154,7 @@ version = "1.13.0+0"
 # ╟─2b04681b-6704-4172-9bf1-279051fc1d78
 # ╟─803b3413-a9e5-463e-b9be-5464d21ead2c
 # ╠═a29e748e-cbed-4807-8fd3-3e181e0cae1b
+# ╟─cce6ab50-55a7-46f8-86fd-694d4560d4ca
 # ╟─d6913907-38af-4b2c-bc37-e4a0de8dfc32
 # ╠═ddcc50fd-c3ac-4cdc-843a-92cb2c9eec0f
 # ╠═2e1751b5-a2cd-4a39-a7a8-4601f4448ff4
