@@ -173,7 +173,7 @@ md"""
 	- Rearranging the circle equation to $x_1 = \sqrt{1-x_2^2}$
 	  thus leads to the fixed-point problem
 	  ```math
-	  \mathbf{x} = {g}_D(\mathbf{x})
+	  \begin{pmatrix}x_1\\x_2\end{pmatrix} = \mathbf{x} = {g}_D(\mathbf{x})
 	  \qquad \text{with}\qquad
 	  {g}_D(\mathbf{x})
 	  = \begin{pmatrix} \sqrt{1-x_2^2} \\ 2x_1^2 \end{pmatrix}.
@@ -181,6 +181,7 @@ md"""
 	- Rearranging instead the parabola equation to $x_1 = \sqrt{\frac{x_2}2}$
 	  and the circle equation to $x_2 = \sqrt{1-x_1^2}$ yields the problem
 	  ```math
+      \begin{pmatrix}x_1\\x_2\end{pmatrix} =
 	  \mathbf{x} = {g}_C(\mathbf{x})
 	  \qquad \text{with}\qquad
 	  {g}_C(\mathbf{x})

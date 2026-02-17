@@ -96,7 +96,7 @@ Before we dive into the main content of the course, the remainder of this chapte
 # ╔═╡ 5a609e3e-ed94-4e4e-b9e4-c70fd459a25c
 md"""
 We first consider the problem of **taking derivatives**.
-Derivatices characterise the change of a quantity of interest.
+Derivatives characterise the change of a quantity of interest.
 E.g. the acceleration as a derivative of the velocity indeed characterises
 how the velocity changes over time.
 
