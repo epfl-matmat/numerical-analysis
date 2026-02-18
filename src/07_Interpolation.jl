@@ -2077,8 +2077,8 @@ Note that a consequence of (20), i.e. orthonormal columns, are the following pro
 	\mathbf{q}_i \cdot \mathbf{q}_j = \delta_{ij}  \qquad 1 \leq i,j \leq l
 	```
 	where $q_i$ is the $i$-th column of $\mathbf{Q}$. Then it holds
-	1.   $\mathbf{Q}^T\mathbf{Q} = \mathbf{I} \in \mathbb{R}^{k\times k}$, the identity matrix
-	2.  $\|\mathbf Q \mathbf x\| = \| \mathbf x\|$ for all vectors $\mathbf{x} \in \mathbb{R}^{k}$.
+	1.   $\mathbf{Q}^T\mathbf{Q} = \mathbf{I} \in \mathbb{R}^{l\times l}$, the identity matrix
+	2.  $\|\mathbf Q \mathbf x\| = \| \mathbf x\|$ for all vectors $\mathbf{x} \in \mathbb{R}^{l}$.
 	3.  $\|\mathbf Q\| = 1$
 """
 
