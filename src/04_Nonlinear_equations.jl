@@ -232,7 +232,7 @@ we first need to **rewrite the non-linear equation** ${f}(\mathbf{x}) = \mathbf{
 ```math
 {f}(\mathbf{x}_\ast) = 0 \qquad \Longleftrightarrow \qquad \mathbf{x}_\ast = {g}(\mathbf{x}_\ast).
 ```
-On $\mathbf{g}$ we then apply fixed-point iteration.
+On ${g}$ we then apply fixed-point iteration.
 
 We saw one example how to achieve this rewriting in the discussion
 of the "Intersecting circle and parabola" example in the [section above](#Root-finding-and-fixed-point-problems), where we first defined a root-finding problem and then two equivalent fixed-point problems for the same task.
@@ -355,7 +355,7 @@ See also the discussion in [Revision and preliminaries](https://teaching.matmat.
 Sometimes being fully precise in the big O notation will be too distracting. In this case we will use a generic "$O(\text{small})$" to remind ourselves that there are additional terms and we will specify in the surrounding text what this term stands for. 
 """
 
-# ╔═╡ 01db98ec-daf2-4779-9f31-c3271039f44c
+# ╔═╡ 7ca9192e-e584-480f-8d20-ac8fe3e3d46d
 md"""
 Using (3), the fact that $g(x_\ast) = x_\ast$,
 and the key fixed-point iterations equation, $x^{(k+1)} = g(x^{(k)})$,
@@ -370,33 +370,48 @@ e^{(k+1)}
 ```
 Taking moduli on both sides:
 ```math
+\tag{$\ast$}
 |e^{(k+1)}| = |g'(x_\ast)| \ |e^{(k)}| + O(|e^{(k)}|^2) 
 ```
+A related relation also holds between the error in the $k$-th
+and $(k-1)$-st iteration, just by subtracting $1$ in the iteration
+count on both sides, i.e.
+```math
+|e^{(k)}| = |g'(x_\ast)| \ |e^{(k-1)}| + O(|e^{(k-1)}|^2).
+```
+Combining both expressions we obtain
+```math
+|e^{(k+1)}| = |g'(x_\ast)|^2 \ |e^{(k-1)}| + O(\text{small}),
+```
+where $O(\text{small})$ is a term that is at least quadratic in $|e^{(k)}|$ and at least quadratic in $|e^{(k-1)}|$.
 
-We employ this relation now in a recursive argument.
-Assume we choose a good initial guess,
-then $x^{(0)}$ is close enough to $x_\ast$, such that $O((e^{(0)})^2)$
-is neglibile compared to $|g'(x_\ast)| \ |e^{(0)}|$.
-Similarly, provided that the iteration makes progress,
- $O((e^{(1)})^2)$ is in turn
-smaller than $|g'(x_\ast)| \ |e^{(1)}|$ and so forth.
-Therefore
+Continuing in a recursive fashion:
 ```math
 \begin{aligned}
 |e^{(k+1)}| &= |g'(x_\ast)| \ |e^{(k)}| + O(\text{small}) \\
 &= |g'(x_\ast)|^2 \ |e^{(k-1)}| + O(\text{small}) \\
 &= \ldots \\
-&= |g'(x_\ast)|^{k+1} \ |e^{(0)}| + O(\text{small})
+&= |g'(x_\ast)|^{k+1} \ |e^{(0)}| + O(\text{small}),
 \end{aligned}
 ```
-In other words as $k \to \infty$, i.e. the iteration progresses,
-$|e^{(k+1)}|$ approaches zero
-if $|g'(x_\ast)| < 1$.
+where the $O(\text{small})$ is at least quadratic in all errors $|e^{(k)}|$ to $|e^{(0)}|$.
+"""
+
+# ╔═╡ 15c5b579-25f2-4d37-960b-031e80a7a1aa
+md"""
+From this we conclude:
+- If $|g'(x_\ast)| > 1$, then $|g'(x_\ast)|^k$ grows to infinity as the number of iteration $k$ grows, therefore the error $|e^{(k+1)}|$ has to grow: **the fixed-point iterations diverge.**
+- Furthermore if $|g'(x_\ast)| < 1$ and if the terms hidden in $O(\text{small})$ can be neglected, then $|e^{(k+1)}|$ is getting smaller and smaller as the number of iterations $k$ increases: **the fixed-point iterations converge**.
+- Now we ask under which conditions the terms in $O(\text{small})$ can be neglected. This is indeed the case if $|e^{(0)}|$ is sufficiently small, i.e. **if our starting point $x^{(0)}$ is sufficiently close to the fixed point $x_\ast$**.
+- To see this, assume $|g'(x_\ast)| < 1$. As a result $|e^{(1)}| < |g'(x_\ast)| \ |e^{(0)}| + O(|e^{(0)}|^2)$ by ($\ast$) for $k=1$. Therefore if $|e^{(0)}|$ is sufficiently small, then $|e^{(0)}|^2 = |x_\ast - x^{(0)}|^2$ is small compared to $|g'(x_\ast)| \ |e^{(0)}|$, meaning that the terms hidden in $O(|e^{(0)}|^2)$ can be neglected. As a result $|e^{(1)}|^2$ is even smaller than $|e^{(0)}|^2$, such that also the terms in $O(|e^{(1)}|^2)$ can be neglected and so forth. We conclude that all terms at least quadratic in the error term $|e^{(k)}|$ to $|e^{(0)}|$ can be neglected, i.e. that the entire set of terms $O(\text{small})$ is neglibile.
+- Note that for $|g'(x_\ast)| = 1$ our theory does not allow us to conclude neither convergence, nor divergence.
+
+We summarise in a Theorem:
 """
 
 # ╔═╡ 9176b666-41f7-436e-b5ad-61b196a8b35b
 md"""
-!!! note "Theorem 1 (scalar version)"
+!!! note "Theorem 0 (scalar version of Theorem 1)"
     Let $g : \mathbb{R} \to \mathbb{R}$
 	be a once differentiable function
     and $x_\ast \in \mathbb{R}$ be a fixed point of $g$.
@@ -414,7 +429,7 @@ We will generalise this theorem to the vector case in the following secition.
 md"""
 #### Higher dimensions
 
-We now consider the generalisation of the above argument to the vector setting,
+We now consider the generalisation of the above argument to the multi-dimensional setting,
 i.e. finding a fixed-point $\mathbf{x}_\ast = {g}(\mathbf{x}_\ast) \in \mathbb{R}^n$ of a function ${g} : \mathbb{R}\to\mathbb{R}$.
 To make a similar argument to the scalar case, we need to consider again the Talyor expansion of ${g}(\mathbf{x}^{(k)}) = {g}(\mathbf{x}_\ast + \mathbf{e}^{(k)})$ around $\mathbf{x}_\ast$, where as before $\mathbf{e}^{(k)} = \mathbf{x}^{(k)} - \mathbf{x}_\ast$.
 
@@ -450,9 +465,8 @@ is the collection of all partial derivatives of ${g}$ *evaluated at $\mathbf{x}$
 \end{array}\right).
 ```
 See also the discussion on multi-dimensional Talyor approximations in [Revision and preliminaries](https://teaching.matmat.org/numerical-analysis/03_Preliminaries.html).
-
 Note that the Jacobian (just like any derivative) is a function of an independent
-variable (here $\textbf{x}_\ast$).
+variable (here $\textbf{x}$).
 
 Since the Jacobian very much plays the role of a generalised derivative
 of a multidimensional function ${g}$, we will sometimes also
@@ -547,7 +561,6 @@ The definition of the matrix norm implies in particular that
 # ╔═╡ 9c9719e3-ec6c-4bdc-b05b-ab4bd4119cb9
 md"""
 We now take vector norms on either side of (5) and make use of this last inequality to obtain to first order
-
 ```math
 \|\mathbf{e}^{(k+1)}\| \leq \left\| \mathbf{J}_{g}(\mathbf{x}_\ast) \right\| \, \left\| \mathbf{e}^{(k)} \right\| + O(\text{small})
 ```
@@ -556,13 +569,15 @@ Under the assumption that our initial guess $\mathbf{x}^{(0)}$ is sufficiently c
 to $\mathbf{x}_\ast$ we can again follow a recursive argument to obtain
 ```math
 \begin{aligned}
-\|\mathbf{e}^{(k+1)}\| &=  \left\| \mathbf{J}_{g}(\mathbf{x}_\ast) \right\|^{k+1} \ \|\mathbf{e}^{(0)}\| + O(\text{small})
+\|\mathbf{e}^{(k+1)}\| &\leq  \left\| \mathbf{J}_{g}(\mathbf{x}_\ast) \right\|^{k+1} \ \|\mathbf{e}^{(0)}\| + O(\text{small})
 \end{aligned}
 ```
 where $O(\text{small})$ is a small term that we do not make more precise for simplicity.
 
-We are again faced with the conclusion that  as $k \to \infty$, i.e. the iteration progresses, that the error norm $\|\mathbf{e}^{(k+1)}\|$ approaches zero
-if $\left\| \mathbf{J}_{g}(\mathbf{x}_\ast) \right\| <  1$.
+Similar to the one-dimensional case we conclude:
+- If $\left\| \mathbf{J}_{g}(\mathbf{x}_\ast) \right\| < 1$ and the initial guess $\mathbf{x}^{(0)}$ is sufficiently close to the final fixed point $\mathbf{x}_\ast$, then as $k \to \infty$, i.e. as the iteration progresses, the error norm $\|\mathbf{e}^{(k+1)}\|$ approaches zero: **the fixed-point iterations converge**.
+
+However, in contrast to the one-dimensional setting **we cannot conclude divergence** if $\left\| \mathbf{J}_{g}(\mathbf{x}_\ast) \right\| > 1$. This is because we only obtain an *inequality* relating $\|\mathbf{e}^{(k+1)}\|$ to $\|\mathbf{e}^{(0)}\|$, whereas in the one-dimensional case this equation was an equality.
 
 The following theorem summarises our argument
 """
@@ -722,7 +737,7 @@ In a given step $\mathbf{x}^{(k)}$ we have in general not yet achieved our goal,
 i.e. ${g}(\mathbf{x}^{(k)}) \neq \mathbf{x}^{(k)}$.
 An idea is thus to consider exactly the descrepancy 
 ```math
-\mathbf{r}^{(k)} = {g}(\mathbf{x}^{(k)}) - \mathbf{x}^{(k)},
+\mathbf{r}^{(k)} = {g}(\mathbf{x}^{(k)}) - \mathbf{x}^{(k)} = \mathbf{x}^{(k+1)} - \mathbf{x}^{(k)},
 ```
 the so-called **residual**. A natural stopping criterion is thus
 """
@@ -805,9 +820,6 @@ function fixed_point_iterations(g, xstart; tol=1e-6, maxiter=100)
 	(; fixed_point=xᵏ, residual=rᵏ, n_iter=k, history_x, history_r)
 end
 
-# ╔═╡ 685cf9f0-9869-49aa-b232-cc7009c2a484
-fixed_point_iterations(gC, [0.5, 0.5]; tol=1e-6, maxiter=100)
-
 # ╔═╡ 54f314c1-d1cf-41f1-96e5-5aca90d82b95
 fixed_point_iterations_simple(gC, [0.4, 0.3]; tol=1e-14)
 
@@ -821,14 +833,14 @@ md"""
 - To explain this, let us consider the **scalar case** $g : \mathbb{R} \to \mathbb{R}$.
   In this setting we can derive the **residual-error relationship** *(see derivation below)*
   ```math
-  \tag{5}
+  \tag{6}
   |x^{(k)} - x_\ast| = \frac{1}{|1 - g'(\xi^{(k)})|} |r^{(k)}|.
   ```
   for some $\xi^{(k)} \in [x_\ast, x^{(k)}]$.
   Note, that this is just a **conceptional expression** as determining
   $\xi^{(k)}$ is in general *as hard* as finding $x_\ast$.
   But it will be useful in some theoretical arguments.
-- For converging fiterations $x^{(k)} \to x_\ast$ as $k \to \infty$.
+- For converging iterations $x^{(k)} \to x_\ast$ as $k \to \infty$.
   Therefore the interval $[x_\ast, x^{(k)}]$ gets smaller and smaller,
   such that necessarily $\xi^{(k)} \to x_\ast$
   and $g'(\xi^{(k)}) \to g'(x_\ast)$ as $k \to \infty$.
@@ -1024,7 +1036,7 @@ md"""
 #### Visual inspection: Residual ratio
 
 One caveat with this analysis is that we cheated a little by assuming that we already *know* the solution. An alternative approach is to **build upon our 
-residual-error relationship**, i.e. for the scalar case (5)
+residual-error relationship**, i.e. for the scalar case (6)
 ```math
 |x^{(k)} - x_\ast| = \frac{1}{|1 - g'(\xi^{(k)})|} r^{(k)}.
 ```
@@ -1317,7 +1329,7 @@ md"""
       = \frac{1}{q!} \left|g^{(q)}(x_\ast)\right|
       ```
 
-Recall the residual-error relationship (5)
+Recall the residual-error relationship (6)
 ```math
 |x^{(k)} - x_\ast| = \frac{1}{|1 - g'(\xi^{(k)})|} r^{(k)}.
 ```
@@ -3081,7 +3093,8 @@ version = "1.13.0+0"
 # ╟─e49a6345-827f-4dcb-b2b3-1c385a7efdf5
 # ╟─5e21e4c5-5538-40cf-a955-837809f7c3c3
 # ╟─05989b7d-e694-4860-9a8e-6e6cb52aea8b
-# ╟─01db98ec-daf2-4779-9f31-c3271039f44c
+# ╟─7ca9192e-e584-480f-8d20-ac8fe3e3d46d
+# ╟─15c5b579-25f2-4d37-960b-031e80a7a1aa
 # ╟─9176b666-41f7-436e-b5ad-61b196a8b35b
 # ╟─511fcf1a-5ea8-4827-9d24-6a43e7dcccd6
 # ╟─c7068f2e-7313-44bc-85a4-785f4d4adc60
@@ -3095,7 +3108,6 @@ version = "1.13.0+0"
 # ╟─29931ae9-bcb7-4ec0-b397-a89c491d950e
 # ╠═5409350b-4845-46e5-ac3a-f7342fc28d3d
 # ╠═9d7ca2e1-41b0-4651-a734-31bf883cee37
-# ╠═685cf9f0-9869-49aa-b232-cc7009c2a484
 # ╟─fffd0bd2-7b66-4a21-8311-2965e974d88b
 # ╠═50639d02-55d5-4fcb-8335-13fd7f6b7624
 # ╠═da60beec-74e7-4b3f-aa09-27b806054896
