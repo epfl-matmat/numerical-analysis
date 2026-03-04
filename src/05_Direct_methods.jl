@@ -449,7 +449,7 @@ md"""
 	    - In *loop over rows* `i` only runs until `n = 3`, so we are done with it.
 	- **`k=2` (Step 2):** Our goal is now to zero out the 2nd column in all rows below the diagonal. We thus start another loop over rows, this time starting at `k+1 = 3`:
 	  * **`i = 3` (Row 3):** Our factor is now
-	    -  $L_{32} = \frac{U_{31}}{\textcolor{green}{U_{22}}} = \frac{-5}{\textcolor{green}{5}} = \mathbf{-1}$
+	    -  $L_{32} = \frac{U_{32}}{\textcolor{green}{U_{22}}} = \frac{-5}{\textcolor{green}{5}} = \mathbf{-1}$
 	    - After subtracting $L_{32} = -1$ times the second row from the 3rd in the *loop over columns*, i.e. we add 2nd and 3rd row, we get
 	      ```math
 	      \mathbf L =   \begin{pmatrix} 1 &\phantom{-1}&\phantom{1} \\ -2 & 1 &  \\ 2 & \textbf{-1} &  \end{pmatrix} \qquad
