@@ -1368,8 +1368,8 @@ i.e. that the Jacobian is non-singular, we can rearrange this to
 ```
 If $\mathbf{x}$ is close to $\mathbf{x}_\ast$, thus $\mathbf{x} - \mathbf{x}_\ast$ is small,
 then the last term $O(\text{small})$, which actually depends
-on $(\textbf{x}_\ast - \textbf{x})^2$ and higher powers of
-$(\textbf{x}_\ast - \textbf{x})$ is even smaller.
+on $\|\textbf{x}_\ast - \textbf{x}\|^2$ and higher powers of
+$\|\textbf{x}_\ast - \textbf{x}\|$ is even smaller.
 
 Neglecting it completely we can further develop this to an approximation for $x_\ast$ as
 ```math
@@ -1397,6 +1397,7 @@ is the idea of Newton's method:
     \tag{11}
     g_\text{Newton}(\mathbf{x}) =  \mathbf{x} - \left( \textbf{J}_{f}(\textbf{x}) \right)^{-1} \, f(\mathbf{x}).
     ```
+	At convergence we find a **root of $f$**, i.e. $f(\textbf{x}_\ast) = 0$.
 
 For scalar problems, i.e. when we consider finding the root of $f : \mathbb{R} \to \mathbb{R}$, we can identify the Jacobian
 (which formally is a $1 \times 1$ matrix) by the single element
@@ -1538,7 +1539,7 @@ More conventionally, one "inlines" the function $g_\text{Newton}$ into the fixed
        the right-hand side $\textbf{y}^{(k)} = {f}(\textbf{x}^{(k)})$
        and Jacobian
        $\textbf{A}^{(k)} = \textbf{J}_{f}(\textbf{x}^{(k)})$.
-    2. **Newton step:** Solve the linear system $\textbf{A}^{(k)} \textbf{r}^{(k)} = - \textbf{y}^{(k)}$ for $\textbf{r}^{(k)}$.
+    2. **Newton step:** Solve the linear system $\textbf{A}^{(k)} \textbf{r}^{(k)} = - \textbf{y}^{(k)}$ for the residual $\textbf{r}^{(k)}$.
     3. Update $\textbf{x}^{(k+1)} = \textbf{x}^{(k)} + \textbf{r}^{(k)}$
     Loop 1. to 3. until $\|\textbf{r}^{(k)}\| < \epsilon$. 
 
@@ -1573,10 +1574,10 @@ function newton(f, jac, xstart; maxiter=40, tol=1e-8)
 	while norm(r) ≥ tol && k < maxiter
 		k = k + 1
 		
-		y = f(x)      # Function value
-		A = jac(x)    # Jacobian
-		r = -(A \ y)  # Newton step
-		x = x + r     # Form next iterate
+		y = f(x)      # Step 1: Compute function value
+		A = jac(x)    # Step 1: Compute Jacobian
+		r = -(A \ y)  # Step 2: Newton step; obtain residual
+		x = x + r     # Step 3: Form next iterate
 		
 		push!(history_r, r)  # Push newton step and
 		push!(history_x, x)  # next iterate to history
@@ -1615,6 +1616,12 @@ function newton(f, jac, xstart; maxiter=40, tol=1e-8)
 
 	(; root=x, n_iter=k, history_x, history_r)
 end
+```
+```julia
+		y = f(x)      # Step 1: Compute function value
+		A = jac(x)    # Step 1: Compute Jacobian
+		r = -(A \ y)  # Step 2: Newton step; obtain residual
+		x = x + r     # Step 3: Form next iterate
 ```
 """)
 
@@ -1780,10 +1787,27 @@ let
 	end
 end
 
+# ╔═╡ abfd87fa-1152-4827-beeb-054e55562377
+md"or graphically:"
+
+# ╔═╡ e5d9d401-6654-4b2a-9270-5f2b49df28f0
+let
+	p = plot(; xlabel=L"k", ylabel=L"\Vert r^{(k)}\Vert / \Vert r^{(k-1)}\Vert^q", yaxis=:log, legend=:topleft)
+	for q in (1, 2, 3)
+		krange = 2:length(res.history_r)
+		ratios = [norm(res.history_r[k]) / norm(res.history_r[k-1])^q
+				  for k in krange]
+		plot!(p, krange, ratios; label="q = $q", lw=2, mark=:o)
+	end
+	p
+end
+
 # ╔═╡ 6686d3bc-abc8-4a3a-a3cd-f6cac50fdf34
 md"""
-As can be see the most constant is the sequence corresponding to $q=2$,
-such that we conclude that the method converges quadratically.
+We notice that the ratio stabilises around a constant for $q=2$,
+but converges to zero for $q=1$ (indicating too small a choice for $q$)
+and blows up to infinity for $q=3$ (indicating too large a value for $q$).
+We conclude tha the method converges quadratically.
 """
 
 # ╔═╡ efcd0f6a-4c48-49c8-9c7a-f49421170a33
@@ -1797,6 +1821,7 @@ md"""
 	  **not guaranteed**, that **Newton converges to the *closest* root**.
 	  A good graphical representation of this phaenomenon
 	  are [Newton fractals](https://en.wikipedia.org/wiki/Newton_fractal).
+    - Applying **Newton's method** is **a general technique to obtain quadratic convergence**. In other words if one is given a fixed-point problem $g(\mathbf{x}_\ast) = \mathbf{x}_\ast$, which does converge, but does not yet converge quadratically (i.e. where $0 < \|\mathbf{J}_g(x_\ast)\| < 1$), then we can *always* solve it with a quadratically convergent algorithm if we apply Newton's method to $f(\mathbf{x}) = g(\mathbf{x}) - \mathbf{x}$.
 """
 
 # ╔═╡ bdff9554-58b6-466e-9c93-6b1367262b50
@@ -1818,17 +1843,17 @@ In this chapter we discussed fixed point iterations as well as Newton's method (
 	More generally an iterative algorithm has the form:
 	1. **Initialisation:** Choose a starting point $x^{(0)} = x_\text{start}$.
 	2. **Iteration:** For $k = 1, 2, 3, ...$ we perform the same
-	  iterative procedure, advancing $x^{(k-1)}$ into $x^{(k)}$.
+	   iterative procedure, advancing $x^{(k-1)}$ into $x^{(k)}$.
 	3. **Check for convergence:** Once $x^{(k)}$ is similar enough to $x^{(k-1)}$ we consider the iteration converged and exit the iterations.
 
-Writing the second step more mathematically we can consider it as the application of a function $g$, i.e. $x^{(k)} = g(x^{(k-1)})$. In this formulation step 3 thus does nothing else than checking whether the iterates $x^{(k)}$ no longer change. Or, put in other words, if we have found a **fixed point** of $g$.
+Writing the second step more mathematically, we can consider it as the application of a function $g$, i.e. $x^{(k)} = g(x^{(k-1)})$. In this formulation step 3 thus does nothing else than checking whether the iterates $x^{(k)}$ no longer change. Or, put in other words, if we have found a **fixed point** of $g$.
 """
 
 # ╔═╡ a0390836-e86b-46fb-bb42-fe6e5b09bd64
 md"""
 !!! info "Observation: Iterative algorithms are fixed-point problems"
 	By identifying the iteration step $x^{(k)} = g(x^{(k-1)})$ of *any*
-	iterative algorithm with a function $g$ we can view this algorithm
+	iterative algorithm with a function $g$ we can view *any* algorithm
 	as a fixed-point problem, where at convergence a fixed-point of $g$
 	is found. 
 
@@ -3183,6 +3208,8 @@ version = "1.13.0+0"
 # ╟─9be996e7-9a33-4399-9043-28d1f93cd890
 # ╟─b6edac36-ee05-4efa-8d75-7840e9e185e4
 # ╠═95120495-15c7-4567-84f1-cb6f535c3885
+# ╟─abfd87fa-1152-4827-beeb-054e55562377
+# ╠═e5d9d401-6654-4b2a-9270-5f2b49df28f0
 # ╟─6686d3bc-abc8-4a3a-a3cd-f6cac50fdf34
 # ╟─efcd0f6a-4c48-49c8-9c7a-f49421170a33
 # ╟─bdff9554-58b6-466e-9c93-6b1367262b50
