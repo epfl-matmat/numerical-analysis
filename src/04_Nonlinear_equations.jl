@@ -723,9 +723,6 @@ md"""
 	while fixed-point iterations for $g_D$ diverge.
 """
 
-# ╔═╡ b7ee0316-5e6b-4615-a934-8a4716b00b2d
-# TODO(md"Table contrast scalar versus multi-dimensional case in a table.")
-
 # ╔═╡ 5d7b3d35-3456-48df-ad22-0ffccaa2f529
 md"""
 ### Stopping criteria and residual
@@ -1094,6 +1091,20 @@ Clearly in both cases these ratios become approximately constant as $k$ gets lar
       on a **`log`-scale** as the iteration proceeds
       is often extremely insightful to understand the convergence behaviour
       (and debug implementation bugs)!
+"""
+
+# ╔═╡ 312693df-616f-4e87-ba6c-0426ac606f61
+md"""
+!!! info "One-dimensional vs. multi-dimensional settings for fixed-point methods"
+	We consider a fixed-point problem $g(x_\ast) = x_\ast$, which we want to solve
+	with fixed-point iterations $x^{(k+1)} = g(x^{(k)})$ giving rise to a residual $r^{(k)} = x^{(k+1)} - x^{(k)}$.
+
+	|      | Convergence | Linear convgnce rate $C$ | $\|r^{(k)}\| < ε$ good s.c. |
+	| ------------------------- | ------------------ | ------------ | ----- |
+	| one-dimensional $g:\mathbb{R}\to\mathbb{R}$ | $\vert g'(x_\ast) \vert < 1$ | $C=\vert g'(x_\ast) \vert$  | $\vert g'(x_\ast)\vert \neq 1$ |  
+    |  multi-dimensional $g:\mathbb{R}^n\to\mathbb{R}^n$  | $\Vert J_g(\mathbf{x}_\ast) \Vert < 1$           | $C = \Vert J_g(\mathbf{x}_\ast) \Vert$      | $\Vert J_g(\mathbf{x}_\ast) \Vert \neq 1$ |
+
+	where the last row indicates the condition for the simple residual norm stopping criteration is a good or a bad stopping criterion.
 """
 
 # ╔═╡ 68f63b13-1326-4cb6-8db1-3b043b2ad78e
@@ -3137,7 +3148,6 @@ version = "1.13.0+0"
 # ╠═50639d02-55d5-4fcb-8335-13fd7f6b7624
 # ╠═da60beec-74e7-4b3f-aa09-27b806054896
 # ╟─ec8b8273-3724-4ea9-91d3-259390abc55d
-# ╠═b7ee0316-5e6b-4615-a934-8a4716b00b2d
 # ╟─5d7b3d35-3456-48df-ad22-0ffccaa2f529
 # ╟─284f3fa4-ce24-4b99-8bb7-6f74a4589550
 # ╠═899698d1-9dee-4f82-9171-f1b49aefcabe
@@ -3169,6 +3179,7 @@ version = "1.13.0+0"
 # ╟─dc136c3d-4534-4d66-86ca-36114bb825bb
 # ╟─d22a7de4-67ef-4664-951b-8fb46116a7bc
 # ╟─314f733c-c3c2-4679-bb7b-c94b96b54961
+# ╟─312693df-616f-4e87-ba6c-0426ac606f61
 # ╟─68f63b13-1326-4cb6-8db1-3b043b2ad78e
 # ╟─b96fd4b2-13d1-4e42-ac6c-074d595f4750
 # ╠═7839caac-64e9-443d-bd49-03930fbe7aba

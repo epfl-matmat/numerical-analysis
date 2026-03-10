@@ -39,16 +39,16 @@ TableOfContents()
 md"""
 # Direct methods for linear systems
 
-In the previous chapter on polynomial interpolation we were already
-confronted with the need to solve linear systems, that is a system
-of equations of the form
+In the previous chapter in our discussion on multi-dimensional
+fixed-point problems we were already
+confronted with the need to solve linear systems
 ```math
 \tag{1}
-\mathbf{A} \mathbf{x} = \mathbf{b},
+\mathbf{A} \mathbf{x} = \mathbf{b}.
 ```
-where we are given a matrix $\mathbf{A} \in \mathbb{R}^{n\times n}$
-as well as a right-hand side $\mathbf{b} \in \mathbb{R}^n$.
-As the solution we seek the unknown $\mathbf{x} \in \mathbb{R}^n$.
+Here, we are given a matrix $\mathbf{A} \in \mathbb{R}^{n\times n}$
+as well as a right-hand side $\mathbf{b} \in \mathbb{R}^n$ and seek
+the unknown $\mathbf{x} \in \mathbb{R}^n$.
 """
 
 # ╔═╡ 419d11bf-2561-49ca-a6e7-40c8d8b88b24
@@ -283,6 +283,15 @@ function forward_substitution(L, b)
     end
     x
 end
+```
+```julia
+x[1] = b[1] / L[1, 1]
+```
+```julia
+			row_sum += L[i, j] * x[j]
+```
+```julia
+        x[i] = 1 / L[i, i] * (b[i] - row_sum)
 ```
 """)
 
@@ -783,7 +792,7 @@ md"... and exactly achieves the task of swapping the last two rows, but leaving 
 
 # ╔═╡ c42c3c63-b96c-4af0-a276-72ebd96fe23c
 md"""
-We notice that even though $\mathbf D$ cannot be permuted it is possible to obtain an  LU factorisation $\mathbf{L} \mathbf{U} = \mathbf{P} \mathbf{D}$
+We notice that even though $\mathbf D$ cannot be factorised it is possible to obtain an  LU factorisation $\mathbf{L} \mathbf{U} = \mathbf{P} \mathbf{D}$
 if we additionally allow the freedom to cleverly permute the rows of $\mathbf D$.
 
 This is in fact a general result:
@@ -1175,13 +1184,59 @@ Full matrices are the "standard case" and for them memory constraints usually se
 linear problems with more than around $n \simeq 60000$ unknows cannot be treated.
 """
 
-# ╔═╡ 946fb6e6-e7e5-4aee-b566-b7c33ead7789
+# ╔═╡ 30620d0c-b73a-4de3-95a1-6fa199199289
 md"""
+!!! warning "Examples of full matrices"
+	- **Generic matrices are full.** If we can say nothing specific about a matrix, all its entries $A_{ij}$ may be non-zero. Thus we have $n^2 = O(n^2)$ non-zero entries and the matrix is full.
+	- **Upper-triangular matrices are full.** For an upper-triangular matrix all entries $A_{ij}$ with $i<j$ are zero. The first row thus has all $n$ entries, the second $n-1$ and the last just $1$. We obtain $\sum_{i=1}^n (n-i+1) = n (n+1) + \sum_{i=1}^n i = \frac{n (n+1)}{2} = O(n^2)$. The same holds for lower-triangular matrices.
+	- **Symmetric matrices are full.** If a matrix is symmetric, then we can get away storing only the the upper triangle. Same as above, the storage cost is $O(n^2)$.
+"""
+
+# ╔═╡ b4d56685-21e5-4bc8-88b8-14e0478f30e3
+md"""
+In contrast are the sparse matrices:
+
 !!! info "Definition: Sparse matrix"
     A matrix $A \in \mathbb{R}^{n\times n}$ is called **sparse** if the number
     of non-zero elements is at the order of $n$.
 
-If we know which elements are zero, we can thus save memory by only storing those elements, which are non-zero. For this purpose the [`SparseArrays` Julia package](https://docs.julialang.org/en/v1/stdlib/SparseArrays/) implements many primitives
+If we know which elements are zero, we can thus save memory by only storing those elements, which are non-zero. 
+
+A particular type of sparse matrix, which is very important is:
+"""
+
+# ╔═╡ 53b44779-c8a6-457d-b13e-52d4d7cc3a47
+md"""
+!!! info "Definition: Band matrix"
+    A matrix $A \in \mathbb{R}^{n\times n}$ is called a **band matrix**
+    with bandwidth $d$ if $A_{ij} = 0$ when $|j - i| > d$.
+    Every line of the matrix contains at most $2d + 1$ non-zero elements
+    and the number of non-zeros thus scales as $O(nd)$.
+	The idea is that $d \ll n$, i.e. that $d$ is much smaller than $n$.
+
+An example for a banded matrix with bandwidth $5$ is:
+"""
+
+# ╔═╡ 5dc919c8-01e1-4b23-b406-492562c9e338
+band = spdiagm(-5 =>  -ones(100),
+	           -3 =>  3ones(102),
+	           -2 =>   ones(103),
+	            0 => -10ones(105),
+	            1 =>  -ones(104),
+	            3 =>  3ones(102),
+	            4 =>   ones(101),
+	            5 =>  -ones(100))
+
+# ╔═╡ e38aa377-38f8-408d-8133-58b8e99edc7b
+md"""
+!!! warning "Examples of sparse matrices"
+	- **Band matrices.** By definiton a band matrix has at most $d$ non-zero entries per row. So the number of non-zeros is at most $nd = O(n)$.
+	- **Diagonal matrix.** A diagonal matrix has exactly one non-zero entry per row, meaning that its storage cost is $n = O(n)$. This is not surprising given that a diagonal matrix is just a band matrix with band width $d = 1$.
+"""
+
+# ╔═╡ 4eed2dc5-a7e0-4e77-aeea-bdb9480840ae
+md"""
+For working with sparse matrices the [`SparseArrays` Julia package](https://docs.julialang.org/en/v1/stdlib/SparseArrays/) implements many primitives
 for working with sparse arrays. 
 
 This includes, generating random sparse arrays:
@@ -1202,30 +1257,10 @@ M = [ 1 0 0  5;
 # ╔═╡ d6b61d9a-817e-4c09-9a83-fde7ca591d23
 sparse(M)
 
-# ╔═╡ fb87aa13-1fd6-4c13-8ba4-68caef5f775b
+# ╔═╡ 4f94086e-19be-46c6-a674-da5193b3498c
 md"""
 Using the `SparseArray` data structure from `SparseArrays` consistently allows to fully exploit sparsity when solving a problem. As a result the **storage costs scale only as $O(n)$**. With our laptop of 32 GiB memory we can thus tackle problems with around $n\simeq 4 \cdot 10^9$ unknowns --- much better than the $60000$ we found when using full matrices.
-
-Finally we introduce a special kind of sparse matrix:
-
-!!! info "Definition: Band matrix"
-    A matrix $A \in \mathbb{R}^{n\times n}$ is called a **band matrix**
-    with bandwidth $d$ if $A_{ij} = 0$ when $|j - i| > d$.
-    Every line of the matrix contains at most $2d + 1$ non-zero elements
-    and the number of non-zeros thus scales as $O(nd)$.
-
-An example for a banded matrix with bandwidth $5$ is:
 """
-
-# ╔═╡ 5dc919c8-01e1-4b23-b406-492562c9e338
-band = spdiagm(-5 =>  -ones(100),
-	           -3 =>  3ones(102),
-	           -2 =>   ones(103),
-	            0 => -10ones(105),
-	            1 =>  -ones(104),
-	            3 =>  3ones(102),
-	            4 =>   ones(101),
-	            5 =>  -ones(100))
 
 # ╔═╡ 74709cb2-0be8-4b24-aa9d-926ef059fe2d
 md"""
@@ -1297,7 +1332,7 @@ md"""
 	|  type of $n\times n$ matrix   | memory usage | comment |
 	| ------------------------- |  ------------ | ------------ |
 	|  full matrix  | $O(n^2)$             |
-    |  general sparse matrix | $O(n)$ | fill-in
+    |  general sparse matrix | $O(n^2)$ | fill-in
 	|  banded matrix, band width $d$     | $O(n\,d)$     |  stays block-diagonal
 
 """
@@ -1482,7 +1517,7 @@ md"""
 	|  type of $n\times n$ matrix   | computational cost | memory usage |
 	| ------------------------- | ------------------ | ------------ |
 	|  full matrix  | $O(n^3)$           | $O(n^2)$      |
-    |  general sparse matrix
+    |  general sparse matrix | $O(n^3)$           | $O(n^2)$      |
 	|  banded matrix, band width $d$  | $O(n\,d^2)$    | $O(n\,d)$      |
 
 """
@@ -3351,13 +3386,17 @@ version = "1.13.0+0"
 # ╠═1f34c503-6815-4639-a932-9fe2d7e1b4c2
 # ╟─ef60d36e-02c7-44e1-8910-241f99a89a38
 # ╟─3ab0ccfe-df7c-4aed-b83f-f0113001610b
-# ╟─946fb6e6-e7e5-4aee-b566-b7c33ead7789
+# ╟─30620d0c-b73a-4de3-95a1-6fa199199289
+# ╟─b4d56685-21e5-4bc8-88b8-14e0478f30e3
+# ╟─53b44779-c8a6-457d-b13e-52d4d7cc3a47
+# ╟─5dc919c8-01e1-4b23-b406-492562c9e338
+# ╟─e38aa377-38f8-408d-8133-58b8e99edc7b
+# ╟─4eed2dc5-a7e0-4e77-aeea-bdb9480840ae
 # ╠═4a0dc42d-31a8-49bc-8db0-5f77474d8785
 # ╟─d0a852cb-0d68-4807-861f-5302a5aeecd4
 # ╠═8353d1fd-75cc-41e0-866c-5234634219d5
 # ╠═d6b61d9a-817e-4c09-9a83-fde7ca591d23
-# ╟─fb87aa13-1fd6-4c13-8ba4-68caef5f775b
-# ╟─5dc919c8-01e1-4b23-b406-492562c9e338
+# ╟─4f94086e-19be-46c6-a674-da5193b3498c
 # ╟─74709cb2-0be8-4b24-aa9d-926ef059fe2d
 # ╠═68396ec1-444b-4c56-966b-5c70a2208d34
 # ╠═8b51fcc1-6287-43cd-a44c-26c7423e8d7a
