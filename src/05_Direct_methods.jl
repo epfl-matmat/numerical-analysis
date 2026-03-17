@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -1434,13 +1434,22 @@ you will not asked to deal with these details. For our problems it will be suffi
 # ╔═╡ 334d83a2-4809-4e85-808f-1213a56be9b7
 md"""
 !!! info "Overview of computational cost"
-	For vectors $\textbf v, \textbf w \in \mathbb{R}^n$ and matrices $\mathbf A \in \mathbb R^{n\times n}$ the computational cost is
+	For vectors $\textbf v, \textbf w \in \mathbb{R}^n$, matrices $\mathbf A, \mathbf B \in \mathbb R^{n\times n}$ and scalars $α \in \mathbb{R}$ the computational cost is
 
 	| operation  | cost  |
 	| ------------------------- |  ------------ |
 	|  dot product $\mathbf v ^T \mathbf w$ | $O(n)$             |
-    |  matriv-vector product $\mathbf A \mathbf v$ | $O(n^2)$
-    |  matrix-matrix multiplication $\mathbf A \mathbf B$ | $O(n^3)$
+    |  matrix-vector product $\mathbf A \mathbf v$ | $O(n^2)$ |
+    |  matrix-matrix multiplication $\mathbf A \mathbf B$ | $O(n^3)$ |
+
+	Other costs, which we did not discuss in detail above, but that are important to know:
+
+	| operation  | cost  |
+	| ------------------------- |  ------------ |
+	|  Vector addition/subtraction/scaling |            |
+	|  i.e. $\mathbf v+\mathbf w$, $\mathbf v-\mathbf w$, $α \mathbf v$ | $O(n)$ |
+    |  Matrix addition / subtraction / scaling  |  | 
+	|  i.e. $\mathbf A+\mathbf B$, $\mathbf A-\mathbf B$, $α \mathbf A$ | $O(n^2)$ |
 
 """
 
@@ -1675,24 +1684,7 @@ For an alternative and more detailed discussion see also
 md"""
 ### Matrix condition numbers and stability result
 
-To analyse the error $\mathbf{x} - \widetilde{\mathbf{x}}$ mathematically, we first have to introduce some notation.
-
-Recall that for a vector $\mathbf{v} \in \mathbb{R}^n$ its Euclidean norm
-is $\|\mathbf{v}\| = \sqrt{\sum_{i=1}^n v_i^2}$.
-
-We define the following:
-
-!!! info "Definition: Relative error of linear systems"
-    The **relative error** in $\widetilde{\mathbf{x}}$,
-    the solution to the perturbed system (6),
-    is the quantity
-	```math
-	\frac{\|\mathbf{x} - \widetilde{\mathbf{x}}\|}{\|\mathbf{x}\|},
-	```
-	where $\mathbf{x}$ is the exact solution,
-    i.e. the solution to the exact linear system (5) one actually wanted to solve.
-
-We further need a generalisation of norms to matrices:
+We remind ourselves about the matrix norm:
 
 !!! info "Definition: Matrix norm"
     Given $\mathbf{M} \in \mathbb{R}^{m \times n}$ a real matrix (not necessarily square), we define the matrix norm of $\mathbf{M}$ as
@@ -1700,7 +1692,8 @@ We further need a generalisation of norms to matrices:
 		\|\mathbf{M}\| = \max_{\stackrel{\mathbf{v} \in \mathbb{R}^n}{\mathbf{v}\neq\mathbf{0}}} \frac{\|\mathbf{M}\mathbf{v}\|}{\|\mathbf{v}\|}.
 	```
 
-The previous definition implies in particular that
+which in particular implies that
+
 ```math
 \|\mathbf{M}\mathbf{v}\| \leq \|\mathbf{M}\| \, \|\mathbf{v}\|
 \quad \forall \mathbf{x} \in \mathbb{R}^n.
@@ -1816,11 +1809,10 @@ This inequality shows that the condition number of the matrix $\mathbf{A}$ plays
 md"""
 Since for standard double-precision floating-point numbers we have
 $\epsilon \approx 10^{-16}$, this means that condition numbers
-of $10^{16}$ lead to a relative error of $1$, i.e. $100\%$ error
+of $10^{16}$ can lead to a relative error of $1$, i.e. $100\%$ error
 --- all precision is lost.
-In general condition numbers above $10^8$ start to become problematic
-as in this case the relative error in the solution is at most $10^{-8}$,
-i.e. roughly speaking no more than $8$ digits.
+In practice condition numbers above $10^8$ usually start to become problematic
+for numerical computations.
 """
 
 # ╔═╡ 3eb70fdb-457a-4b5b-94d8-13b062895cd3
@@ -1872,14 +1864,14 @@ md"""
 
 Using the `cond` function of Julia enables us to easily compute condition numbers in practice.
 
-However, the expression $\kappa(\mathbf{A}) = \left\| \mathbf{A}^{-1}\right\| \, \left\| \mathbf{A}\right\|$ is not extremly handy to provide a good intuition for what the condition number actually means or how it varies as the matrix $\mathbf A$ is changed.
+However, the expression $\kappa(\mathbf{A}) = \left\| \mathbf{A}^{-1}\right\| \, \left\| \mathbf{A}\right\|$ is not extremly handy to provide a good intuition for how the condition number varies as the matrix $\mathbf A$ is changed.
 
-In this section we thus discuss a few standard techniques how to compute condition numbers of matrices. These techniques are in fact exactly the algorithms that `cond` uses under the hood to do its computation.
+In this section we thus discuss a few standard techniques how to compute condition numbers of matrices. These are in fact generalisations of our discussion on computing matrix norms in [chapter 4 on fixed-point methods](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.html).
 """
 
 # ╔═╡ 8c327ba8-ea35-4acf-8774-a1f45126f040
 md"""
-First we need some notation:
+First we recall some notation:
 
 !!! info "Definition: Absolutely minimal and maximal eigenvalues"
 	Given a diagonalisable matrix $\mathbf{M} \in \mathbb{R}^{n\times n}$
@@ -2282,7 +2274,7 @@ uuid = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
 version = "0.4.5"
 
 [[deps.FFMPEG_jll]]
-deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
 git-tree-sha1 = "01ba9d15e9eae375dc1eb9589df76b3572acd3f2"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "8.0.1+0"
@@ -3083,6 +3075,12 @@ git-tree-sha1 = "7ed9347888fac59a618302ee38216dd0379c480d"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
 version = "0.9.12+0"
 
+[[deps.Xorg_libpciaccess_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "4909eb8f1cbf6bd4b1c30dd18b2ead9019ef2fad"
+uuid = "a65dc6b1-eb27-53a1-bb3e-dea574b5389e"
+version = "0.18.1+0"
+
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
 git-tree-sha1 = "bfcaf7ec088eaba362093393fe11aa141fa15422"
@@ -3195,6 +3193,12 @@ git-tree-sha1 = "9bf7903af251d2050b467f76bdbe57ce541f7f4f"
 uuid = "1183f4f0-6f2a-5f1a-908b-139f9cdfea6f"
 version = "0.2.2+0"
 
+[[deps.libdrm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libpciaccess_jll"]
+git-tree-sha1 = "63aac0bcb0b582e11bad965cef4a689905456c03"
+uuid = "8e53e030-5e6c-5a89-a30b-be5b7263a166"
+version = "2.4.125+1"
+
 [[deps.libevdev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "56d643b57b188d30cccc25e331d416d3d358e557"
@@ -3218,6 +3222,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "6ab498eaf50e0495f89e7a5b582816e2efb95f64"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
 version = "1.6.54+0"
+
+[[deps.libva_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
+git-tree-sha1 = "7dbf96baae3310fe2fa0df0ccbb3c6288d5816c9"
+uuid = "9a156e7d-b971-5f62-b2c9-67348b8fb97c"
+version = "2.23.0+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll"]
