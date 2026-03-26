@@ -834,7 +834,7 @@ The corresponding equation
 ```math
 \mathbf{0} = \nabla ϕ(\mathbf{x}) = \mathbf{A} \mathbf{x} - \mathbf{b}
 ```
-only has a single solution, provided that $\mathbf{A}$ is non-singular.
+only has a single solution, since a positive-definite matrix $\mathbf{A}$ can by definiton not be singular.
 Since the Hessian $H_ϕ(\mathbf{x}) = \mathbf{A}$ is positive definite,
 this stationary point is a minimum. As a result we obtain
 
@@ -848,6 +848,38 @@ this stationary point is a minimum. As a result we obtain
     ```
 """
 
+# ╔═╡ c4ea6961-a42b-4764-9be8-f08870084add
+Foldable("Detailed computation of gradient ∇ϕ and Hessian", md"""
+*Note:* We will not discuss this in details in the lecture, but you are expected to be able to do such kind of calculations yourself.
+		 
+The gradient $\nabla \phi$ is obtained by differentiating
+$\phi(\mathbf x) = \sum_{k=1}^n \sum_{l=1}^n \frac12 x_l A_{lk} x_k - x_l b_l$
+with respect to the unknows $x_i$ for $i=1,\ldots,n$. We compute:
+```math
+\begin{aligned}
+\frac{\partial}{\partial x_i} \phi(\mathbf x)
+&= \sum_{k=1}^n \sum_{l=1}^n \frac12 \frac{\partial x_l}{\partial x_i} A_{lk} x_k + \frac12 x_l A_{lk} \frac{\partial x_k}{\partial x_i} - \frac{\partial x_l}{\partial x_i} b_l \\
+&= \sum_{k=1}^n \sum_{l=1}^n \frac12 \delta_{li} A_{lk} x_k + \frac12 x_l A_{lk} \delta_{ki} - \delta_{li} b_l \\
+&= \sum_{k=1}^n \frac12 A_{ik} x_k + \sum_{l=1}^n \frac12 x_l A_{\textcolor{red}{li}} - b_i \\
+&= \sum_{k=1}^n \frac12 A_{ik} x_k + \sum_{l=1}^n \frac12 x_l A_{\textcolor{red}{il}} - b_i \\
+&= \sum_{k=1}^n A_{ik} x_k - b_i \\
+&= \left( \mathbf{A} \mathbf{x} - \mathbf{b} \right)_i
+\end{aligned}
+```
+Therefore $\nabla ϕ(\mathbf{x}) = \mathbf{A} \mathbf{x} - \mathbf{b}$.
+Similarly we find for the second derivative
+```math
+\begin{aligned}
+\frac{\partial}{\partial x_i} \frac{\partial}{\partial x_j} \phi(\mathbf x)
+&= \frac{\partial}{\partial x_j} \sum_{k=1}^n A_{ik} x_k - b_i \\
+&= \sum_{k=1}^n A_{ik} \frac{\partial x_k}{\partial x_j} \\
+&= \sum_{k=1}^n A_{ik} \delta_{kj} \\
+&= A_{ij},
+\end{aligned}
+```
+which implies for the Hessian $H_ϕ(\mathbf{x}) = \mathbf{A}$.
+""")
+
 # ╔═╡ 41a269c8-fe64-4660-aa66-054b8af8af20
 md"""
 Importantly there is thus a **relation between optimisation problems** and **solving linear systems** if the system matrix $\textbf{A}$ is s.p.d.
@@ -855,15 +887,15 @@ Importantly there is thus a **relation between optimisation problems** and **sol
 
 # ╔═╡ bf9a171a-8aa4-4f21-bde3-56ccef40de24
 md"""
-SPD matrices are not unusual. For example, recall that in polynomial regression problems (see least-squares problems in [Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html)),
-where we wanted to find the best polynomial through the points
-$(x_i, y_i)$ for $i=1, \ldots n$ by minimising the least-squares error,
-we had to solve the *normal equations*
+SPD matrices are not unusual. For example, in polynomial regression problems (see least-squares problems in [Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html))
+we wanted to find the best polynomial through the points
+$(x_i, y_i)$ for $i=1, \ldots n$ by minimising the least-squares error.
+This leads to the so-called *normal equations*
 ```math
 \mathbf{V}^T \mathbf{V} \mathbf{c} = \mathbf{V}^T \mathbf{y}
 ```
 where $\mathbf{c} \in \mathbf{R}^m$ are the unknown coefficients of the polynomial $\sum_{j=0}^m c_j x^j$, $\mathbf{y}$ is the vector
-collecting all $y_i$ values and the $\mathbf{V}$ is the Vandermonde matrix
+collecting all $y_i$ values. $\mathbf{V}$ is the Vandermonde matrix
 ```math
 \mathbf{V} = \left(\begin{array}{ccc}
 1 & x_1 & \ldots & x_1^m \\
@@ -872,7 +904,8 @@ collecting all $y_i$ values and the $\mathbf{V}$ is the Vandermonde matrix
 1 &x_n & \ldots & x_n^m \\
 \end{array}\right) \in \mathbb{R}^{n\times (m+1)}.
 ```
-In this case the system matrix $\mathbf{A} = \mathbf{V}^T \mathbf{V}$ is *always* s.p.d.
+In this case the system matrix $\mathbf{A} = \mathbf{V}^T \mathbf{V}$ is *always* s.p.d and so the iterative methods we consider in this chapter can be applied.
+In fact generalisations of these ideas are the basis for training neural networks.
 """
 
 # ╔═╡ 590e8877-0600-4bbb-8e88-7033548815b5
@@ -887,18 +920,18 @@ a relatively simple idea is to construct an iterative method, where at every ste
 
 To guide our thoughts we consider a 2D problem which is easy to visualise. We take as an example
 ```math
-\mathbf A^\text{2D} = \begin{pmatrix} 2& 0 \\ 0& 60 \end{pmatrix}
+\mathbf A^\text{2D} = \begin{pmatrix} 2 & 0 \\ 0& 40 \end{pmatrix}
 \qquad \mathbf b^\text{2D} = \begin{pmatrix}0\\0\end{pmatrix}
 ```
 such that
 ```math
-\phi(\mathbf x) = \frac12 \mathbf x^T \mathbf A^\text{2D} \mathbf x - \mathbf x^T \mathbf b^\text{2D} = x_1^2 + 30 x_2^2
+\phi(\mathbf x) = \frac12 \mathbf x^T \mathbf A^\text{2D} \mathbf x - \mathbf x^T \mathbf b^\text{2D} = x_1^2 + 20 x_2^2
 ```
 """
 
 # ╔═╡ bb45f71b-b4cc-4b9a-abcb-7b0647f32a9b
-A2d = [1.0  0.0;
-	   0.0 20.0]
+A2d = [2.0  0.0;
+	   0.0 40.0]
 
 # ╔═╡ 53cc323c-d742-4cc6-8b96-e966e2b1ccb4
 b2d = [0.0;
@@ -1311,7 +1344,7 @@ end
 md"""
 One way to cure this behaviour is in fact make a rather different choice for the update direction. While for the first update we keep $\mathbf{p}^{(1)} = \mathbf{r}^{(k)}$ we subsequently choose directions $\mathbf{p}^{(k)}$ with the property
 ```math
-0 = \mathbf{p}^{(k)} \mathbf{A} \mathbf{p}^{(j)} \qquad \text{with $j = 0, 1, \ldots, k-1$}.
+0 = (\mathbf{p}^{(k)})^T \mathbf{A} \mathbf{p}^{(j)} \qquad \text{with $j = 0, 1, \ldots, k-1$}.
 ```
 This property of the vectors $\mathbf{p}^{(k)}$ is usually called $\mathbf{A}$-orthogonality. Based on this update direction we iterate as
 ```math
@@ -1327,7 +1360,7 @@ The next $\mathbf{p}^{(k+1)}$ is found by $A$-orthogonalising $\mathbf{r}^{(k+1)
 \qquad \text{with} \quad β_k = \frac{(\mathbf{A} \mathbf{p}^{(k)})^T \, \mathbf{r}^{(k)}}{(\mathbf{p}^{(k)})^T\mathbf{A} \mathbf{p}^{(k)}}.
 ```
 
-This is called the [Conjugate gradient method](https://en.wikipedia.org/wiki/Conjugate_gradient_method) and despite its invention in 1952 is still the state-of-the-art method for solving linear systems or optimisation problems involving s.p.d. matrices.
+This is called the [Conjugate gradient method](https://en.wikipedia.org/wiki/Conjugate_gradient_method). Despite it has already been invented in 1952 by Magnus Hestenes   and Eduart Stiefel at ETH, is **still the state-of-the-art method** for solving linear systems or optimisation problems involving s.p.d. matrices.
 """
 
 # ╔═╡ 1d3ea21f-0ebd-491b-a165-2e5cf7cc583f
@@ -2713,6 +2746,7 @@ version = "1.13.0+0"
 # ╟─08dc1f90-2fc6-4328-a39d-8856f215db33
 # ╟─33cb7e52-abe1-40f0-81d0-f8b00468a9ff
 # ╟─b46abcc8-f739-4da0-9d63-f6673ed6884f
+# ╟─c4ea6961-a42b-4764-9be8-f08870084add
 # ╟─41a269c8-fe64-4660-aa66-054b8af8af20
 # ╟─bf9a171a-8aa4-4f21-bde3-56ccef40de24
 # ╟─590e8877-0600-4bbb-8e88-7033548815b5
