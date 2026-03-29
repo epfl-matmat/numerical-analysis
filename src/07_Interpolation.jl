@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -40,7 +40,7 @@ TableOfContents()
 md"""
 # Interpolation
 
-In this chapter we will return to one of the problems we already briefly discussed in the introductory lecture, namely:
+In this chapter we will return to one problems that you likely have met in previous courses:
 
 !!! info "Definition: Interpolation problem"
     Suppose we are given data $(x_i, y_i)$ with $i = 1, 2, 3, \ldots n$,
@@ -66,7 +66,7 @@ md"""
 
 # ╔═╡ 0852f479-cf4d-4293-9a7a-0b7aa6e10d81
 md"""
-Of course we have not really discussed precisely *how* to obtain such an $p$. Indeed the interpolation condition $p(x_i) = y_i$ is rather weak and in practice and leaves considerable freedom:
+Of course we have not really discussed precisely *how* to obtain such an $p$. Indeed the interpolation condition $p(x_i) = y_i$ leaves considerable freedom:
 
 - Show polynomial interpolant: $(@bind show_poly CheckBox(; default=true))
 - Show piecewise linear interpolant: $(@bind show_pw CheckBox(; default=true))
@@ -127,12 +127,7 @@ where
 md"""
 ## Polynomial interpolation
 
-We start with one of the simplest forms of interpolation: Namely fitting polynomials through the given data.
-
-Let us come back to our earlier problem of finding an interpolating function $p$
-for the given temperature-dependent reaction rates.
-
-Note, that compared to the pathological example of the introduction, we start with a slightly simpler case:
+We start with one of the simplest forms of interpolation: Namely fitting polynomials through the given data. We start with the following data:
 """
 
 # ╔═╡ 9e933ebe-1805-46fa-9e0a-a64c03a71c5c
@@ -161,25 +156,21 @@ end;
 # ╔═╡ 8be732e2-927b-4c56-8cab-9079c7598e86
 scatter(temperature, rate; label="data", xlabel="temperature", ylabel="rate")
 
-# ╔═╡ b37a4828-c65e-44be-a20c-787a7309fb21
+# ╔═╡ c5fbfe20-f82e-4fca-9612-c229341e356f
 md"""
 ### Monomial basis
 
-Let us first consider the case of **polynomial interpolation**:
-given $n+1$ data points $(x_1, y_1)$ up to $(x_{n+1}, y_{n+1})$
-we want to find a $n$-th degree polynomial
+!!! info "Definition: Monomial basis"
+    The basis of $n+1$ monomials are the functions
+    $φ_1(x) = 1, φ_2(x) = x, \ldots, φ_{n+1}(x) = x^n$.
+
+Let us explore what happens if we  employ the monomials directly as the basis for our interpolation. Given $n+1$ data points $(x_1, y_1)$ up to $(x_{n+1}, y_{n+1})$
+we want to find a function of the form[^1]
 ```math
 \tag{3}
 p_n(x) = \sum_{\textcolor{red}{j=0}}^n c_j x^j,
 ```
-which is an interpolating function,
-i.e. satisfies $p_n(x_i) = y_i$
-for all $i = 1, \ldots, n + 1$.
-Fundamental results from algebra
-ensure that such a polynomial of degree $n$,
-which goes through all $n+1$ data points can always be found.
-Moreover this polynomial (thus its coefficients $c_j$)
-is uniquely defined by the data.
+which satisifes $p_n(x_i) = y_i$ for all $i = 1, \ldots, n + 1$.
 """
 
 # ╔═╡ 20a76496-f1a0-4690-8522-a13cf4656e6d
@@ -190,18 +181,22 @@ md"""
 	When discussing numerical methods (such as here interpolations) it is sometimes more convenient to start indexing from $0$ and sometimes to start from $1$. Please be aware of this and read sums in this notebook carefully. Occasionally we use color to highlight the start of a sum explicitly.
 """
 
+# ╔═╡ 373d6bf6-c509-4662-b94d-b469f489a0ec
+md"""
+We notice that (3) is nothing but a **polynomial of degree $n$**,
+such that we are in fact performing **polynomial interpolation**.
+Importantly, fundamental results from algebra
+ensure that such a polynomial of degree $n$,
+which goes through all $n+1$ data points can always be found.
+Moreover this polynomial (thus its coefficients $c_j$)
+is uniquely defined by the data.
+
+[^1]: Compare to (1) with the $φ_1, \ldots φ_n$ from the monomial basis definition inserted.
+"""
+
 # ╔═╡ 17e97fad-6290-4ef6-9124-c9a816346564
 md"""
-To find this polynomial a
-natural idea is thus to employ the monomials $1, x, x^2, \ldots x^n$
-directly as the basis for our interpolation:
-
-!!! info "Definition: Monomial basis"
-    The basis of $n+1$ monomials are the functions
-    $φ_1(x) = 1, φ_2(x) = x, \ldots, φ_{n+1}(x) = x^n$.
-
-Employing these in equations (1) and (2) to perform our interpolation
-leads to the linear system in the $n+1$ unknowns $c_0, c_1, \ldots, c_n$
+Inserting the monomial basis into (1) and (2) tells us that the $n+1$ unknowns $c_0, c_1, \ldots, c_n$ can be found by solving the linear system
 ```math
 \tag{4}
 \underbrace{
@@ -238,6 +233,8 @@ Use the Slider to regulate how many of the data points are included in the inter
 - `n_data_monomial =` $(@bind n_data_monomial Slider(1:11; show_value=true, default=3))
 
 We see as we use more and more data points, eventually the full data range is well-represented by interpolating polynomial.
+
+So far things seem easy, however looking at the condition numbers of the Vandermonde matrices $\mathbf V$ we notice a problem:
 """
 
 # ╔═╡ 2dfef7e4-23ca-49fa-bb95-f9c7219cdf22
@@ -279,9 +276,30 @@ let
 	plot!(p, f; label=L"Polynomial interpolant $p$", lw=2)
 end
 
-# ╔═╡ d6c4e000-c213-40e0-8a6a-e1dfccadb006
+# ╔═╡ e8273049-6950-4b1e-8dba-c72d7c82cfd4
+cond(V)
+
+# ╔═╡ 25fac6d7-faee-4e93-8104-89830ad6a6d1
+let
+	ns    = 1:11
+	conds = map(ns) do n
+		x = temperature[1:n]
+		
+		V = zeros(n, n)
+		for j in 1:n, i in 1:n
+			V[i, j] = x[i] ^ (j-1)
+		end
+		cond(V)
+	end
+
+	plot(ns, conds; lw=2, yaxis=:log, xlabel="Number of data points n_data_monomial" , ylabel="Condition number Vandermonde matrix", mark=:o, label="", yticks=10.0 .^ (0:5:30))
+
+	vline!([n_data_monomial], label="", lw=2, ls=:dash)
+end
+
+# ╔═╡ 5820719d-603a-4ef0-a7ce-4d2dd3236c79
 md"""
-**A word of warning:** Vandermonde matrices are an example of what is known as a *badly conditioned matrix*, that is a matrix where small numerical errors (such as rounding errors due to the finite-precision number format used by the computer) can amplify and lead to very inaccurate solutions. Therefore this method starts to be come very unreliable for $n$ larger than a few tens.
+As we take **more and more data points** into account the **condition number of the Vandermonde matrix** gets **very large**. As a result solving (4) is very sensitive to noise in the $y_i$. With only **little noise in the input data** we will **no longer find** the correct **interpolating polynomial**.
 
 We will explore a better method in the next section.
 """
@@ -428,7 +446,7 @@ end
 
 # ╔═╡ 944fa679-77d2-4fe5-9a79-ef63248105c7
 md"""
-### Error analysis
+### Interpolation error and Runge's phaenomenon
 
 With the Lagrange polynomials we have a simple approach to find an interpolating polynomial. From a numerical analysis perspective this raises the question **how good a polynomial approximation is**.
 Or to put it into the language of **data-driven methods**: Having obtained an interpolation model, how well does it generalise to unseen $x_n$ ?
@@ -534,59 +552,8 @@ converges very poorly. In particular from about `n_samples_comparsion = 8`
 spurious oscillations start to appear towards the end of the domain $[-1, 1]$,
 which become more and more pronounced as we *increase* the number of samples
 and the polynomial degree.
-"""
 
-# ╔═╡ 08fe0c39-f73d-46d0-b435-17abb3f60583
-md"""
-To understand this behaviour the following error estimate is useful:
-
-!!! info "Theorem 2"
-    For a $(n+1)$-times differentiable function $f : [a, b] \to \mathbb{R}$
-    and $a = x_1 < x_2 < \cdots < x_{n+1} = b$ *equally distributed*
-    nodes in $[a, b]$ the $n$-th degree polynomial interpolant $p_n$
-    of the data $(x_i, f(x_i))$ with $i = 1, 2, \ldots, n+1$
-    satisfies the estimate
-    ```math
-    \tag{8}
-    \left\|f - p_n\right\|_\infty
-    \leq \frac{1}{4(n+1)}\left(\frac{b-a}{n}\right)^{n+1}
-    \left\| f^{(n+1)} \right\|_\infty
-    ```
-    where the **infinity norm** $\| \phi \|_\infty$ for a function $\phi : D \to \mathbb{R}$
-    mapping from a domain $D$ is the expression
-    ```math
-    \| \phi \|_\infty = \max_{x \in D} |\phi(x)|,
-    ```
-    i.e. the maximal absolute value the function takes.
-"""
-
-# ╔═╡ 5f63abce-f843-4c33-9db6-0770323b55ac
-md"""
-The **key conclusion of the previous theorem** is that
-if the right-hand side (RHS) of (8) goes to zero,
-than the the error $\|f - p_n\|_\infty$ neccessirly vanishes
-as $n$ increases. 
-
-So let's check this for our functions.
-- For $f_\text{sin}(x) = \sin(5x)$ we can easily verify
-  $|f_\text{sin}^{(n+1)}(x)| = 5 |f_\text{sin}^{(n)}(x)|$ as well as $\max_{[-1,1]} |f_\text{sin}(x)| = \max_{x\in[-1,1]} |\sin(5x)| = 1$, such that
-  ```math
-  \|f_\text{sin}^{(n+1)}\|_\infty =\max_{x\in[-1,1]} |f_\text{sin}^{(n+1)}(x)| = 5^{n+1}
-  ```
-  and (8) becomes (using $b = 1$ and $a = -1$):
-  ```math
-  \left\|f_\text{sin} - p_n \right\|_\infty \leq \frac{10^{n+1}}{4(n+1)n^{n+1}} \longrightarrow 0 \qquad \text{as $n \to \infty$}
-  ```
-- In contrast for $f_\text{ratio}(x)$ one can show
-  ```math
-  \begin{aligned}
-  \|f_\text{ratio}^{(n+1)}\|_\infty
-  &\sim 20^n n! \qquad \text{as $n\to\infty$}
-  \end{aligned}
-  ```
-  and as a result convergence is not guaranteed.
-
-Looking more closely at the error of the problematic case,
+Let us look more closely at the error of the problematic case,
 that is plotting $|f_\text{ratio}(x) - p_n(x)|$ as a function of $x$,
 we observe an interesting pattern:
 """
@@ -639,19 +606,72 @@ which reveals, that the origin is our choice of a *regular* spacing between the 
     infinity norm $\|\,\cdot\,\|_\infty$ still
     decreases, for large $n$ this behaviour can change, such that
     **for large $n$ the error can keep increasing** as $n$ increases.
+
+Notice, that Runge's phaenomenon does always occur. E.g. while we observe it for $f_\text{ratio}$ we don't observe it for $f_\text{sin}$. The details on this are beyond the scope of this class, but some ideas are given below.
 """
+
+# ╔═╡ 08fe0c39-f73d-46d0-b435-17abb3f60583
+Foldable("Details: Why Runge's phaenomenon does not occur for all functions",
+md"""
+To understand better why Runge's phaenomenon concerns $f_\text{ratio}$,
+but not $f_\text{sin}$, consider the following Theorem:
+
+!!! info "Theorem 2"
+    For a $(n+1)$-times differentiable function $f : [a, b] \to \mathbb{R}$
+    and $a = x_1 < x_2 < \cdots < x_{n+1} = b$ *equally distributed*
+    nodes in $[a, b]$ the $n$-th degree polynomial interpolant $p_n$
+    of the data $(x_i, f(x_i))$ with $i = 1, 2, \ldots, n+1$
+    satisfies the estimate
+    ```math
+    \tag{8}
+    \left\|f - p_n\right\|_\infty
+    \leq \frac{1}{4(n+1)}\left(\frac{b-a}{n}\right)^{n+1}
+    \left\| f^{(n+1)} \right\|_\infty
+    ```
+    where the **infinity norm** $\| \phi \|_\infty$ for a function $\phi : D \to \mathbb{R}$
+    mapping from a domain $D$ is the expression
+    ```math
+    \| \phi \|_\infty = \max_{x \in D} |\phi(x)|,
+    ```
+    i.e. the maximal absolute value the function takes.
+
+The **key conclusion of the previous theorem** is that
+if the right-hand side (RHS) of (8) goes to zero,
+than the the error $\|f - p_n\|_\infty$ neccessarily vanishes
+as $n$ increases. 
+
+So let's check this for our functions.
+- For $f_\text{sin}(x) = \sin(5x)$ we can easily verify
+  $|f_\text{sin}^{(n+1)}(x)| = 5 |f_\text{sin}^{(n)}(x)|$ as well as $\max_{[-1,1]} |f_\text{sin}(x)| = \max_{x\in[-1,1]} |\sin(5x)| = 1$, such that
+  ```math
+  \|f_\text{sin}^{(n+1)}\|_\infty =\max_{x\in[-1,1]} |f_\text{sin}^{(n+1)}(x)| = 5^{n+1}
+  ```
+  and (8) becomes (using $b = 1$ and $a = -1$):
+  ```math
+  \left\|f_\text{sin} - p_n \right\|_\infty \leq \frac{10^{n+1}}{4(n+1)n^{n+1}} \longrightarrow 0 \qquad \text{as $n \to \infty$}
+  ```
+- In contrast for $f_\text{ratio}(x)$ one can show
+  ```math
+  \begin{aligned}
+  \|f_\text{ratio}^{(n+1)}\|_\infty
+  &\sim 20^n n! \qquad \text{as $n\to\infty$}
+  \end{aligned}
+  ```
+  and as a result convergence is not guaranteed.
+""")
 
 # ╔═╡ 25b82572-b27d-4f0b-9be9-323cd4e3ce7a
 md"""
-The solution to this dilemma is to employ **irregularly spaced**
-nodal points, in particular the nodal points need to become
+To **avoid Runge's phaenomenon** for all functions,
+the solution is to employ **irregularly spaced**
+nodal points, in particular nodal points that become
 *more densely spaced* towards the boundary of the domain.
-One especially important node family
+One important node family
 are the **Chebyshev extreme points** defined by
 ```math
 x_k = - \cos\left(\frac{k \pi}{n}\right) \qquad \text{for $k = 0, 1, \ldots n$}.
 ```
-Using these to interpolate a degree $n$ polynomial gives a uniform convergence behaviour as $n\to \infty$:
+Using these to interpolate a degree $n$ polynomial gives a **uniform convergence behaviour** as $n\to \infty$ **for the pathological $f_\text{ratio}$ function:**
 """
 
 # ╔═╡ c38b9e48-98bb-4b9c-acc4-7375bbd39ade
@@ -685,15 +705,12 @@ Notably Chebyshev nodes enjoy the following convergence result:
 	\| f - p_n \|_\infty = \max_{x\in[-1,1]} \left|f(x) - p_n(x)\right| \leq α C^{n}
     ```
     where $p_n$ is the unique polynomial of degree $n$ defined by
-    interpolation on $n+1$ Chebyshev points.
+    interpolation on $n+1$ **Chebyshev points**.
 
 This is an example of **exponential convergence**: The error of the approximation scheme reduces by a *constant factor* whenever the polynomial degree $n$ is increased by a constant increment. 
 
-The **graphical characterisation** is similar to the iterative schemes we discussed in the previous chapter: We employ a **semilog plot** (using a linear scale for $n$ and a logarithmic scale for the error), where exponential convergence is characterised by a straight line:
+The **graphical characterisation** is similar to the iterative schemes we discussed in the previous chapters: We employ a **semilog plot** (using a linear scale for $n$ and a logarithmic scale for the error), where exponential convergence is characterised by a straight line:
 """
-
-# ╔═╡ 21c98bd4-b3eb-4406-bcd2-0abfbeb9bb93
-TODO("'previous chapter' remark likely outdated after pushing interpolation back")
 
 # ╔═╡ d4cf71ef-576d-4900-9608-475dbd4d933a
 let
@@ -710,7 +727,7 @@ let
 		linf_error  = maximum(x -> abs(poly_fratio(x) - fratio(BigFloat(x))), fine)
 	end
 	
-	plot(degrees, linf_errors_chebyshev; yaxis=:log, lw=2, mark=:x, xlabel=L"Polynomial degree $n$", ylabel=L"\Vert f - p_n \Vert_\infty", label="Chebyshev nodes", title="Convergence of polynomial interpolation", ylims=(-Inf, 10))
+	plot(degrees, linf_errors_chebyshev; yaxis=:log, lw=2, mark=:x, xlabel=L"Polynomial degree $n$", ylabel=L"\Vert f_{ratio} - p_n \Vert_\infty", label="Chebyshev nodes", title="Convergence of polynomial interpolation", ylims=(-Inf, 10))
 	plot!(degrees, linf_errors_equispaced; lw=2, mark=:x, label="equally spaced nodes", title="Convergence of polynomial interpolation")
 end
 
@@ -728,52 +745,62 @@ is one of the **desired properties**.
     When discussing convergences rates of iterative numerical algorithms and
     the accuracy of numerical approximation schemes (interpolation, differentiation, integration, discretisation) unfortunately a different terminology is employed. In the following let $α > 0$ and $0 < C < 1$ denote appropriate constants.
 	- **Iterative schemes:** Linear convergence
-	  * If the error scales as $α C^{n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to the last chapter.)
+	  * If the error scales as $α C^{n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to [Root finding and fixed-point problems](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.html)).
     - **Approximation schemes:** Exponential convergence
 	  * If the error scales as $α C^{n}$ where $n$ is some accuracy parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
 """
 
-# ╔═╡ 647f96ee-c0ad-4bd8-9de1-f24a7dcf6b24
-TODO("'Last chapter' reference is likely outdated after pushing interpolation back")
-
-# ╔═╡ a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
+# ╔═╡ ffccc21a-b76e-4b66-acf8-cb6f5b1e69d5
 md"""
-### Stability of polynomial interpolation
+### Numerical stability of polynomial interpolation
 
-In the previous discussion we identified the Chebyshev nodal points to provide exponential convergence by avoiding Runge's phaenomenon. Another common question to ask in numerical analysis is referred to as **numerical stability**. The goal of stability analysis is to quantify by how much small perturbations in the input data translate to the obtained result of a numerical algorithm.
+Recall that an algorithm is well-conditioned if small perturbation in the input data translate to only small changes in the obtained result of the algorithm. See the general discussion at the end of [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html).
 
-We consider the case of interpolating a polynomial $p_n$
+In the case of polynomial interpolation we want to interpolate a polynomial $p_n$
 to $n+1$ data points $(x_i, y_i)$ for $i = 1, 2, \ldots, n+1$,
 where $a = x_1 < x_2 < \cdots < x_{n+1} = b$
 and the $y_i$ are drawn from a function $f$, i.e. $y_i = f(x_i)$.
 Our goal is effectively to recover $f$ as close as possible.
-However, in many practical settings we don't have access to the
-true data  $(x_i, y_i)$, since we are only able to obtain data
+However, in many practical settings we don't have access to $f$ or even the
+true data  $(x_i, y_i)$. We are only able to obtain data
 through a noisy measurement.
+
 This means that the data we are *actually* able to collect
 is much rather $\tilde{y}_i = f(x_i) + \varepsilon_i$
 where $\varepsilon_i$ represents the measurement error.
-We suppose further that $|\varepsilon_i| \leq \varepsilon$ for all $i= 1, 2, \ldots, n+1$ where $\varepsilon > 0$ is a small number,
-i.e. that overall the errors are small.
 Instead of producing an interpolating polynomial $p_n$
 using the exact data $(x_i, y_i)$,
 our procedure only has access to the noisy data  $(x_i, \tilde{y}_i)$,
 thus producing the polynomial $\tilde{p}_n$.
+Our question is thus: **How different is $\tilde{p}_n$ from $p_n$ ?**
+"""
+
+# ╔═╡ ad41f714-0103-4f68-942d-aa5f78f7812b
+md"""
+To formulate this mathematically we assume that $|\varepsilon_i| \leq \varepsilon$ for all $i= 1, 2, \ldots, n+1$ where $\varepsilon > 0$ is a small number, i.e. that overall all errors are small and bounded by $\varepsilon$.
+The infinity norm quantifies how different two functions are,
+our goal is thus to find the smallest constant $\Lambda_n$ that satisfies
+```math
+\tag{9}
+\underbrace{\|\tilde{p}_n - p_n\|_\infty}_{= \max_{x\in[a, b]} \left| \tilde{p}_n(x) - p_n(x) \right|} \leq \Lambda_n ε.
+```
+This constant is called **Lebesgue's constant**, a more precise definition is given in the detailed discussion below.
 """
 
 # ╔═╡ 7f855423-72ac-4e6f-92bc-73c12e5007eb
+Foldable("Detailed discussion about Lebesgue's constant",
 md"""
-In **stabilty analysis** we now ask the question:
+To analyse the stability of polynomial interpolation, we ask the question:
 How different are $p_n$ and $\tilde{p}_n$ given a measurement noise
 of order $\varepsilon$.
 
-Let us investigate this using the Lagrange basis, where
+We use the Lagrange basis, where
 ```math
 p_n(x) = \sum_{i=1}^{n+1} y_i L_i(x)
 \qquad \qquad
-\tilde{p}_n(x) = \sum_{i=1}^{n+1} (y_i + \varepsilon_i) L_i(x)
+\tilde{p}_n(x) = \sum_{i=1}^{n+1} (y_i + \varepsilon_i) L_i(x).
 ```
-therefore for all $x \in [a, b]$:
+Therefore for all $x \in [a, b]$:
 ```math
 \left| \tilde{p}_n(x) - p_n(x) \right|
 = \left|\sum_{i=1}^{n+1} \varepsilon_i L_i(x)\right|
@@ -792,14 +819,15 @@ Introducing
 
 we can rewrite this as
 ```math
-\tag{9}
-\left| \tilde{p}_n(x) - p_n(x) \right| \leq \Lambda_n ε.
+\left| \tilde{p}_n(x) - p_n(x) \right| \leq \Lambda_n ε \qquad \forall x \in [a, b]
 ```
-"""
+In particular this is true for the $x$, which maximises $\left| \tilde{p}_n(x) - p_n(x) \right|$ at which the LHS has the value $\| \tilde{p}_n - p_n \|$, thus leading to (9).
+""")
 
-# ╔═╡ eaaf2227-1a19-4fbc-a5b4-45503e832280
+# ╔═╡ f7e5c82e-6a23-485d-8c14-b1f97624adac
 md"""
-Notably, if $\Lambda_n$ is small, then small measurement errors $ε$ can only lead to small perturbations in the interpolating polynomial. In that case our polynomial interpolation procedure would be called **stable** or **well-conditioned**. By contrast, if $\Lambda_n$ is very high, then already a small measurement error $ε$ allows for notably deviations in the resulting interpolant
+Notice, that **Lebesgue's constant plays the role of a condition number**: 
+If $\Lambda_n$ is small, then small measurement errors $ε$ can only lead to small perturbations in the interpolating polynomial and our interpolation is well-conditioned. In contrast, if $\Lambda_n$ is large, then already a small measurement error $ε$ allows for notably deviations in the resulting interpolant
 --- we are faced with a **badly conditioned** problem.
 
 Considering the two polynomial interpolation schemes we discussed, one can show
@@ -818,22 +846,15 @@ begin
 	plot!(ns, L_Chebyshev.(ns), lw=2, mark=:o, label=L"$Λ_n$ for Chebyshev nodes", xlabel=L"n", ylabel=L"\Lambda_n")
 end
 
-# ╔═╡ 9c8b168d-494b-40ae-bc04-5dff7b535459
+# ╔═╡ 7e9cebef-bcbc-4e17-a4fb-2eb2ebdeb23f
 md"""
-Therefore for **Chebyshev nodes** the **condition number** grows only **logarithmically** with $n$, while for **equally spaced nodes** it grows **exponentially** !
-
+!!! note "Observation: Conditioning of polynomial interpolation"
+	For **equally spaced nodes** the $Λ_n$ grows **exponentially**. Equally spaced nodes lead to a **badly conditioned** problem, that is very susceptible to noise in the input data.
+	
+	For **Chebyshev nodes** the condition number $Λ_n$ grows only **logarithmically** with the number of nodes $n$: Chebyshev interpolation remains accurate under numerical noise.
+	
 Thus **Chebyshev nodes** do **not only** lead to **faster-converging polynomial interpolations**,
 but also to notably **more stable answers**. As a result they are one of the standard ingredients in many numerical algorithms.
-"""
-
-# ╔═╡ ebe08f78-d331-4563-9ef8-f99355ff672e
-md"""
-!!! note "General principle: Condition number"
-	For numerical problems the factor relating the error in the output quantity --- here  $\left| \tilde{p}_n(x) - p_n(x) \right|$ --- to the error in the input quantity --- here $ε = \max_i |\tilde{x}_i - x_i|$ --- the **condition number** of the problem. For polynomial interpolation the condition number is exactly Lebesgue's constant $\Lambda_n$.
-
-	Since for Chebyshev nodes $\Lambda_n$ stays relatitvely small, we would call Chebyshev interpolation **well-conditioned**. In contrast interpolation using equally spaced nodes is **ill-conditioned** as the condition number $\Lambda_n$ can get very large, thus **even small input errors can amplify** and **drastically reduce the accuracy** of the obtained polynomial.
-
-	We will meet other condition numbers later in the lecture, e.g. in [Iterative methods for linear systems](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html).
 """
 
 # ╔═╡ 5e19f1a7-985e-4fb7-87c4-5113b5615521
@@ -896,7 +917,7 @@ As we increase polynomial order and noise, we see larger discrepancies for the i
 # ╔═╡ 1b5c69ef-1c35-44ab-b392-47a06263ebba
 md"""
 ## Piecewise linear interpolation
-*Note:* We will only discuss the high-level ideas of this part in the lecture. You can expect that there will not be any detailed exam questions on Jacobi and Gauss-Seidel  without providing you with the formulas and algorithms.
+*Note:* We will only discuss the high-level ideas of piecewise linear interpolation in the lecture. You can expect that if there are exam questions on piecewise linear interpolation you are provided with the required formulas and theorems to answer these questions. In contrast, the section on algebraic and exponential convergence is fully examinable.
 
 In the previous section we looked at $n$-th degree polynomial interpolation,
 which we found to be poorly conditioned, e.g. when equispaced nodes and high 
@@ -1091,18 +1112,37 @@ Unlike the case of polynomial interpolation, we observe a nice convergence
 as we increase `n_pwlinear`. Let's analyse this in more detail in the next section.
 """
 
-# ╔═╡ d0a8b733-af40-41f7-a900-bf0ec6b17ed3
+# ╔═╡ 541d1ae7-27e4-4371-9fc8-bee944766c3a
 md"""### Error analysis
 
-For the error analysis of the piecewise linear interpolation
-we restrict ourself to the case of *equidistant* nodes,
-which we considered in the most recent exercise.
-That is we assume a partitioning of the interval $[a, b]$
+For making a statement about the error analysis of the
+piecewise linear interpolation
+we restrict ourself to the case of *equidistant* nodes.
+That is, we assume a partitioning of the interval $[a, b]$
 with $a = x_1 < x_2 < \cdots < x_{n+x} = b$
 and equal nodal distance $h = x_{i+1} - x_i$.
 
-In this setting the error analysis is a
-consequence of Theorem 2, equation (8).
+In this setting we obtain the following result (proof in the details below)
+
+!!! info "Theorem  4"
+    Let $f : [a, b] \to \mathbb{R}$ be a twice continuously differentiable
+    function and $a = x_1 < x_2 < \cdots < x_{n+1} = b$
+    with equal nodal distance $h = (b - a) / n$.
+    The piecewise linear polynomial interpolating the data
+    $(x_i, f(x_i))$ satisfies the error estimate
+    ```math
+    \tag{13}
+    \|f - p_{1,h}\|_\infty \leq α h^2 \| f'' \|_\infty
+    ```
+    with $α = 1/8$.
+"""
+
+# ╔═╡ f7b5741b-3e0a-48bd-9394-fe22ed522f84
+Foldable("Proof of Theorem 4",
+md"""
+In the setting of equidistant nodes the error analysis is a
+consequence of Theorem 2, equation (8) (see content of the "Details" foldable of the section [Interpolation error and Runge's phaenomenon](#Interpolation-error-and-Runge's-phaenomenon)).
+
 Indeed, for every interval $[x_i, x_{i+1}]$
 we are constructing a linear interpolation
 between the points $(x_i, y_i)$ and $(x_{i+1}, y_{i+1})$.
@@ -1122,31 +1162,21 @@ therefore
 &= \frac{h^2}{8} \| f'' \|_\infty
 \end{aligned}.
 ```
+""")
+
+# ╔═╡ 818bc609-e113-4b80-be9e-ea6a7016df83
+md"""
+Note, that this theorem is only true if the second derivative of $f$
+is continuous.
+The key result of this theorem is that the interpolation error
+goes as $O(h^2)$ as $h\to 0$ (or as $n \to \infty$).
 """
 
-# ╔═╡ 34ce3c0d-0769-44a6-a80f-155581f129a7
+# ╔═╡ c428b8ee-5b00-4e71-a09b-a86b3a751131
 md"""
-We summarise in a Theorem:
+### Algebraic and exponential convergence
 
-!!! info "Theorem  4"
-    Let $f : [a, b] \to \mathbb{R}$ be a $C^2$
-    function and $a = x_1 < x_2 < \cdots < x_{n+1} = b$
-    with equal nodal distance $h = (b - a) / n$.
-    The piecewise linear polynomial interpolating the data
-    $(x_i, f(x_i))$ satisfies the error estimate
-    ```math
-    \tag{13}
-    \|f - p_{1,h}\|_\infty \leq α h^2 \| f'' \|_\infty
-    ```
-    with $α = 1/8$.
-
-Note, that this theorem is only true if the second derivative of $f$
-is continuous. Usually the second derivative $f''$
-and thus its maximum norm $\|f\|_\infty$ are not known.
-However, we obtain that the interpolation error
-goes as $O(h^2)$ as $n\to \infty$.
-This is an example of **quadratic convergence**.
-More generally we define
+Piecewise linear interpolation is an example of **quadratic convergence** since the interpolation error goes as $O(h^2)$ as $h\to 0$. We define:
 """
 
 # ╔═╡ a30c9fe0-1467-4ba9-86b3-3ea044798851
@@ -1254,7 +1284,7 @@ To **determine the convergence behaviour graphically** we thus need to look at
 """
 
 # ╔═╡ 3eaddcc1-bddb-45a5-9e0d-0961dba5583c
-md"""### Stability analysis
+md"""### Optional: Stability analysis
 
 We are again interested in the effect of measurement noise
 on the quality of the polynomial interpolation.
@@ -1942,6 +1972,25 @@ of the noise.
   when $m \to n$**.
 """
 
+# ╔═╡ ebf6b5f4-b963-4296-9255-47e426d2d12d
+md"""
+## Summary of polynomial interpolation / regression
+- **Interpolation** and **least-squares regression** techniques is one common approach to **extract a model** $p$ **from** $n$ **observed data** points $(x_i, y_i)$ (with $i=1,2,\ldots,n$). Based on this model one can make predictions about unseen $x_{n+1}$ namely as the points $(x_{n+1}, p(x_{n+1}))$.
+
+- Polynomial interpolation on **equally spaced data points** leads to Runge's phaenomenon as the polynomial degree $m$ is growing.
+  * Moreover this problem is **ill-conditioned**, i.e. extremely susceptible to numerical or experimental noise in the training data $(x_i, y_i)$.
+
+- **One solution**: Keep the polynomial degree $m$ low, for example:
+  * Use piecewise polynomial (e.g. **piecewise linear**) interpolation techniques.
+  * Use **more observations $n$ than $m$**, i.e. perform **least-squares regression** with $n \gg m$
+  * This generally leads to methods with **algebraic convergence** when approximating a smooth function $f$.
+  * Moreover such problems are generally **well-conditioned**. E.g. for piecewise linear interpolation the condition number is $1$ independent of the employed data --- the best-possible value.
+
+- The **other solution** is to use **non-equally spaced points**:
+  * The typical approach are **Chebyshev nodes**
+  * These lead to **exponential convergence**
+"""
+
 # ╔═╡ 33d04a00-b35d-4d3e-93b0-e12446e6df34
 md"""
 ## QR factorisation
@@ -1973,7 +2022,7 @@ and conclude
 ```
 In other words the condition number of solving the normal equations is the **square of the condition number of $\mathbf{A}$**.
 
-For typical polynomial regression problems the condition number of the normal equations, $\kappa(\mathbf{A})^2$ can get huge. Take as an example the condition number of the vandermode matrix for regressing a 5-th degree polynomial with 10 equispaced datapoints between $0$ and $10$:
+We already found that for polynomial regression problems the [condition number of the Vandermonde matrix $\kappa(\mathbf{A})$ can get large](#Lagrange-basis). So clearly squaring this number makes it even worse. For illustration, we compute the condition number of the vandermode matrix for regressing a 5-th degree polynomial with 10 equispaced datapoints between $0$ and $10$:
 """
 
 # ╔═╡ 1bf08cdf-267b-44c7-92f9-d5057f17a409
@@ -2338,27 +2387,6 @@ which is why Julia's `qr` by default employs a different procedure using so-call
 For more details see [chapter 3.4](https://tobydriscoll.net/fnc-julia/leastsq/house.html) of Driscoll, Brown: *Fundamentals of Numerical Computation.*
 """
 
-# ╔═╡ ebf6b5f4-b963-4296-9255-47e426d2d12d
-md"""
-## Summary
-- **Interpolation** and **least-squares regression** techniques is one common approach to **extract a model** $p$ **from** $n$ **observed data** points $(x_i, y_i)$ (with $i=1,2,\ldots,n$). Based on this model one can make predictions about unseen $x_{n+1}$ namely as the points $(x_{n+1}, p(x_{n+1}))$.
-
-- Polynomial interpolation on **equally spaced data points** leads to Runge's phaenomenon as the polynomial degree $m$ is growing.
-  * Moreover this problem is **ill-conditioned**, i.e. extremely susceptible to numerical or experimental noise in the training data $(x_i, y_i)$.
-
-- **One solution**: Keep the polynomial degree $m$ low, for example:
-  * Use piecewise polynomial (e.g. **piecewise linear**) interpolation techniques.
-  * Use **more observations $n$ than $m$**, i.e. perform **least-squares regression** with $n \gg m$
-  * This generally leads to methods with **algebraic convergence** when approximating a smooth function $f$.
-  * Moreover such problems are generally **well-conditioned**. E.g. for piecewise linear interpolation the condition number is $1$ independent of the employed data --- the best-possible value.
-
-- The **other solution** is to use **non-equally spaced points**:
-  * The typical approach are **Chebyshev nodes**
-  * These lead to **exponential convergence**
-
-Notice that all of these problems lead to linear systems $\textbf A \textbf x = \textbf b$ that we need to solve. How this can me done numerically we will see in [Direct methods for linear systems](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html).
-"""
-
 # ╔═╡ 708e77b4-adbb-4e72-91d4-40ea03fc76f4
 md"""
 ## Appendix
@@ -2597,7 +2625,7 @@ uuid = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
 version = "0.4.5"
 
 [[deps.FFMPEG_jll]]
-deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
 git-tree-sha1 = "01ba9d15e9eae375dc1eb9589df76b3572acd3f2"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "8.0.1+0"
@@ -3432,6 +3460,12 @@ git-tree-sha1 = "7ed9347888fac59a618302ee38216dd0379c480d"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
 version = "0.9.12+0"
 
+[[deps.Xorg_libpciaccess_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "4909eb8f1cbf6bd4b1c30dd18b2ead9019ef2fad"
+uuid = "a65dc6b1-eb27-53a1-bb3e-dea574b5389e"
+version = "0.18.1+0"
+
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
 git-tree-sha1 = "bfcaf7ec088eaba362093393fe11aa141fa15422"
@@ -3544,6 +3578,12 @@ git-tree-sha1 = "9bf7903af251d2050b467f76bdbe57ce541f7f4f"
 uuid = "1183f4f0-6f2a-5f1a-908b-139f9cdfea6f"
 version = "0.2.2+0"
 
+[[deps.libdrm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libpciaccess_jll"]
+git-tree-sha1 = "63aac0bcb0b582e11bad965cef4a689905456c03"
+uuid = "8e53e030-5e6c-5a89-a30b-be5b7263a166"
+version = "2.4.125+1"
+
 [[deps.libevdev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "56d643b57b188d30cccc25e331d416d3d358e557"
@@ -3567,6 +3607,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "6ab498eaf50e0495f89e7a5b582816e2efb95f64"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
 version = "1.6.54+0"
+
+[[deps.libva_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
+git-tree-sha1 = "7dbf96baae3310fe2fa0df0ccbb3c6288d5816c9"
+uuid = "9a156e7d-b971-5f62-b2c9-67348b8fb97c"
+version = "2.23.0+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll"]
@@ -3624,8 +3670,9 @@ version = "1.13.0+0"
 # ╠═9e933ebe-1805-46fa-9e0a-a64c03a71c5c
 # ╠═f9f4ddec-fd3d-4624-ace4-f316b9cfa1e4
 # ╠═8be732e2-927b-4c56-8cab-9079c7598e86
-# ╟─b37a4828-c65e-44be-a20c-787a7309fb21
+# ╟─c5fbfe20-f82e-4fca-9612-c229341e356f
 # ╟─20a76496-f1a0-4690-8522-a13cf4656e6d
+# ╟─373d6bf6-c509-4662-b94d-b469f489a0ec
 # ╟─17e97fad-6290-4ef6-9124-c9a816346564
 # ╟─2dfef7e4-23ca-49fa-bb95-f9c7219cdf22
 # ╟─2a088353-0b78-45a8-b354-6ced35b1c7f9
@@ -3635,7 +3682,9 @@ version = "1.13.0+0"
 # ╟─317058ec-7690-4eea-8fed-b9cd8190cc7b
 # ╟─f7e3bfc6-1d12-4390-add7-12d0b0f8f4e1
 # ╟─2580774f-b4be-4665-9123-bc7c22210010
-# ╟─d6c4e000-c213-40e0-8a6a-e1dfccadb006
+# ╠═e8273049-6950-4b1e-8dba-c72d7c82cfd4
+# ╟─25fac6d7-faee-4e93-8104-89830ad6a6d1
+# ╟─5820719d-603a-4ef0-a7ce-4d2dd3236c79
 # ╟─f6fdfe7b-fa92-4168-bc8b-1f3a5a30f8db
 # ╟─463fcdfa-89b0-4f9d-aa22-29d522585627
 # ╟─8bfdb2e5-b3bf-4a17-a1cb-161eec581df8
@@ -3650,25 +3699,22 @@ version = "1.13.0+0"
 # ╟─e567287b-9244-4b55-9f5b-2e3bf583e46a
 # ╟─31126101-685d-464d-be4a-6233d3803780
 # ╟─af534a92-31d4-4125-bb7c-3eb2b3430852
-# ╟─08fe0c39-f73d-46d0-b435-17abb3f60583
-# ╟─5f63abce-f843-4c33-9db6-0770323b55ac
 # ╟─de28f64c-f243-4cb5-a1e6-ae8562cce5bc
 # ╟─08d5cb8a-3bf5-4d40-a8d6-d22318e37712
 # ╟─c5b33503-973b-468f-95de-acd6a7605a99
 # ╟─890b203c-d380-45ae-bb08-739dd0f4a1da
+# ╟─08fe0c39-f73d-46d0-b435-17abb3f60583
 # ╟─25b82572-b27d-4f0b-9be9-323cd4e3ce7a
 # ╟─c38b9e48-98bb-4b9c-acc4-7375bbd39ade
 # ╟─479a234e-1ce6-456d-903a-048bbb3de65a
-# ╠═21c98bd4-b3eb-4406-bcd2-0abfbeb9bb93
 # ╟─d4cf71ef-576d-4900-9608-475dbd4d933a
 # ╟─56685887-7866-446c-acdb-2c20bd11d4cd
-# ╠═647f96ee-c0ad-4bd8-9de1-f24a7dcf6b24
-# ╟─a15750a3-3507-4ee1-8b9a-b7d6a3dcea46
+# ╟─ffccc21a-b76e-4b66-acf8-cb6f5b1e69d5
+# ╟─ad41f714-0103-4f68-942d-aa5f78f7812b
 # ╟─7f855423-72ac-4e6f-92bc-73c12e5007eb
-# ╟─eaaf2227-1a19-4fbc-a5b4-45503e832280
+# ╟─f7e5c82e-6a23-485d-8c14-b1f97624adac
 # ╟─d9e318e7-5ffc-4433-9b0c-f393948c10ef
-# ╟─9c8b168d-494b-40ae-bc04-5dff7b535459
-# ╟─ebe08f78-d331-4563-9ef8-f99355ff672e
+# ╟─7e9cebef-bcbc-4e17-a4fb-2eb2ebdeb23f
 # ╟─5e19f1a7-985e-4fb7-87c4-5113b5615521
 # ╟─d5de3b11-7781-4100-8a63-d26426685bbc
 # ╟─4a4540a3-b4cf-47fd-a615-a5280505333f
@@ -3684,8 +3730,10 @@ version = "1.13.0+0"
 # ╠═f26fb942-a891-4555-8c1a-9ecc1ffeca85
 # ╠═f6055e59-1ddd-4148-8a85-95f4501e3f9f
 # ╟─193131ad-e016-4f2a-b1cb-a544bc497c95
-# ╟─d0a8b733-af40-41f7-a900-bf0ec6b17ed3
-# ╟─34ce3c0d-0769-44a6-a80f-155581f129a7
+# ╟─541d1ae7-27e4-4371-9fc8-bee944766c3a
+# ╟─f7b5741b-3e0a-48bd-9394-fe22ed522f84
+# ╟─818bc609-e113-4b80-be9e-ea6a7016df83
+# ╟─c428b8ee-5b00-4e71-a09b-a86b3a751131
 # ╟─a30c9fe0-1467-4ba9-86b3-3ea044798851
 # ╟─7e317807-d3ee-4197-91fb-9fc03f7297e8
 # ╠═eb96f944-74ac-4cc0-9322-825df83f34f2
@@ -3719,6 +3767,7 @@ version = "1.13.0+0"
 # ╟─4562b2f4-3fcb-4c60-83b6-cafd6e4b3144
 # ╟─7829afd0-2693-40dc-b2d5-c8da72e96454
 # ╟─c2431601-afc7-4b37-9113-5ae85d4e5549
+# ╟─ebf6b5f4-b963-4296-9255-47e426d2d12d
 # ╟─33d04a00-b35d-4d3e-93b0-e12446e6df34
 # ╠═1bf08cdf-267b-44c7-92f9-d5057f17a409
 # ╟─87eec3b0-bcfe-46e4-a3ad-496d53a95eba
@@ -3760,7 +3809,6 @@ version = "1.13.0+0"
 # ╠═9011a819-13bb-4fa4-b3a9-32aad3ee3362
 # ╠═a479e4e7-e0dc-4d24-9365-627e3301eb0b
 # ╟─adfa4dd1-c85e-47c2-aac5-0e7f8438d51a
-# ╟─ebf6b5f4-b963-4296-9255-47e426d2d12d
 # ╟─708e77b4-adbb-4e72-91d4-40ea03fc76f4
 # ╠═d7aaf219-42cf-42cd-81a7-f1540dcabc78
 # ╟─2240f8bc-5c0b-450a-b56f-2b53ca66bb03

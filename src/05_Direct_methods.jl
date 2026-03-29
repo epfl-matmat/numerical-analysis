@@ -2012,7 +2012,7 @@ md"""
 	--- i.e. the same huge number we obtained before.
 """
 
-# ╔═╡ 86bc2d9e-903e-4069-be88-1b8cf1f737ff
+# ╔═╡ e194331d-d5bd-4209-8d2e-5cd175f5d3c8
 md"""
 ## Lessons to learn about numerical stability
 
@@ -2031,7 +2031,10 @@ is in fact more general as defined below:
 	≤ K \frac{\|\widetilde{\mathbf{b}} - \mathbf{b}\|}{\|\mathbf{b}\|}
 	```
 	for all valid inputs $\mathbf{b}$ and $\tilde{\mathbf{b}}$ to $f$.
+"""
 
+# ╔═╡ 386af644-04e6-419d-993d-f78333a90f74
+md"""
 In our case of the linear system we had that $f$ is the LU factorisation algorithm 3 to obtain the solution $\mathbf{x}$ of the linear system $\mathbf{A} \mathbf{x} = \mathbf{b}$,
 i.e. $\widetilde{\mathbf{x}} = f(\widetilde{\mathbf b})$ and ${\mathbf{x}} = f(\mathbf b)$. The condition number $K$ of this algorithm (see Theorem 2) is than just $\kappa(\mathbf{A})$, the condition number of the matrix $\mathbf{A}$.
 
@@ -2042,6 +2045,9 @@ Finally let us note:
 
 !!! info "Definiton: Well-conditioned"
 	We call an algorithm *well-conditioned* if its condition number is small (i.e. close to $1$). Else we call a problem badly conditioned.
+
+An algorithm that is badly conditioned is also sometimes called **numerically unstable**. Conversely a numerically stable algorithm is well-conditioned.
+Notice, however, that term "numerical stability" is often defined more broadly with bad conditioning being one possible reason why an algorithm is unstable.
 """
 
 # ╔═╡ 66f6453b-9ad9-48ff-b5f5-60787c5cb381
@@ -3461,7 +3467,8 @@ version = "1.13.0+0"
 # ╟─9be40396-9ace-4088-ac7b-8e0a0117e4f4
 # ╟─6f077373-cc53-4e9d-8849-c59c45b40178
 # ╟─f2e5abd8-a544-4c21-88fe-af0edec938ab
-# ╟─86bc2d9e-903e-4069-be88-1b8cf1f737ff
+# ╟─e194331d-d5bd-4209-8d2e-5cd175f5d3c8
+# ╟─386af644-04e6-419d-993d-f78333a90f74
 # ╟─66f6453b-9ad9-48ff-b5f5-60787c5cb381
 # ╟─45df2cc2-44d7-4b39-872d-b3a49cd59dfe
 # ╟─00000000-0000-0000-0000-000000000001
