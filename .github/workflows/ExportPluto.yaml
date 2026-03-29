@@ -51,6 +51,7 @@ jobs:
 
 
             - name: Run & export Pluto notebooks
+              if: github.event_name == 'push' && github.ref == 'refs/heads/master'
               run: |
                 julia -e 'using Pkg
                   Pkg.activate(mktempdir())
