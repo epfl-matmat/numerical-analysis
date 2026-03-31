@@ -40,7 +40,7 @@ TableOfContents()
 md"""
 # Interpolation
 
-In this chapter we will return to one problems that you likely have met in previous courses:
+In this chapter we will consider one type of problems that you likely have met in previous courses:
 
 !!! info "Definition: Interpolation problem"
     Suppose we are given data $(x_i, y_i)$ with $i = 1, 2, 3, \ldots n$,
@@ -106,7 +106,7 @@ In matrix form we can write
 \tag{2}
 \textbf{A} \textbf{c} = \textbf{y}
 ```
-where
+where $A_{ij} = \varphi_j(x_i)$, i.e.
 ```math
 \textbf{A} = \left(\begin{array}{ccc}
 φ_1(x_1) & \ldots & φ_n(x_1) \\
@@ -121,6 +121,13 @@ where
 ```
 
 *Note:* The number of basis functions and the number of data points does not need to agree. We will consider such more general regression problems later.
+"""
+
+# ╔═╡ 7323379d-9bff-46e3-9e87-7432ace5306e
+md"""
+In practical settings acquiring a data point can be very costly, e.g. involve months of a lab time to perform an experiment, or hours of a computational simulation. In practice the number of data points $n$ is therefore often limited by our budget of time or money. So the primary quesitons to ask are:
+1. Given the possibility to observe $n$ data points, where should we take these measurements, i.e. **how should we chose the $x_i$** ? We will see that not all choices are equally good.
+2. Given $n$ data points $(x_i, y_i)$ **what basis functions $\phi_j$ should we choose** to interpolate our data and build the model $p$ ?
 """
 
 # ╔═╡ eb43ef87-343e-4a9b-9a0f-3a18364d6b4b
@@ -171,6 +178,8 @@ we want to find a function of the form[^1]
 p_n(x) = \sum_{\textcolor{red}{j=0}}^n c_j x^j,
 ```
 which satisifes $p_n(x_i) = y_i$ for all $i = 1, \ldots, n + 1$.
+
+[^1]: Compare to (1) with the $φ_1, \ldots φ_n$ from the monomial basis definition inserted.
 """
 
 # ╔═╡ 20a76496-f1a0-4690-8522-a13cf4656e6d
@@ -190,8 +199,6 @@ ensure that such a polynomial of degree $n$,
 which goes through all $n+1$ data points can always be found.
 Moreover this polynomial (thus its coefficients $c_j$)
 is uniquely defined by the data.
-
-[^1]: Compare to (1) with the $φ_1, \ldots φ_n$ from the monomial basis definition inserted.
 """
 
 # ╔═╡ 17e97fad-6290-4ef6-9124-c9a816346564
@@ -386,27 +393,42 @@ end
 
 # ╔═╡ 8bfdb2e5-b3bf-4a17-a1cb-161eec581df8
 md"""
-In particular the nodal property (6) makes it extremely convenient to use a Lagrange polynomial basis to find the interpolating polynomial $p_n$:
+In particular the nodal property (6) makes it extremely convenient to use a Lagrange polynomial basis to find the interpolating polynomial $p_n$.
+
+To make this apparent we return to Equations (1) and (2), which described the general framework for interpolations. In the case we consider here, our basis functions are just the set of Lagrange polynomials, i.e. $\varphi_j = L_j(x)$ for $j=1, \ldots, n+1$. Then the matrix $\mathbf A$ with its elements $A_{ij} = \varphi_j(x_i) = L_j(x_i)$ has a particularly simple form:
+```math
+\textbf{A} = \left(\begin{array}{ccc}
+L_1(x_1) & L_2(x_1) & \ldots & L_{n+1}(x_1) \\
+L_1(x_2) & L_2(x_2) & \ldots & L_{n+1}(x_2) \\
+\vdots &\vdots & \ddots & \vdots\\
+L_1(x_{n+1}) & L_2(x_{n+1} & \ldots & L_{n+1}(x_{n+1}) \\
+\end{array}\right)
+=  \left(\begin{array}{ccc}
+1 & 0 & \ldots &0 \\
+0& 1 & \ldots & 0 \\
+\vdots &\vdots & \ddots & \vdots\\
+0 & 0 & \ldots & 1 \\
+\end{array}\right) = \mathbf{I}
+```
+where in the last equality we just used the cardinality condition $L_j(x_i) = \delta_{ij}$. The linear system in Equation (2) therefore has the particularly simple form
+```math
+\mathbf{I} \mathbf{c} = \mathbf{y},
+```
+which we are supposed to solve for the expansion coefficients $\mathbf c$ given the data point $\mathbf y$.
+However, this is trivially solvey by just setting the expansion coefficients *equal* to the data points $\mathbf y$. In other words our interpolating polynomial is just given by
+```math
+\tag{7}
+p_n(x) = \sum_{\textcolor{red}{i=1}}^{n+1} y_i L_i(x).
+```
+We summarise:
 
 !!! note "Proposition 1"
     The $n$-th degree
     polynomial $p_n$ interpolating the data $(x_i, y_i)$ for $i = 1, \ldots, n+1$
     is given by
     ```math
-    \tag{7}
     p_n(x) = \sum_{\textcolor{red}{i=1}}^{n+1} y_i L_i(x)
     ```
-
-> **Proof:**
-> This can be easily verified:
-> - Since every linear combination of an $n$-th degree polynomial is itself
->   an $n$-th degree polynomial, $p_n$ (as a linear combination of the $n$-th
->   degree Lagrange polynomials) is a $n$-th degree polynomial.
-> - Moreover
->   ```math
->   p_n(x_i) = y_1 \underbrace{L_1(x_i)}_{=0} + y_2 \underbrace{L_2(x_i)}_{=0} + \cdots +  y_i \underbrace{L_i(x_i)}_{=1} + \cdots + y_{n+1} \underbrace{L_{n+1}(x_i)}_{=0} = y_i
->   ```
->   which confirms that $p_n$ is the interpolating polynomial.
 """
 
 # ╔═╡ 2b0638bd-2ab1-49ff-921b-a86c4e49c002
@@ -562,7 +584,7 @@ we observe an interesting pattern:
 let
 	fine = range(-1.3, 1.3; length=3000)
 
-	p = plot(yaxis=:log, title=L"Error $|f_\textrm{ratio}(x) - p_n(x)|$ for small degree")
+	p = plot(yaxis=:log, title=L"Error $|f_\textrm{ratio}(x) - p_n(x)|$ for small degree", ylabel=L"|f_\textrm{ratio}(x) - p_n(x)|", xlabel=L"x")
 	for n_degree in (4, 8, 12)
 		samples = range(-1, 1; length=n_degree+1)
 		values_fratio = fratio.(samples)
@@ -570,6 +592,7 @@ let
 		error(x) = abs(poly_fratio(x) - fratio(BigFloat(x)))
 		plot!(p, fine, error.(fine), label="error n = $n_degree", lw=2)
 	end
+	
 	p
 end
 
@@ -582,7 +605,7 @@ For small polynomial degrees, the error decreases homogeneously as we increase $
 let
 	fine = range(-1.1, 1.1; length=3000)
 
-	p = plot(yaxis=:log, title=L"Error $|f_\textrm{ratio}(x) - p_n(x)|$ for large degree")
+	p = plot(yaxis=:log, title=L"Error $|f_\textrm{ratio}(x) - p_n(x)|$ for large degree", ylabel=L"|f_\textrm{ratio}(x) - p_n(x)|", xlabel=L"x")
 	for n_degree in (24, 34, 50)
 		samples = range(-1, 1; length=n_degree+1)
 		values_fratio = fratio.(samples)
@@ -674,6 +697,26 @@ x_k = - \cos\left(\frac{k \pi}{n}\right) \qquad \text{for $k = 0, 1, \ldots n$}.
 Using these to interpolate a degree $n$ polynomial gives a **uniform convergence behaviour** as $n\to \infty$ **for the pathological $f_\text{ratio}$ function:**
 """
 
+# ╔═╡ 3fdf0fa4-4121-4cad-882c-e393773a86e2
+md"""
+- `n_chebyshev = ` $(@bind n_chebyshev Slider(2:1:20; show_value=true, default=4))
+- `show_circle ` $(@bind show_circle CheckBox() )
+"""
+
+# ╔═╡ db9fe942-d9ee-4096-8745-a93325556056
+let
+	t = [-cos(π*k/n_chebyshev) for k = 0:n_chebyshev]
+	if show_circle
+		p = plot(-1:0.01:1, t -> sqrt(1-t^2), lw=3, label="Unit circle", aspect_ratio=1, c=2, xlims=(-1.05, 1.05), ylims=(-0.2, 1.2))
+		vline!(p, t, c=:grey, linestyle=:dash, label="")
+		scatter!(p, t, t -> sqrt(1 - t^2), c=2, label="")
+	else
+		p = plot(; aspect_ratio=1, xlims=(-1.05, 1.05), ylims=(-0.2, 1.2))
+	end
+	title!(p, "Construction of Chebyshev points")
+	scatter!(p, t, zero(t), label="Chebyshev points", c=1)
+end
+
 # ╔═╡ c38b9e48-98bb-4b9c-acc4-7375bbd39ade
 let
 	fine = range(-1.1, 1.1; length=3000)
@@ -707,13 +750,13 @@ Notably Chebyshev nodes enjoy the following convergence result:
     where $p_n$ is the unique polynomial of degree $n$ defined by
     interpolation on $n+1$ **Chebyshev points**.
 
-This is an example of **exponential convergence**: The error of the approximation scheme reduces by a *constant factor* whenever the polynomial degree $n$ is increased by a constant increment. 
+This is an example of what in approximation theory is called **exponential convergence**: The error of the approximation scheme reduces by a *constant factor* whenever the polynomial degree $n$ is increased by a constant increment. Note, that the terminology here is **different from iterative methods**. We will discuss this more in the section [Algebraic and exponential convergence](#Algebraic-and-exponential-convergence) below.
 
-The **graphical characterisation** is similar to the iterative schemes we discussed in the previous chapters: We employ a **semilog plot** (using a linear scale for $n$ and a logarithmic scale for the error), where exponential convergence is characterised by a straight line:
+In summary we find the following convergence behaviour comparin equally spaced and Chebyshev nodes:
 """
 
 # ╔═╡ d4cf71ef-576d-4900-9608-475dbd4d933a
-let
+pconf = let
 	fine = range(-1.0, 1.0; length=3000)
 	degrees = 2:2:50
 	linf_errors_chebyshev = map(degrees) do n_degree
@@ -729,26 +772,8 @@ let
 	
 	plot(degrees, linf_errors_chebyshev; yaxis=:log, lw=2, mark=:x, xlabel=L"Polynomial degree $n$", ylabel=L"\Vert f_{ratio} - p_n \Vert_\infty", label="Chebyshev nodes", title="Convergence of polynomial interpolation", ylims=(-Inf, 10))
 	plot!(degrees, linf_errors_equispaced; lw=2, mark=:x, label="equally spaced nodes", title="Convergence of polynomial interpolation")
+	yticks!(10.0 .^ (-4:1:1))
 end
-
-# ╔═╡ 56685887-7866-446c-acdb-2c20bd11d4cd
-md"""
-When designing approximation schemes, **obtaining exponential convergence**
-is one of the **desired properties**.
-
-!!! info "Observations"
-    - For **exponential convergence**, the error reduces by a constant factor
-    - A straight line is obtained when looking at the error norm on a `log`-scale
-	  versus an appropriate accuracy parameter (such as the polynomial degree $n$, the spacing of the interpolating notes etc.)
-
-!!! danger "Potential confusion: Convergence terminology"
-    When discussing convergences rates of iterative numerical algorithms and
-    the accuracy of numerical approximation schemes (interpolation, differentiation, integration, discretisation) unfortunately a different terminology is employed. In the following let $α > 0$ and $0 < C < 1$ denote appropriate constants.
-	- **Iterative schemes:** Linear convergence
-	  * If the error scales as $α C^{n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to [Root finding and fixed-point problems](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.html)).
-    - **Approximation schemes:** Exponential convergence
-	  * If the error scales as $α C^{n}$ where $n$ is some accuracy parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
-"""
 
 # ╔═╡ ffccc21a-b76e-4b66-acf8-cb6f5b1e69d5
 md"""
@@ -1112,179 +1137,9 @@ Unlike the case of polynomial interpolation, we observe a nice convergence
 as we increase `n_pwlinear`. Let's analyse this in more detail in the next section.
 """
 
-# ╔═╡ 541d1ae7-27e4-4371-9fc8-bee944766c3a
-md"""### Error analysis
-
-For making a statement about the error analysis of the
-piecewise linear interpolation
-we restrict ourself to the case of *equidistant* nodes.
-That is, we assume a partitioning of the interval $[a, b]$
-with $a = x_1 < x_2 < \cdots < x_{n+x} = b$
-and equal nodal distance $h = x_{i+1} - x_i$.
-
-In this setting we obtain the following result (proof in the details below)
-
-!!! info "Theorem  4"
-    Let $f : [a, b] \to \mathbb{R}$ be a twice continuously differentiable
-    function and $a = x_1 < x_2 < \cdots < x_{n+1} = b$
-    with equal nodal distance $h = (b - a) / n$.
-    The piecewise linear polynomial interpolating the data
-    $(x_i, f(x_i))$ satisfies the error estimate
-    ```math
-    \tag{13}
-    \|f - p_{1,h}\|_\infty \leq α h^2 \| f'' \|_\infty
-    ```
-    with $α = 1/8$.
-"""
-
-# ╔═╡ f7b5741b-3e0a-48bd-9394-fe22ed522f84
-Foldable("Proof of Theorem 4",
-md"""
-In the setting of equidistant nodes the error analysis is a
-consequence of Theorem 2, equation (8) (see content of the "Details" foldable of the section [Interpolation error and Runge's phaenomenon](#Interpolation-error-and-Runge's-phaenomenon)).
-
-Indeed, for every interval $[x_i, x_{i+1}]$
-we are constructing a linear interpolation
-between the points $(x_i, y_i)$ and $(x_{i+1}, y_{i+1})$.
-In Theorem 2 we can thus set $n=1$ and $b-a = x_{i+1} - x_i = h$
-and obtain
-```math
-\max_{x \in [x_{i}, x_{i+1}]}
-\left| f(x) - p_{1,h}(x) \right| \leq \frac{h^2}{8} \max_{x \in [x_{i}, x_{i+1}]} |f''(x)|
-```
-therefore
-```math
-\begin{aligned}
-\|f - p_{1,h}\|_\infty
-&= \max_{x\in [a,b]} |f(x) - p_{1,h}(x)| \\
-&= \max_{i=1,\ldots,n} \max_{x\in[x_{i},x_{i+1}]} |f(x) - p_{1,h}(x)| \\
-&\leq \max_{i=1,\ldots,n} \frac{h^2}{8} \max_{x \in [x_{i}, x_{i+1}]} |f''(x)| \\
-&= \frac{h^2}{8} \| f'' \|_\infty
-\end{aligned}.
-```
-""")
-
-# ╔═╡ 818bc609-e113-4b80-be9e-ea6a7016df83
-md"""
-Note, that this theorem is only true if the second derivative of $f$
-is continuous.
-The key result of this theorem is that the interpolation error
-goes as $O(h^2)$ as $h\to 0$ (or as $n \to \infty$).
-"""
-
-# ╔═╡ c428b8ee-5b00-4e71-a09b-a86b3a751131
-md"""
-### Algebraic and exponential convergence
-
-Piecewise linear interpolation is an example of **quadratic convergence** since the interpolation error goes as $O(h^2)$ as $h\to 0$. We define:
-"""
-
-# ╔═╡ a30c9fe0-1467-4ba9-86b3-3ea044798851
-md"""
-!!! info "Definition: Algebraic convergence"
-    If an approximation has an error with asymptotic
-    behaviour $O(h^m)$ as $h\to0$ with $m$ integer
-    and $h$ being a discretisation parameter
-    (e.g. grid spacing, nodal distance, etc.),
-	we say the approximation has **algebraic convergence**.
-    If $m$ is the largest such integer
-    (i.e. the error is *not* $O(h^{m+1})$)
-    then $m$ is the order of accuracy.
-
-    Moreover we often refer to the case $m=1$ as **linear convergence**,
-    $m=2$ as **quadratic convergence** and so on.
-
-!!! danger "Potential confusion: Convergence terminology"
-    Note again the difference in convergence terminology between **iterative methods** and **approximation schemes**. What is called algebraic convergence for approximation schemes would be sub-linear convergence for iterative schemes.
-"""
-
-# ╔═╡ 7e317807-d3ee-4197-91fb-9fc03f7297e8
-md"""
-Let us finally illustrate the quadratic convergence of piecewise polynomial
-interpolation graphically. Since the error $\|f - p_{1,h}\|_\infty \sim α h^2$ as $h\to0$, taking logarithms on both sides we obtain
-```math
-\log \left(\|f - p_{1,h}\|_\infty\right) \sim \log(α) + 2 \log(h).
-```
-Therefore the logarithm of the error is a *linear function*
-in the logarithm of the discretisation parameter.
-Moreover the **slope** gives us the convergence order,
-here $m = 2$.
-Note, that to obtain this behaviour any logarithm would suffice.
-We choose a $\log_{10}$-$\log_{10}$ plot as this is most easily realised in `Plots.jl`
-and indeed exhibits a slope of $2$, meaning quadratic convergence (note that the $x$-axis is reversed in the plot.)
-"""
-
-# ╔═╡ eb96f944-74ac-4cc0-9322-825df83f34f2
-let
-	fine = range(-1, 1, length=1000)  # Very fine grid
-	
-	n = 5:5:50   # Number of nodes
-	maxerror = Float64[]  # Empty array for Float64 numbers
-	for (i, n_nodes) in enumerate(n)
-		nodes = range(-1, 1; length=n_nodes)
-		p₁ₕ = pwlinear(nodes, fratio.(nodes))
-
-		push!(maxerror, maximum(p₁ₕ.(fine) - fratio.(fine)))
-	end
-
-	h = 2 ./ n   # Discretisation parameter  == [2/element for element in n]
-	p = plot(h, maxerror; label="error", title="Convergence piecewise linear",
-	         xlabel=L"h", xflip=true, xscale=:log10, ylabel=L"|| f-p_{1,h} ||_\infty",
-	         yscale=:log10, mark=:o, legend=:topright)
-
-	# Generate guiding slope
-	order2 = (h ./ h[1]) .^ 2
-	plot!(p, h, order2, label=L"O(h^2)", ls=:dash)
-
-	yticks!(p, 10.0 .^ (-2.5:0.5:0))
-	xticks!(p, 10.0 .^ (-0.5:-0.25:-2))
-	
-	p
-end
-
-# ╔═╡ b922d2ea-b0f5-4ba9-bf7a-87a07e35949b
-md"""
-!!! info "Convergence with respect to n or h"
-	When discussing the convergence of a numerical method or an approximation
-	scheme one typically finds two formulations of limits in the literature.
-	- **Convergence as $n \to \infty$:** In this case $n$ is typically the **number of steps**, the **number of samples** or the **size of the approximation space**.
-	  For our **case of building an interpolating function $p$** to a ground-truth
-	  function $f$ the number $n$ is the number of data points and we study how
-	  $p \to f$ as $n \to \infty$.
-	- **Convergence as $h \to 0$:** In this case $h$ is typically the **size of a step**, the **distance between samples** or the **size of a small displacement**.
-	  For our **case of building an interpolating function $p$** the value $h$ is the spacing between nodes, so $h = \frac{b-a}{n}$ and we study how $p\to f$ as $h \to 0$.
-
-	The two formulations are often used interchangably when discussing convergence and the general idea is that $n$ is (up to constants) the inverse of $h$ and vice versa, so $n = O(1/h)$ or $h = O(1/n)$.
-"""
-
-# ╔═╡ 9d175a21-71e0-4df8-bbd5-f4eedbeb1384
-md"""
-To complete the definition of convergence classes,
-let us return to the case of Chebyshev polynomial interpolation.
-We already mentioned below Theorem 3,
-that this method exhibits exponential convergence.
-While for this setting the nodal points are not equally
-spread, the definition of the nodal points
-($x_k = - \cos\left(\frac{k \pi}{n}\right)$
-for $k = 0, 1, \ldots n$)
-allows to identify a discretisation parameter $h \sim 1/n$,
-which scales the distance between the nodes.
-We obtain the definition:
-
-!!! info "Definition: Exponential convergence"
-	If an approximation has an error scaling as $O(c^{-α h})$
-    with $c>0$ and $α > 0$ two constants and $h$ a discretisation parameter,
-    we say the approximation has **exponential convergence**.
-
-To **determine the convergence behaviour graphically** we thus need to look at
-- a log-log plot ($\log(y)$ versus $\log(x)$) if we suspect *algebraic convergence*.
-  In this case the convergence will be a straight line with slope $m$.
-- a log-linear plot ($\log(y)$ versus $x$) if we suspect *exponential convergence*.
-  Again a straight line with slope $-α$ will result.
-"""
-
 # ╔═╡ 3eaddcc1-bddb-45a5-9e0d-0961dba5583c
 md"""### Optional: Stability analysis
+*Note for 2027: Remove optional*
 
 We are again interested in the effect of measurement noise
 on the quality of the polynomial interpolation.
@@ -1362,6 +1217,271 @@ let
 
 	plot(p, q; layout=grid(2, 1; heights=[0.75, 0.25]))
 end
+
+# ╔═╡ 541d1ae7-27e4-4371-9fc8-bee944766c3a
+md"""### Error analysis
+
+For making a statement about the error analysis of the
+piecewise linear interpolation
+we restrict ourself to the case of *equidistant* nodes.
+That is, we assume a partitioning of the interval $[a, b]$
+with $a = x_1 < x_2 < \cdots < x_{n+x} = b$
+and equal nodal distance $h = x_{i+1} - x_i = \frac{b-a}{n}$.
+
+In this setting we obtain the following result (proof in the details below)
+
+!!! info "Theorem  4"
+    Let $f : [a, b] \to \mathbb{R}$ be a twice continuously differentiable
+    function and $a = x_1 < x_2 < \cdots < x_{n+1} = b$
+    with equal nodal distance $h = (b - a) / n$.
+    The piecewise linear polynomial interpolating the data
+    $(x_i, f(x_i))$ satisfies the error estimate
+    ```math
+    \tag{13}
+    \|f - p_{1,h}\|_\infty \leq α h^2 \| f'' \|_\infty
+    ```
+    with $α = 1/8$.
+"""
+
+# ╔═╡ f7b5741b-3e0a-48bd-9394-fe22ed522f84
+Foldable("Proof of Theorem 4",
+md"""
+In the setting of equidistant nodes the error analysis is a
+consequence of Theorem 2, equation (8) (see content of the "Details" foldable of the section [Interpolation error and Runge's phaenomenon](#Interpolation-error-and-Runge's-phaenomenon)).
+
+Indeed, for every interval $[x_i, x_{i+1}]$
+we are constructing a linear interpolation
+between the points $(x_i, y_i)$ and $(x_{i+1}, y_{i+1})$.
+In Theorem 2 we can thus set $n=1$ and $b-a = x_{i+1} - x_i = h$
+and obtain
+```math
+\max_{x \in [x_{i}, x_{i+1}]}
+\left| f(x) - p_{1,h}(x) \right| \leq \frac{h^2}{8} \max_{x \in [x_{i}, x_{i+1}]} |f''(x)|
+```
+therefore
+```math
+\begin{aligned}
+\|f - p_{1,h}\|_\infty
+&= \max_{x\in [a,b]} |f(x) - p_{1,h}(x)| \\
+&= \max_{i=1,\ldots,n} \max_{x\in[x_{i},x_{i+1}]} |f(x) - p_{1,h}(x)| \\
+&\leq \max_{i=1,\ldots,n} \frac{h^2}{8} \max_{x \in [x_{i}, x_{i+1}]} |f''(x)| \\
+&= \frac{h^2}{8} \| f'' \|_\infty
+\end{aligned}.
+```
+""")
+
+# ╔═╡ 818bc609-e113-4b80-be9e-ea6a7016df83
+md"""
+Note, that this theorem is only true if the second derivative of $f$
+is continuous.
+The key result of this theorem is that the interpolation error
+goes as $O(h^2)$ as $h\to 0$ (or as $n \to \infty$).
+"""
+
+# ╔═╡ 6216f789-a500-4206-a6a8-e6e6fe11218a
+md"""We again consider a graphical understanding of convergence. We first generate some data and then plot the usual `log(error)` versus `n` plot.
+"""
+
+# ╔═╡ 86b917fd-334d-48ec-b299-a0a65f1d5c56
+begin
+	fine = range(-1, 1, length=1000)  # Very fine grid
+	l_n = 5:5:50   # Number of nodes
+	l_maxerror = Float64[]  # Empty array for Float64 numbers
+	for (i, n_nodes) in enumerate(l_n)
+		nodes = range(-1, 1; length=n_nodes)
+		p₁ₕ = pwlinear(nodes, fratio.(nodes))
+		push!(l_maxerror, maximum(p₁ₕ.(fine) - fratio.(fine)))
+	end
+end
+
+# ╔═╡ fbf31ecd-bdf8-4b4b-82f5-d5a95fc2bbbf
+let
+	p = plot(l_n, l_maxerror; title="Convergence piecewise linear", xlabel=L"n", yscale=:log10, mark=:o, legend=:topright, label="", lw=2, ylabel=L"\Vert f - p_{1,h}\Vert_\infty")
+	yticks!(p, 10.0 .^ (-2.5:0.5:0))
+	p
+end
+
+# ╔═╡ 211eeec7-f664-42cf-99f8-ef275b9dfb9c
+md"""
+That's not really a straight line and as such not so easy to interpret.
+
+But looking at Theorem 4 Equation (13) and taking the logarithm on both sides,
+we obtain
+```math
+\log \left(\|f - p_{1,h}\|_\infty\right) \sim \log(α) + 2 \log(h).
+```
+Therefore the logarithm of the error is a *linear function*
+in the logarithm of the discretisation parameter.
+Moreover the **slope** should give us the convergence order,
+here $m = 2$, i.e. quadratic convergence
+(see [detailed discussion below](#Algebraic-and-exponential-convergence)).
+	
+Note, that to obtain this behaviour any logarithm would suffice.
+We choose a $\log_{10}$-$\log_{10}$ plot as this is most easily realised in `Plots.jl`:
+"""
+
+# ╔═╡ 731ad6e9-1af9-4914-8f93-a263abe47404
+let
+	a = -1
+	b =  1
+	# Compute h in (13) from n (stored in l_n)
+	h = (b-a) ./ l_n
+	
+	p = plot(h, l_maxerror; title="Convergence piecewise linear", xlabel=L"h = (b-a)/n", yscale=:log10, mark=:o, legend=:topright, label="", lw=2, ylabel=L"\Vert f - p_{1,h}\Vert_\infty", xaxis=:log)  # Notice the xaxis=:log
+	yticks!(p, 10.0 .^ (-2.5:0.5:0))
+	xticks!(p, 10.0 .^ (-0.5:-0.25:-2))
+	p
+end
+
+# ╔═╡ 1bd4c17d-7760-4322-961a-dde4267025b9
+md"""
+This indeed exhibits a straight line slope, but the looks of it is a little strange as the error starts small and increases. This is of course a result of the fact that we are now plotting the error against $h$ and small nodal distance $h$ means many nodal points, thus a fine interpolation, thus small error.
+
+To make such plots more intuitive one often adds an additional `xflip=true`, which flips the $x$-axis (i.e. it now runs from *large to small*). This leads to the final convergence plot below, where we also added a guide line with slope $2$.
+"""
+
+# ╔═╡ eb96f944-74ac-4cc0-9322-825df83f34f2
+plin = let
+	fine = range(-1, 1, length=1000)  # Very fine grid
+	
+	n = 5:5:50   # Number of nodes
+	maxerror = Float64[]  # Empty array for Float64 numbers
+	for (i, n_nodes) in enumerate(n)
+		nodes = range(-1, 1; length=n_nodes)
+		p₁ₕ = pwlinear(nodes, fratio.(nodes))
+
+		push!(maxerror, maximum(p₁ₕ.(fine) - fratio.(fine)))
+	end
+
+	h = 2 ./ n
+	p = plot(h, maxerror; label="error", title="Convergence of piecewise linear interpolation",
+	         xlabel=L"h = (b-a)/n", xflip=true, xscale=:log10, ylabel=L"|| f-p_{1,h} ||_\infty",
+	         yscale=:log10, mark=:o, legend=:topright, lw=3)
+
+	# Generate guiding slope
+	order2 = (h ./ h[1]) .^ 2
+	plot!(p, h, order2, label=L"O(h^2)", ls=:dash, lw=2)
+
+	yticks!(p, 10.0 .^ (-2.5:0.5:0))
+	xticks!(p, 10.0 .^ (-0.5:-0.25:-2))
+	
+	p
+end
+
+# ╔═╡ c428b8ee-5b00-4e71-a09b-a86b3a751131
+md"""
+### Algebraic and exponential convergence
+
+Before we discuss the different classes of convergence of approximation schemes, we first clarify:
+"""
+
+# ╔═╡ b922d2ea-b0f5-4ba9-bf7a-87a07e35949b
+md"""
+!!! info "Convergence with respect to n or h"
+	When discussing the convergence of a numerical method or an approximation
+	scheme one typically finds two formulations of limits in the literature.
+	- **Convergence as $n \to \infty$:** In this case $n$ is typically the **number of steps**, the **number of samples** or the **size of the approximation space**.
+	  For our **case of building an interpolating function $p$** to a ground-truth
+	  function $f$ the number $n$ is the number of data points and we study how
+	  $p \to f$ as $n \to \infty$.
+	- **Convergence as $h \to 0$:** In this case $h$ is typically the **size of a step**, the **distance between samples** or the **size of a small displacement**.
+	  For our **case of building an interpolating function $p$** the value $h$ is the spacing between nodes, e.g. $h = \frac{b-a}{n}$ for equispaced nodes. We would then study the convergence $p\to f$ as $h \to 0$.
+
+	The two formulations are often used interchangably when discussing convergence and the general idea is that $n$ is (up to constants) the inverse of $h$ and vice versa, so $n = O(1/h)$ or $h = O(1/n)$.
+"""
+
+# ╔═╡ 2fd321c7-7d26-4843-8cd9-a54a04d98ec1
+md"""
+In the example of piecewise polynomial interpolation we can either study convergence as we increase the number of data points $n$ or we can study convergence as we make the nodal spacing $h$ smaller.
+
+In fact piecewise linear interpolation is an example of **quadratic convergence** since the interpolation error goes as $O(h^2)$ as $h\to 0$. We define:
+"""
+
+# ╔═╡ bd9d55a7-3e1c-4b8b-b169-6503b46ab308
+md"""
+!!! info "Definition: Algebraic convergence"
+    If an approximation has an error with asymptotic
+    behaviour $O(h^m)$ as $h\to0$ with $m$ integer
+    and $h$ being a discretisation parameter
+    (e.g. grid spacing, nodal distance, etc.),
+	we say the approximation has **algebraic convergence**.
+    If $m$ is the largest such integer
+    (i.e. the error is *not* $O(h^{m+1})$)
+    then $m$ is the order of accuracy.
+
+    Moreover we often refer to the case $m=1$ as **linear convergence**,
+    $m=2$ as **quadratic convergence** and so on.
+
+In contrast for Chebyshev polynomial interpolation.
+We already mentioned below Theorem 3,
+that this method exhibits exponential convergence.
+For this the definition is:
+
+!!! info "Definition: Exponential convergence"
+	If an approximation has an error scaling as $O(e^{-c/h})$
+    with $c > 0$ a constants and $h$ a discretisation parameter,
+    we say the approximation has **exponential convergence**.
+
+Notice that while for Chebyshev points the nodal points are not equally spaced, the definition of the nodal points
+($x_k = - \cos\left(\frac{k \pi}{n}\right)$ for $k = 0, 1, \ldots n$)
+still allows to identify a discretisation parameter $h \sim 1/n$,
+which scales the distance between the nodes.
+Reformulating Theorem 3 in this way we therefore obtain
+```math
+\| f - p_n \|_\infty \leq \tilde{α} \, C^{1/h} = \tilde{α} \, e^{\log(C)/h}
+= \tilde{α} \, e^{-\tilde{c}/h}
+\qquad \text{with $\tilde{c} = -\log(C)$}
+```
+where $0<C<1$ implies $\tilde{c} = -\log(C) > 0$.
+"""
+
+# ╔═╡ 3e1f20ee-4447-475e-9b26-4b2594dcd92c
+md"""
+!!! danger "Potential confusion: Convergence terminology"
+	When discussing convergences rates of **iterative numerical algorithms** and
+	the **accuracy of numerical approximation schemes** (interpolation, differentiation, integration, discretisation) unfortunately a **different terminology is employed**. In the following let $α > 0$, $\tilde{α} > 0$, $c > 0$ and $0 < C < 1$ denote appropriate constants.
+	- **Iterative schemes:** Linear convergence
+	  * If the error scales as $α C^{n}$ where $n$ is the iteration number, we say the scheme has **linear convergence**. (Compare to [Root finding and fixed-point problems](https://teaching.matmat.org/numerical-analysis/04_Nonlinear_equations.html)).
+	- **Approximation schemes:** Exponential convergence
+	  * If the error scales as $α C^{n}$ where $n$ is some size parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
+	  * Similarly if the error scales as $\tilde{α} e^{-c/h}$ with some accuracy parameter $h$ (with smaller $h$ giving more accurate results), then we have exponential convergence.
+	- **Approximation schenes:** Linear convergence
+	  * If the error scales as $α (1/n)$ or as $\tilde{α} h$ where $n$ and $h$ as above, then we have **linear convergence**.
+"""
+
+# ╔═╡ 7e317807-d3ee-4197-91fb-9fc03f7297e8
+md"""
+Let us finally discuss how to **illustrate algebraic** or exponential **convergence visually**. We already discussed in the context of piecewise polynomial interpolation that Theorem 4 Equation (13) suggests to plot the logarithm of the error versus the logarithm of $h$, because taking the logs on both sides of Equation (13) leads to 
+```math
+\log \left(\|f - p_{1,h}\|_\infty\right) \sim \log(α) + 2 \log(h),
+```
+such that the log of the error is a *linear function* in $\log(h)$ with the **slope** gives us the convergence order, here $m = 2$.
+This we confirm visually:
+"""
+
+# ╔═╡ ee5b0620-21e6-40dc-8e00-8c07828ea7c8
+plin
+
+# ╔═╡ 4e0b5d58-26b6-4474-b824-3281b2b4a7b8
+md"""
+In contrast for **exponential convergence** we best employ a plot similar to the iterative schemes we discussed in the previous chapters: We employ a **semilog plot** (using a linear scale for $n$ and a logarithmic scale for the error), where exponential convergence is characterised by a straight line:
+"""
+
+# ╔═╡ ba9859e6-198c-46ac-b5d2-ca79b10d7f34
+pconf
+
+# ╔═╡ 71af3819-bc0a-45c0-8a3b-25d6d5f90d7f
+md"""
+When designing approximation schemes, **obtaining exponential convergence**
+is one of the **desired properties**.
+
+!!! info "Observations"
+	To **determine the convergence behaviour graphically** we thus need to look at
+	- a log-log plot ($\log(y)$ versus $\log(x)$) if we suspect *algebraic convergence*.
+	  In this case the convergence will be a straight line with slope $m$.
+	- a log-linear plot ($\log(y)$ versus $x$) if we suspect *exponential convergence*.
+	  Again a straight line with slope $-α$ will result.
+"""
 
 # ╔═╡ cf296fbf-c900-485c-8cfe-672f02ad3b69
 md"""
@@ -3666,6 +3786,7 @@ version = "1.13.0+0"
 # ╟─321c3303-824b-459f-b30c-f56bcb6d8a56
 # ╟─25258c1f-2685-4df8-a292-8708e013284a
 # ╟─6e46dbc2-7cd0-4fd7-a6bb-55355c53d861
+# ╟─7323379d-9bff-46e3-9e87-7432ace5306e
 # ╟─eb43ef87-343e-4a9b-9a0f-3a18364d6b4b
 # ╠═9e933ebe-1805-46fa-9e0a-a64c03a71c5c
 # ╠═f9f4ddec-fd3d-4624-ace4-f316b9cfa1e4
@@ -3705,15 +3826,16 @@ version = "1.13.0+0"
 # ╟─890b203c-d380-45ae-bb08-739dd0f4a1da
 # ╟─08fe0c39-f73d-46d0-b435-17abb3f60583
 # ╟─25b82572-b27d-4f0b-9be9-323cd4e3ce7a
+# ╟─3fdf0fa4-4121-4cad-882c-e393773a86e2
+# ╟─db9fe942-d9ee-4096-8745-a93325556056
 # ╟─c38b9e48-98bb-4b9c-acc4-7375bbd39ade
 # ╟─479a234e-1ce6-456d-903a-048bbb3de65a
-# ╟─d4cf71ef-576d-4900-9608-475dbd4d933a
-# ╟─56685887-7866-446c-acdb-2c20bd11d4cd
+# ╠═d4cf71ef-576d-4900-9608-475dbd4d933a
 # ╟─ffccc21a-b76e-4b66-acf8-cb6f5b1e69d5
 # ╟─ad41f714-0103-4f68-942d-aa5f78f7812b
 # ╟─7f855423-72ac-4e6f-92bc-73c12e5007eb
 # ╟─f7e5c82e-6a23-485d-8c14-b1f97624adac
-# ╟─d9e318e7-5ffc-4433-9b0c-f393948c10ef
+# ╠═d9e318e7-5ffc-4433-9b0c-f393948c10ef
 # ╟─7e9cebef-bcbc-4e17-a4fb-2eb2ebdeb23f
 # ╟─5e19f1a7-985e-4fb7-87c4-5113b5615521
 # ╟─d5de3b11-7781-4100-8a63-d26426685bbc
@@ -3730,18 +3852,29 @@ version = "1.13.0+0"
 # ╠═f26fb942-a891-4555-8c1a-9ecc1ffeca85
 # ╠═f6055e59-1ddd-4148-8a85-95f4501e3f9f
 # ╟─193131ad-e016-4f2a-b1cb-a544bc497c95
-# ╟─541d1ae7-27e4-4371-9fc8-bee944766c3a
-# ╟─f7b5741b-3e0a-48bd-9394-fe22ed522f84
-# ╟─818bc609-e113-4b80-be9e-ea6a7016df83
-# ╟─c428b8ee-5b00-4e71-a09b-a86b3a751131
-# ╟─a30c9fe0-1467-4ba9-86b3-3ea044798851
-# ╟─7e317807-d3ee-4197-91fb-9fc03f7297e8
-# ╠═eb96f944-74ac-4cc0-9322-825df83f34f2
-# ╟─b922d2ea-b0f5-4ba9-bf7a-87a07e35949b
-# ╟─9d175a21-71e0-4df8-bbd5-f4eedbeb1384
 # ╟─3eaddcc1-bddb-45a5-9e0d-0961dba5583c
 # ╟─2096258a-efd9-4de1-8f56-c02295407c0b
 # ╟─e2b32c49-9c8e-4d32-8bf6-a0517b7caa8a
+# ╟─541d1ae7-27e4-4371-9fc8-bee944766c3a
+# ╟─f7b5741b-3e0a-48bd-9394-fe22ed522f84
+# ╟─818bc609-e113-4b80-be9e-ea6a7016df83
+# ╟─6216f789-a500-4206-a6a8-e6e6fe11218a
+# ╠═86b917fd-334d-48ec-b299-a0a65f1d5c56
+# ╠═fbf31ecd-bdf8-4b4b-82f5-d5a95fc2bbbf
+# ╟─211eeec7-f664-42cf-99f8-ef275b9dfb9c
+# ╠═731ad6e9-1af9-4914-8f93-a263abe47404
+# ╟─1bd4c17d-7760-4322-961a-dde4267025b9
+# ╠═eb96f944-74ac-4cc0-9322-825df83f34f2
+# ╟─c428b8ee-5b00-4e71-a09b-a86b3a751131
+# ╟─b922d2ea-b0f5-4ba9-bf7a-87a07e35949b
+# ╟─2fd321c7-7d26-4843-8cd9-a54a04d98ec1
+# ╟─bd9d55a7-3e1c-4b8b-b169-6503b46ab308
+# ╟─3e1f20ee-4447-475e-9b26-4b2594dcd92c
+# ╟─7e317807-d3ee-4197-91fb-9fc03f7297e8
+# ╟─ee5b0620-21e6-40dc-8e00-8c07828ea7c8
+# ╟─4e0b5d58-26b6-4474-b824-3281b2b4a7b8
+# ╟─ba9859e6-198c-46ac-b5d2-ca79b10d7f34
+# ╟─71af3819-bc0a-45c0-8a3b-25d6d5f90d7f
 # ╟─cf296fbf-c900-485c-8cfe-672f02ad3b69
 # ╟─22c33635-dd92-4a8d-9f99-74b222a44f2e
 # ╟─923ed582-e187-4f58-b945-93973bdd358c
