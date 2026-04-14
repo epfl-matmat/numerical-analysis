@@ -1445,8 +1445,8 @@ md"""
 	- **Approximation schemes:** Exponential convergence
 	  * If the error scales as $α C^{n}$ where $n$ is some size parameter (with larger $n$ giving more accurate results), then we say the scheme has **exponential convergence**.
 	  * Similarly if the error scales as $\tilde{α} e^{-c/h}$ with some accuracy parameter $h$ (with smaller $h$ giving more accurate results), then we have exponential convergence.
-	- **Approximation schenes:** Linear convergence
-	  * If the error scales as $α (1/n)$ or as $\tilde{α} h$ where $n$ and $h$ as above, then we have **linear convergence**.
+	- **Approximation schemes:** Linear convergence
+	  * If the error scales as $\frac{α}{n}$ or as $\tilde{α} h$ where $n$ and $h$ as in the previous paragraph, then we have **linear convergence**.
 """
 
 # ╔═╡ 7e317807-d3ee-4197-91fb-9fc03f7297e8
@@ -1759,7 +1759,7 @@ taken from a model space $\mathbb{P}$,
 which best represents the data.
 
 For example, in **least-squares** **linear regression** one seeks
-the straight line $q(x) = ax + b$, which yields the lowest squared error
+the straight line $p_1^\text{LS}(x) = ax + b$, which yields the lowest squared error
 ```math
 \tag{15}
 e_\text{LS} = \sum_{i=1}^{n} |p_1^\text{LS}(x_i) - y_i|^2.
@@ -1961,7 +1961,7 @@ Solving (17) can in fact be achieved by a concise explicit expression:
 > which implies that $\textbf{x}$ is the minimiser of $\|\textbf{A}\textbf{x} - \textbf{b}\|$.
 """
 
-# ╔═╡ d846d3f2-8cfc-4fc5-a22b-d55762f88f45
+# ╔═╡ 4bcb2f1b-fcf6-418c-b340-4f533db5b0b9
 md"""
 Due to the overall importance of least-squares problems
 the solution equation $\textbf{A}^T (\textbf{A}\textbf{x} - \textbf{b}) = \textbf{0}$
@@ -1969,7 +1969,7 @@ is usually referred to as the normal equation.
 
 !!! note "Definition: Normal equations"
     Given $\mathbf{A} \in \mathbb{R}^{k\times l}$ and $\mathbf{b} \in \mathbb{R}^k$,
-    which define a least-squares problem $\text{argmin}_{\textbf{x}\in \mathbb{R}^l} \|\mathbf{b} - \mathbf{A} \mathbf{x}\|$, the solution equation
+    which define a least-squares problem $\text{argmin}_{\textbf{x}\in \mathbb{R}^l} \|\mathbf{b} - \mathbf{A} \mathbf{x}\|^2$, the solution equation
     ```math
     \textbf{A}^T (\textbf{A}\textbf{x} - \textbf{b}) = \textbf{0}
     ```
@@ -1981,8 +1981,38 @@ is usually referred to as the normal equation.
     are called the **normal equations**.
 
 For a geometric interpretation of the normal equations, see [chapter 3.2](https://tobydriscoll.net/fnc-julia/leastsq/normaleqns.html) of Driscoll, Brown: *Fundamentals of Numerical Computation*.
+"""
 
+# ╔═╡ e6e61e68-d8fc-4b77-bb37-0d4499963345
+md"""
 Based on this strategy we can now perform polynomial regression.
+Recall that in polynomial regression
+finding a polynomial of order $m$
+regressing through $n$ data points leads to the least-squares problem
+```math
+\min_{\mathbf{c} \in \mathbb{R}^{m+1}}
+\|\mathbf{y} - \mathbf{V} \mathbf{c} \|_2^2
+```
+where the Vandermonde matrix is of size $\mathbf{V} \in \mathbb{R}^{n\times m+1}$
+and $\mathbf y \in \mathbb{R}^n$.
+Employing the normal equations (19) we thus need to solve
+```math
+\mathbf V^T \mathbf V \mathbf c = \mathbf V^T \mathbf{y}
+```
+for $\mathbf{c}$. Since $\mathbf V^T \mathbf V \in \mathbb{R}^{m+1 \times m+1}$ is a square matrix we can use LU factorisation for this task. In code we thus perform:
+```julia
+N = V'*V   # Compute Vᵀ * V ... note that the ' performs the transpose in Julia
+b = V'*y   # Compute Vᵀ * y
+c = N \ b  # Perform LU factorisation and solve linear system
+```
+or in one line:
+```julia
+c = (V'*V) \ (V'*y)
+```
+"""
+
+# ╔═╡ 5f335333-28fa-4cdf-b4ef-f1ea02f81f41
+md"""
 We again employ the word temperature data between 1950 and 2000.
 You can change the polynomial degree using the slider:
 
@@ -2000,8 +2030,8 @@ let
 		V[:, k] = V[:, k-1] .* x
 	end
 
-	# Solve normal equations
-	c = (V'V) \ (V' * y)
+	# Solve normal equations; see discussion above for connection to equation (19)
+	c = (V' * V) \ (V' * y)
 
 	# Construct polynomial
 	polynomial(x) = evalpoly(x, c)
@@ -2039,7 +2069,7 @@ md"""
 md"""
 - Number of samples `n = ` $(@bind n Slider(10:5:50; show_value=true, default=20))
 - Polynomial degree `m = ` $(@bind m Slider(1:20; show_value=true, default=2))
-- Noise amplitude `ε = ` $(@bind ε Slider(10 .^ (-3:0.25:0); show_value=true, default=0.01))
+- Noise amplitude `ε = ` $(@bind ε Slider(append!([0.0], 10 .^ (-3:0.25:0)); show_value=true, default=0.01))
 """
 
 # ╔═╡ 7829afd0-2693-40dc-b2d5-c8da72e96454
@@ -2050,7 +2080,7 @@ let
 	noise = [ε * (-1 + 2rand()) for _ in 1:n]
 	data  = fsin.(nodes) + noise
 
-	pₘᴸˢ = Polynomials.fit(nodes, data, m+1)
+	pₘᴸˢ = Polynomials.fit(nodes, data, m)
 
 	p = plot()
 	plot!(p, fine, fsin.(fine); title="Polynomial regression",
@@ -2283,7 +2313,7 @@ into the normal equations (19) and simplify using Theorem 7 point 1.:
 We now assume the normal equations $\mathbf{A}^T \mathbf{A} \textbf{x} = \textbf{A}^T \textbf{b}$ to be well-posed,
 i.e. that the matrix $\mathbf{A}^T \mathbf{A}$ is non-singular. As a result
 ```math
-\det(\mathbf{R}^T)^2 = \det(\mathbf{R}^T\mathbf{R}) = \det(\mathbf{A}^T\mathbf{A}) \neq 0
+\det(\mathbf{R}^T)^2 = \det(\mathbf{R}^T) \, \det(\mathbf{R}) = \det(\mathbf{R}^T\mathbf{R}) = \det(\mathbf{A}^T\mathbf{A}) \neq 0
 ```
 implying that $\det(\mathbf{R}^T) \neq 0$ and thus that $\mathbf{R}^T$ is invertible.
 Multiplying from the left with $(\mathbf{R}^T)^{-1}$ we thus obtain:
@@ -2424,9 +2454,9 @@ The Gram-Schmidt algorithm proceeds as follows:
     ```math
     \mathbf{v} = \mathbf{a}_2 - \underbrace{(\mathbf{q}_1 \cdot \mathbf{a}_2)}_{= R_{12} = 2} \ \mathbf{q}_1 = \begin{pmatrix} 0 \\ 3 \\ 4 \end{pmatrix}
     ``` 
-  * **Step 2:** Normalise and save the result:
+  * **Step 2:** Normalise resulting $\mathbf v$ and save the result:
     ```math
-    \mathbf{q}_2 = \mathbf{a}_2 / R_{22} = \begin{pmatrix}0\\0.6\\0.8\end{pmatrix}\qquad \text{where} \quad R_{22} = \|\mathbf{v}\| = 5
+    \mathbf{q}_2 = \mathbf{v} / R_{22} = \begin{pmatrix}0\\0.6\\0.8\end{pmatrix}\qquad \text{where} \quad R_{22} = \|\mathbf{v}\| = 5
     ```
 - **After iteration 2**:
   ```math
@@ -2441,9 +2471,9 @@ The Gram-Schmidt algorithm proceeds as follows:
     ```math
     \mathbf{v} = \mathbf{a}_3 - \underbrace{(\mathbf{q}_1 \cdot \mathbf{a}_3)}_{= R_{13} = 3} \ \mathbf{q}_1 - \underbrace{(\mathbf{q}_2 \cdot \mathbf{a}_3)}_{= R_{23} = 0} \ \mathbf{q}_2 = \begin{pmatrix} 0 \\ -4 \\ 3 \end{pmatrix}
     ``` 
-  * **Step 2:** Normalise and save the result:
+  * **Step 2:** Normalise resulting $\mathbf v$ and save the result:
     ```math
-    \mathbf{q}_3 = \mathbf{a}_3 / R_{33} = \begin{pmatrix}0\\-0.8\\0.6\end{pmatrix}\qquad \text{where} \quad R_{33} = \|\mathbf{v}\| = 5
+    \mathbf{q}_3 = \mathbf{v} / R_{33} = \begin{pmatrix}0\\-0.8\\0.6\end{pmatrix}\qquad \text{where} \quad R_{33} = \|\mathbf{v}\| = 5
     ```
 - **Final answer:**
   ```math
@@ -2505,6 +2535,26 @@ md"""
 In practice this algorithm is often **numerically not sufficiently stable**,
 which is why Julia's `qr` by default employs a different procedure using so-called Householder reflectors.
 For more details see [chapter 3.4](https://tobydriscoll.net/fnc-julia/leastsq/house.html) of Driscoll, Brown: *Fundamentals of Numerical Computation.*
+"""
+
+# ╔═╡ 886a1e14-d827-4c5d-a499-94fdff066984
+md"""
+## Key differences between LU and QR decompositions
+
+Having discussed both LU and QR as matrix decompositions for solving linear systems, let us provide a table summarisin their key differences:
+
+|                    | LU decomposition | QR decomposition   |
+| ------------------ | ---------------- | ------------------ |
+| Main use case      | Solving square linear systems $\mathbf{A} \mathbf{x} = \mathbf{b}$  | Solving least-squares problems $\min_{\mathbf x} \| \mathbf b - \mathbf A \mathbf x \|^2$    |
+| Requirements       | $\mathbf{A}$ needs to be **square** and **invertible** | Works for **any rectangular** $k \times l$ matrix, provided  $\mathbf{A}^T \mathbf{A}$ is invertible |
+| Numerical stability | **LU with pivoting** generally stable, but can fail in rare cases | **Inherently more stable** because it involves orthogonal matrices (which do not amplify rounding errors) [^3] |
+| Computational cost | Faster for square systems; costs about $\frac23 n^3$ flops | Slower for square systems; for which it costs about $\frac43 n^3$ flops (i.e. twice as LU) |
+
+[^3]: Note, that this is true for the stable QR variant implemented in Julia's `qr` function (Householder QR), but actually *not* true for the [Gram-Schmidt QR we discussed above](#Computing-QR-factorisations) --- which is why in practice Gram-Schmidt QR is hardly ever used.
+
+So with these differences pointed out, **which method should you choose**:
+- Use **LU factorisation** when solving a **square linear system** $\mathbf{A} \mathbf{x} = \mathbf{b}$ and **speed is a priority**. For most applications pivoted LU is sufficiently stable.
+- Use **QR factorisation** when solving a **least-squares problem** or if you have a square system, but suspect it to be **very ill-conditioned**.
 """
 
 # ╔═╡ 708e77b4-adbb-4e72-91d4-40ea03fc76f4
@@ -3893,7 +3943,9 @@ version = "1.13.0+0"
 # ╟─2521d29f-64ee-4221-8d92-d83e71068758
 # ╟─20832145-54ba-4503-8099-e49b45f5024f
 # ╟─30899dd5-b307-415d-bb94-efd09e7d0864
-# ╟─d846d3f2-8cfc-4fc5-a22b-d55762f88f45
+# ╟─4bcb2f1b-fcf6-418c-b340-4f533db5b0b9
+# ╟─e6e61e68-d8fc-4b77-bb37-0d4499963345
+# ╟─5f335333-28fa-4cdf-b4ef-f1ea02f81f41
 # ╠═0b8f2bcc-0948-47ed-bd62-4a0ceeee9156
 # ╟─d3fdad97-275d-49d8-a4aa-b1f6438a01b8
 # ╟─14bb1d8e-dd73-4795-9bb9-0213e83020d9
@@ -3942,6 +3994,7 @@ version = "1.13.0+0"
 # ╠═9011a819-13bb-4fa4-b3a9-32aad3ee3362
 # ╠═a479e4e7-e0dc-4d24-9365-627e3301eb0b
 # ╟─adfa4dd1-c85e-47c2-aac5-0e7f8438d51a
+# ╟─886a1e14-d827-4c5d-a499-94fdff066984
 # ╟─708e77b4-adbb-4e72-91d4-40ea03fc76f4
 # ╠═d7aaf219-42cf-42cd-81a7-f1540dcabc78
 # ╟─2240f8bc-5c0b-450a-b56f-2b53ca66bb03
