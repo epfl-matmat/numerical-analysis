@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ dc68915e-d230-11ee-09c8-4fce8a858118
 begin
@@ -32,7 +44,7 @@ Integration is an important operation in engineering and the physical sciences, 
 
 Let's start with an easy analytic case. The integral $\int_0^1 e^x dx$ can be computed rather elegantly by analytical means, since the anti-derivative of $e^x$ is again $e^x$. Therefore
 ```math
-\int_0^1 e^x dx = [e^x]_0^1 = e^1 - 1 \simeq 1.718281828459045.
+\int_0^1 e^x dx = [e^x]_0^1 = e^1 - 1 ≈ 1.718281828459045.
 ```
 """
 
@@ -65,7 +77,7 @@ end
 
 # ╔═╡ bfccad43-b336-4271-83eb-40af1ed36849
 md"""
-What is remarkable when looking at the graphs of these two functions is that they are very similar ... and for one case the area under the curve boils down to simple basic calculus and the other is impenetrable analytically. However, from a numerical standpoint they are basically the same problem.
+What is remarkable when looking at the graphs of these two functions is that they are very similar ... and for one case the area under the curve boils down to simple basic calculus and the other is impenetrable analytically. However, from a numerical standpoint they are basically the same problems.
 """
 
 # ╔═╡ 81c6042e-20a1-4aa7-b7ff-4a369126c22e
@@ -76,45 +88,58 @@ begin
 	plot(p, q, layout=(2, 1))
 end
 
-# ╔═╡ 899f6285-331e-4cc5-8b0a-0e68c67082d2
+# ╔═╡ 526ba7d0-846d-419c-90a7-9659b384353f
 md"""
-## Trapezoidal rule
+## Composite quadrature formulas
 """
 
-# ╔═╡ 86ff3f84-f234-4de1-9d78-54a289c9319e
+# ╔═╡ a24b3609-8d0b-4a33-b546-7c2c49a66ebe
 md"""
-The task of **numerical integration** is to **approximate an integral** $\int_a^b f(x) \, dx$. We want to achieve this by **sampling the function** at $n$ carefully selected points $t_i$, $i=0, \ldots n$, followed by taking linear combinations of the results. We thus work towards approximations of the form
+The task of **numerical integration** is to **approximate an integral** $I = \int_a^b f(x) \, dx$. We want to achieve this by **sampling the function** at $N$ carefully selected points $t_i$, $i=0, \ldots N$, followed by taking linear combinations of the results. We thus work towards approximations of the form
 ```math
-\int_a^b f(x) \, dx ≈ \sum_{i=1}^m α_i f(t_i).
+I = \int_a^b f(x) \, dx ≈ \underbrace{\sum_{i=1}^N α_i f(t_i)}_{=Q_a^b(f)}.
 ```
-In general the $t_i$ can be distributed arbitrarily in the interval $[a, b]$.
-However, for simplicity we will assume **equally spaced nodes** $t_i$
-using the definition
+The expression on the right is usually called a **quadrature formula** $Q_a^b(f)$ while the sampling points $t_i$ are called **quadrature nodes**.
+There are two common strategies to construct such formulas:
+"""
+
+# ╔═╡ 18c04e73-ca49-428d-b9cd-efa3ae697af0
+md"""
+##### Simple quadrature
+Approximate $f$ by a function $\widetilde{f}$ that is easy to integrate, then perform $\int_a^b \widetilde{f}(x) \, dx$. This result is used as the approximation of the integral $I$. Typically, one takes $\widetilde{f}$ to be a polynomial approximation to $f$, since
+- **polynomials can be integrated in closed form** and
+- we know standard procedures to to approximate functions as polynomials, namely **polynomial interpolation**, which we discussed in [the chapter on Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html).
+
+Recall that to construct a $p$-th degree polynomial approximation $\widetilde{f}$ we require $p+1$ samples of the function $f$. Therefore a simple quadrature formulas employing $N$ quadrature nodes effectively works by constructing an $N-1$ polynomial interpolation of $f$ on $[a, b]$.
+"""
+
+# ╔═╡ c63fa1a3-d96e-4a09-a914-85773be9ad0d
+md"""
+##### Composite quadrature
+Here we first subdivide the interval $[a, b]$ into a set of $n$ subintervals $[τ_i, τ_{i+1}]$ with with $a = τ_0 < τ_1 < \cdots < τ_{n-1} < τ_n$. In general the $τ_i$ can be distributed arbitrarily in the interval $[a, b]$. However, for simplicity we will assume **intervals of equal size** using the definition
 ```math
 \tag{1}
-t_i = a + i \, h, \qquad h = \frac{b-a}{n} \qquad \text{where $i = 0, 1, \ldots, n$}.
+τ_i = a + i \, h, \qquad h = \frac{b-a}{n} \qquad \text{where $i = 0, 1, \ldots, n$}.
 ```
-"""
+in this class. Now notice that
+```math
+\tag{2}
+I = \int_a^b f(x) \, dx = \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} f(x) \, dx
+\approx \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} \widetilde{f}_i(x) \, dx
+```
+where in the last step we follow the same idea as in the *simple quadrature* discussion above, namely we approximate the function $f$ on the interval $[τ_{i-1}, τ_i]$ by a polynomial $\widetilde{f}_i$. 
 
-# ╔═╡ d060f303-2dc6-4322-96eb-5a8deb3b7846
-md"""
-A first idea goes back to **polynomial interpolation**:
-As **polynomials are easy to integrate analytically**,
-we could just **fit a** $n$-th degree **polynomial**
-through our $n+1$ nodes $t_0, t_1, \ldots, t_n$
-and **then integrate that** instead of $f$ itself.
-
-Since the integration of the polynomial is essentially exact,
-the error of such a scheme is **dominated by the error of the polynomial
-interpolation**.
-Recall the [chapter on Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html), where we noted polynomials
-through equispaced nodes to become numerically unstable and
-possibly inaccurate for large $n$ due to Runge's phaenomenon.
-
-Therefore we will pursue **piecewise linear polynomial interpolation**
-instead of fitting an $n$-th degree polynomial.
-
-The following graphics illustrates the idea:
+Notice that each approximation $\widetilde{f}_i$ is only defined on the subinterval $[τ_{i-1}, τ_i]$. However, by stitching each of them together we also obtain a global approximation $\widetilde{f}$ to $f$, namely
+```math
+\widetilde{f}(x) = \begin{cases}
+\widetilde{f}_1(x) & \text{if $x \in [t_0, t_1]$} \\
+\widetilde{f}_2(x) & \text{if $x \in [t_1, t_2]$} \\
+\vdots & \vdots \\
+\widetilde{f}_n(x) & \text{if $x \in [t_{n-1}, t_n]$} \\
+\end{cases}
+```
+See the figure below, which illustrates this for the case of constructing linear approximations on each subinterval $[τ_{i-1}, τ_i]$.
+We recognise $\tilde{f}$ to be a **piecewise polynomial approximation** to $f$.
 """
 
 # ╔═╡ 2da93494-ceff-40ec-90d3-3b214b134b5e
@@ -134,34 +159,127 @@ let
 	plot!(p, [ts[it], ts[it+1], ts[it+1], ts[it]],
 		     [0, 0, f(ts[it+1]), f(ts[it])], fill=0, c=cgrad(:grays)[0.8], label="")
 	
-	plot!(p, ts, f.(ts), c=:black, lw=3, mark=:o, label="piecewise linear")
+	plot!(p, ts, f.(ts), c=:black, lw=3, mark=:o, label=L"piecewise linear $\widetilde{f}(x)$")
 
 	for i in 0:n
 		plot!(p, [a + i * h, a + i * h], [0, f(a + i * h)];
 			  ls=:dash, c=:black, label="", lw=1.5)
 	end
-	annotate!(p, [(a,   -0.5, L"a = t_0"),
-				  (a+h, -0.5, L"t_1"),
-				  (a+n*h, -0.5, L"t_n = b")])
+	annotate!(p, [(a,   -0.5, L"a = τ_0"),
+				  (a+h, -0.5, L"τ_1"),
+				  (a+n*h, -0.5, L"τ_n = b"),
+				  (a+h/2,  5.5, L"\widetilde{f}_1"),
+				  (a+3h/2, 3, L"\widetilde{f}_2"),
+				  (a+11h/2, 7.5, L"\widetilde{f}_n"),
+				 ])
 
 	ylims!(p, (-0.9, 10.5))
 	p
 end
 
-# ╔═╡ 03290f7e-46fd-4511-aa00-673a75de180f
+# ╔═╡ c1959ea2-d1b7-4c40-adb4-e99bbad9eb5f
 md"""
-To approximate integral $I = \int_a^b f(x) dx$, that is the area under the blue curve,
-we evaluate the function $f$ at $n+1$ equispaced nodes
-leading to data points $(t_i, f(t_i))$.
-From these we construct a piecewise linear polynomial interpolation $p_{1,h}$ (black line).
-Integrating $p_{1,h}$ on $[t_0, t_n]$ then yields an approximation to $I$:
+!!! info "Observation: Composite quadrature rules"
+    Composite quadrature rules are based on the idea of constructing
+	a **piecewise polynomial approximation** and then integrating this approximation
+	analytically instead of the original function.
+
+	**Composite quadrature rules are the state of the art** for numerical integration and provide in general more accurate results compared to simple quadrature rules.
+"""
+
+# ╔═╡ 2d5a6b35-4484-4f3e-8a92-d11a6580da6b
+Foldable("Why prefer composite quadrature rules over simple ones ?",
+md"""
+There are two main reasons to prefer composite quadrature rules over simple ones:
+- [**Runge's phaenomenon**](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html#Interpolation-error-and-Runge's-phaenomenon): For an accurate approximation of the integral $\int_a^b f(x) \, dx ≈ \sum_{i=1}^m α_i f(t_i)$ we can expect to require many (a few tens) of quadrature nodes, meaning that we would construct a high-degree polynomial, which we found to be numerically unstable. In contrast composite quadrature rules employ *piecewise* polynomial approximations [which is numerically much better conditioned](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html#Piecewise-linear-interpolation) even for a large number of nodes.
+- **Flexibility:** Composite rules do not require to employ the same polynomial degree in each subinterval $[τ_{i-1}, τ_i]$. This opens the path towards *adaptive integration techniques* where the quadrature nodes are not homogeneously distributed across $[a, b]$. More on this in [Node doubling](#Node-doubling) below.
+""")
+
+# ╔═╡ 74fcb512-65cb-4df4-82b6-2e408b971913
+md"""
+!!! danger "Notational confusion N versus n versus h"
+	In this class we will use the following notation:
+	-   $N$ **number of integration nodes**
+	-   $n$ **number of subintervals** $[τ_{i-1} τ_i]$
+	-   $h$ **width of the subintervals** $h = τ_{i} - τ_{i-1}$
+	In general $N > n$ and therefore the *distance between the nodes* is usually smaller than $h$.
+"""
+
+# ╔═╡ 899f6285-331e-4cc5-8b0a-0e68c67082d2
+md"""
+## Trapezoidal rule
+"""
+
+# ╔═╡ 20d182af-1fbe-4027-8248-a7c94bcbb12c
+md"""
+Our goal is to compute the integral $I = \int_a^b f(x)\, dx$, that is the area under the blue curve in the figure above.
+
+Following our discussion about composite quadrature rules a first idea is to perform **linear interpolation** in each of the subintervals $[τ_{i-1}, τ_i]$ with $i=0, \ldots, n$. In other words we aim to approximate in each interval $[τ_{i-1}, τ_i]$ the function $f$ by a first degree polynomial $\widetilde{f}_i$, i.e. a straight line. This leads to the **black line segments** in the above figure.
+"""
+
+# ╔═╡ 9fb00e26-146a-4e82-861f-4345aa143c7a
+md"""
+To fit such a linear polynomial $\widetilde{f}_{1,i}$ two nodal points are sufficient in the subinterval. Knowing $f$ on the interval boundaries, i.e. having access to the data points $(τ_{i-1}, f(τ_{i-1}))$ and $(τ_i, f(τ_i))$ is thus sufficient. We construct an interpolynomial using the based on the [Lagrange basis described previously](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html#Lagrange-basis). Using aforementioned two datapoints we thus obtain
+```math
+\widetilde{f}_{1,i}(x) = f(τ_{i-1}) \underbrace{\frac{x - τ_{i}}{τ_{i-1} - τ_{i}}}_{\text{Langrange function of $τ_{i-1}$}}
++ f(τ_i) \underbrace{\frac{x - τ_{i-1}}{τ_{i} - τ_{i-1}}}_{\text{Langrange function of $τ_{i}$}}.
+```
+Recalling the definition of the subintervals (1), i.e. $τ_i = a + i \, h$, this is equal to
+```math
+\widetilde{f}_{1,i}(x) = -\frac{f(τ_{i-1})}{h} (x-τ_i) + \frac{f(τ_i)}{h} (x-τ_{i-1}).
+```
+"""
+
+# ╔═╡ 5d4f0a34-1da1-4e12-a8aa-55b1322d4a41
+md"""
+Finally we follow equation (2) and integrate these line segments instead of the blue curve to obtain an approximation for our desired integral:
 ```math
 \begin{aligned}
-I = \int_a^b f(x)\, dx &\approx \int_a^b p_{1,h}(x)\, dx = \int_a^b \sum_{i=0}^n f(t_i) H_i(x)\, dx
-= \sum_{i=0}^n f(t_i) \int_a^b H_i(x)\, dx.
+I = \int_a^b f(x)\, dx &= \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} f(x)\, dx \\
+&\approx \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} \widetilde{f}_{1,i}(x)\, dx \\
+&= \sum_{i=1}^n \left(
+	\frac{f(τ_{i-1})}{h} \int_{τ_{i-1}}^{τ_i} τ_i - x \, dx
+	+ \frac{f(τ_i)}{h}\int_{τ_{i-1}}^{τ_i} x - τ_{i-1} \, dx
+	\right) \\
+&= \sum_{i=1}^n \left(
+	\frac{f(τ_{i-1})}{h} \frac{h^2}{2} + \frac{f(τ_i)}{2} \frac{h^2}{2}
+	\right) \\
 \end{aligned}
 ```
-As a reminder the $H_i$ are the hat functions defined as
+where we used that both
+$\int_{τ_{i-1}}^{τ_i} τ_i - x \, dx$
+and $\int_{τ_{i-1}}^{τ_i} x - τ_{i-1} \, dx$
+describe both the area of a triangle with width $h$ and height $h$,
+thus have a value of $\frac{h^2}{2}$.
+
+Rearranging this sum differently leads to the final formula
+```math
+\begin{aligned}
+I = \int_a^b f(x)\, dx \approx T_n(f) &:= \frac h2 f(τ_0) + h f(τ_1) + \cdots + h f(τ_{n-1}) + \frac h2 f(τ_n)\\
+&= \frac h2 f(τ_0) + \sum_{i=1}^{n-1} h\, f(τ_i) + \frac h2 f(τ_n).
+\end{aligned}
+```
+
+This formula is called the **trapezoidal rule**.
+This name stems from a more geometric way of constructing the trapezoidal formula:
+as can be captured in the visualisation above, one can think of the formula as  summing the areas of the trapezoids defined by the quadrature nodes (see shaded grey).
+"""
+
+# ╔═╡ cdb60089-57b1-43fb-9fc0-a0c700c18903
+Foldable("Alternative derivation using our results on piecewise polynomial interpolation",
+md"""
+An aternative derivation considers first building a **piecewise linear interpolation** of $f$ on $[a, b]$ and than integrating this approximation:
+- Evaluate $f$ on the $n + 1$ nodes $τ_0, τ_1, \ldots, τ_n$ leading to the $n+1$ data points $(τ_i, f(τ_i))$.
+- From these construct a piecewise linear polynomial interpolation $\widetilde{f}$ following the discussion in the [interpolation chapter](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html#Piecewise-linear-interpolation). (Note that we used the symbol $p_{1,h}$ to refer to such piecewise linear interpolations in Chapter 7)
+- Integrating $\widetilde{f}$ on $[a, b]$ then yields an approximation to $I$:
+  ```math
+  \begin{aligned}
+  I = \int_a^b f(x)\, dx &\approx \int_a^b \widetilde{f}(x)\, dx = \int_a^b \sum_{i=0}^n   f(t_i) H_i(x)\, dx
+  = \sum_{i=0}^n f(t_i) \int_a^b H_i(x)\, dx.
+  \end{aligned}
+  ```	 
+
+It remains to evaluate the latter expression. As a reminder the $H_i$ are the hat functions defined as
 ```math
     H_i(x) = \left\{ \begin{array}{ll}
     \frac{x - x_{i-1}}{x_i - x_{i-1}} & \text{if $i>1$ and $x\in [x_{i-1}, x_i]$}\\
@@ -169,10 +287,7 @@ As a reminder the $H_i$ are the hat functions defined as
     0 & \text{otherwise}
     \end{array}\right.
 ```
-"""
 
-# ╔═╡ 12235876-6af1-4091-b0ed-7e029b70992d
-md"""
 Recall that $t_{i+1} - t_{i} = h$, that is to say the distance between two nodes is always $h$.
 With this and using the formulas for computing the areas of triangles
 the integrals of the hat functions can be evaluated as
@@ -190,10 +305,49 @@ I = \int_a^b f(x)\, dx \approx T_n(f) &:= \frac h2 f(t_0) + h f(t_1) + \cdots + 
 &= \frac h2 f(t_0) + \sum_{i=1}^{n-1} h\, f(t_i) + \frac h2 f(t_n).
 \end{aligned}
 ```
-This formula is called the **trapezoidal rule**.
-This name stems from a more geometric way of constructing the trapezoidal formula:
-as can be captured in the visualisation above, one can think of the formula as  summing the areas of the trapezoids defined by the quadrature nodes (see shaded grey).
+as before
+""")
 
+# ╔═╡ 5f0178ad-c05b-4ac4-a008-b35d105cc7b2
+md"""
+The trapezoidal rule is just one representative of the wide class of numerical integration formulas. A general definition is:
+
+!!! info "Definition: Numerical integration formula"
+    A **numerical integration formula** for the $N+1$ equispaced **quadrature nodes**
+	$t_i$, $i=0, \ldots, N$ is the set of **weights** $w_0, w_1, \ldots w_N$,
+    such that for an integrand $f : [a, b] \to \mathbb{R}$
+    ```math
+	\tag{3}
+    \int_a^b f(x) dx \approx Q_a^b(f) = \frac{b-a}{N}\, \sum_{i=0}^N w_i f(t_i).
+	```
+	The weights $w_i$ are independent of $f$.
+ 
+	An older and still frequently used name for numerical integration is **quadrature**.
+
+By comparing with our derivation above, we realise:
+
+!!! info "Observation: Trapezoid formula"
+	The trapezoid formula is the numerical integration of the form (3) where the nodes are just equal to the subinterval boundaries, i.e. we have $N=n$ and
+	```math
+	\begin{aligned}
+	t_0 &= τ_0 = a \\
+	t_1 &= τ_1 = a + 1 h \\
+	t_2 &= τ_2 = a + 2 h \\
+	\vdots\\
+	t_N &= τ_n = b.
+	\end{aligned}
+	```
+	Here we used the subinterval width $h = \frac{b-a}{ne}$.
+	The associated weights are
+	```math
+	w_i = \left\{ \begin{array}{ll} 1 & \text{if } 0 < i < n \\ \frac12& \text{if }i = 0 \text{ or } i = n \end{array}\right.
+	```
+
+We will see later that nodes and interval boundaries do not agree for more general formulas. In fact we usually have $N > n$, i.e. more nodes than subintervals.
+"""
+
+# ╔═╡ 26c60564-679e-48cc-b4e3-8715391604db
+md"""
 An implementation of the trapezoidal rule is:
 """
 
@@ -209,26 +363,9 @@ function trapezoid(f, a, b, n)
 	(; integral, h)
 end
 
-# ╔═╡ a1d83cb2-6e0d-4a53-a11f-60dc020249d4
+# ╔═╡ feab81d1-1013-491e-b1d0-adb76d7aaadf
 md"""
-Recall that in Theorem 4 of [chapter 07 (Interpolation)](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html) we found that
-the piecewise polynomial interpolation shows quadratic convergence
-```math
-\|f - p_{1,h}\|_\infty \leq α h^2 \| f'' \|_\infty,
-```
-where $α > 0$.
-With this in mind we can bound the error of the trapezoidal rule as
-```math
-\begin{aligned}
-I - T_n(f) &= \int_a^b f(x)\,dx - \int_a^b p_{1,h}(x)\,dx\\
-&= \int_a^b [f(x) - p_{1,h}(x)] \, dx\\
-&\leq \|f-p_{1,h}\|_\infty\, \int_a^b\, dx\\
-&\leq \underbrace{(b-a)\, α\, \|f''\|_\infty}_{=\widetilde{α}} \, h^2 = \widetilde{α} \, h^2 = O(h^2).
-\end{aligned}
-```
-We thus expect **quadratic convergence** with $h$.
-
-Let us confirm this numerically on the simple integral from earlier, i.e.
+Let's test this formula numerically on the simple integral from earlier, i.e.
 """
 
 # ╔═╡ 9c2919cb-8580-422e-82f3-cd70b9e15112
@@ -272,7 +409,7 @@ end
 
 # ╔═╡ 18506fc5-9019-4076-b77e-1c000d01b946
 md"""
-We notice that the error decreases roughly by a factor $4$ when we double the number of quadrature nodes (i.e. half the distance $h$ between the quadrature nodes). This again confirms the idea of a second-order convergence.
+We notice that the error decreases roughly by a factor $4$ when we double the number of quadrature nodes (i.e. half the distance $h$ between the quadrature nodes). This is the expectation for a method with second-order convergence.
 
 This becomes even clearer if we plot the error versus $h$ in a log-log plot along with a line of slope $2$:
 """
@@ -290,30 +427,26 @@ let
 	yticks!(p, 10.0 .^ (0:-1:-7))
 end
 
-# ╔═╡ 5f0178ad-c05b-4ac4-a008-b35d105cc7b2
-md"""
-The trapezoidal rule is just one representative of the wide class of numerical integration formulas. A general definition is:
-
-!!! info "Definition: Numerical integration formula"
-    A **numerical integration formula** for the $N+1$ equispaced **quadrature nodes**
-	$t_i$, $i=0, \ldots, N$ is the set of **weights** $w_0, w_1, \ldots w_N$,
-    such that for an integrand $f : [a, b] \to \mathbb{R}$
-    ```math
-	\tag{2}
-    \int_a^b f(x) dx \approx Q_a^b(f) = \frac{b-a}{N}\, \sum_{i=0}^N w_i f(t_i).
-	```
-	The weights $w_i$ are independent of $f$.
-
-	An older and still frequently used name for numerical integration is **quadrature**.
-
-By comparing with our derivation above, we realise:
-
-!!! info "Definition: Trapezoid formula"
-	The trapezoid formula is the numerical integration of the form (2) with $n+1$ nodes (i.e. $N = n$) and weights
-	```math
-	w_i = \left\{ \begin{array}{ll} 1 & \text{if } 0 < i < n \\ \frac12& \text{if }i = 0 \text{ or } i = n \end{array}\right.
-	```
-"""
+# ╔═╡ 8ea21571-6a5c-4a07-b1a8-26c05eaf5422
+Foldable("Why is quadratic convergence not surprising?", md"""
+Recall that in Theorem 4 of [chapter 07 (Interpolation)](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html) we found that
+a piecewise linear polynomial interpolation $\widetilde{f}$
+shows quadratic convergence to $f$ with respect to $h$, i.e.
+```math
+\|f - \widetilde{f}\|_\infty \leq α h^2 \| f'' \|_\infty,
+```
+where $α > 0$.
+With this in mind we can bound the error of the trapezoidal rule as
+```math
+\begin{aligned}
+I - T_n(f) &= \int_a^b f(x)\,dx - \int_a^b \widetilde{f}(x)\,dx\\
+&= \int_a^b [f(x) - \widetilde{f}(x)] \, dx\\
+&\leq \|f-\widetilde{f}\|_\infty\, \int_a^b\, dx\\
+&\leq \underbrace{(b-a)\, α\, \|f''\|_\infty}_{=\widetilde{α}} \, h^2 = \widetilde{α} \, h^2 = O(h^2),
+\end{aligned}
+```
+i.e. **quadratic convergence** with $h$.
+""")
 
 # ╔═╡ c31c7012-6986-441f-ae99-5e2bb2b469e5
 md"""
@@ -321,45 +454,69 @@ md"""
 """
 
 # ╔═╡ 4fdd346f-a279-4686-b775-675cfe9f9f21
-TODO("Show an illustrative drawing as well")
+# TODO("Show an illustrative drawing as well")
 
 # ╔═╡ becdcc4e-ecff-46ad-8f3a-92d117e374f7
 md"""
-Considering the construction of the trapezoidal rule
-we may easily wonder: why stop at using only linear polynomials
-to proximate $f$ within each interval $[t_i, t_{i+1}]$ ?
+In the construction of the trapezoidal rule we employed linear approximations $\widetilde{f}_{1,i}$ of $f$ in each of the subintervals $[τ_{i-1}, τ_i]$. One may thus wonder: Why stop at using only linear polynomials?
 
-Indeed, Simpson's formula takes the idea one step further and
-constructs a quadratic polynomial within each interval $[t_i, t_{i+1}]$
-by evaluate $f$ on $t_i$, $t_{i+1}$
-as well as the midpoint $m_i = \frac{t_i + t_{i+1}}{2}$.
-This overall leads to a **piecewise quadratic interpolant**
- $p_{2,h}$ of the integrand $f$ on $[a, b]$, which we again integrate exactly.
-This is a little harder to compute and will be done as an exercise. The resulting formula is Simpson's formula
+Indeed, **Simpson's formula** takes the idea one step further and
+constructs a quadratic approximation $\widetilde{f}_{2,i}$
+within each interval $[τ_{i-1}, τ_{i}]$
+by evaluating $f$ on the interval boundaries $τ_{i-1}$, $τ_{i}$, but also the midpoint $m_i = \frac{τ_{i-1} + τ_{i}}{2}$ (recall we need *three points* to fit a quadratic polynomial).
+Again using a Lagrange basis we write
+```math
+\widetilde{f}_{2,i}(x) = f(τ_{i-1}) \underbrace{\frac{x - m_{i}}{τ_{i-1} - m_{i}}
+\frac{x - τ_{i}}{τ_{i-1} - τ_{i}}}_{\text{Langrange function of $τ_{i-1}$}}
++ f(m_i) \underbrace{\frac{x - τ_{i-1}}{m_{i} - τ_{i-1}}
+\frac{x - τ_{i}}{m_{i} - τ_{i}}}_{\text{Langrange function of $m_{i}$}}
++ f(τ_i) \underbrace{\frac{x - τ_{i-1}}{τ_{i} - τ_{i-1}}
+\frac{x - m_i}{τ_{i} - m_i}}_{\text{Langrange function of $τ_{i}$}}.
+```
+Employing this approximation in construction (2) gives 
+```math
+\int_a^b f(x)\, dx = \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} f(x)\, dx \\
+\approx \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} \widetilde{f}_{2,i}(x)\, dx
+```
+which requires us to integrate the quadratic polynomials $\widetilde{f}^2_i$ over the intervals $[τ_{i-1}, τ_i]$. This is a little harder to compute and will be done as an exercise. The resulting formula is Simpson's formula
 ```math
 \tag{3}
 \begin{aligned}
-\int_a^b f(x)\, dx &\approx  S_{2n}(f)  = \int_a^b p_{2,h}(x)\, dx \\
-&= \sum_{i=1}^n \frac h6 \big( f(t_{i-1}) + 4f(m_{i-1}) + f(t_i) \big)\\
-&= \frac h6 f(t_0) + \frac h3 \sum_{i=1}^{n-1} f(t_i) + \frac {2h}3 \sum_{i=0}^{n-1} f(m_i) + \frac h6 f(t_n).
+\int_a^b f(x)\, dx &\approx S_{2n}(f)  = \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} \widetilde{f}_{2,i}(x)\, dx\\
+&= \sum_{i=1}^n \frac h6 \big( f(τ_{i-1}) + 4f(m_i) + f(τ_i) \big)\\
+&= \frac h6 f(τ_0) + \frac h3 \sum_{i=1}^{n-1} f(τ_i) + \frac {2h}3 \sum_{i=1}^{n} f(m_i) + \frac h6 f(τ_n).
 \end{aligned}
 ```
 """
 
 # ╔═╡ 5ee0ec01-54c3-48d8-8ba8-4460144002dd
 md"""
-While a little harder to see, this formula can also be brought into the form of (2):
+While a little harder to see, this formula can also be brought into the form of (3):
 it employs **$2n + 1$ equispaced nodes**
---- namely the collection of both the $t_i$ for $i=0, \ldots, n$ *and* the $m_i$ for $i=0,\ldots n-1$.
-Therefore $N = 2n$ in (2) leading to a **nodal distance** of $\frac{b-a}{2n} = \frac{h}{2}$, where we used that $h = t_{i+1} - t_i = \frac{b-a}{n}$
+--- namely the collection of both the $τ_i$ for $i=0, \ldots, n$ *and* the $m_i$ for $i=1,\ldots n$:
+```math
+\begin{aligned}
+t_0 &= τ_0 = a \\
+t_1 &= m_1 = a + \frac12 h \\
+t_2 &= τ_1 = a + h \\
+\vdots\\
+t_{2n-2} &= m_n = a + (n-1)\, h \\
+t_{2n-1} &= m_n = a + \frac{2n-1}{2} h \\
+t_{2n} &= τ_n = b.
+\end{aligned}
+```
+
+Therefore $N = 2n$ in (3) leading to a **nodal. distance** of $\frac{b-a}{2n} = \frac{h}{2}$ while the **subinterval size** remains as $h = τ_{i+1} - τ_i = \frac{b-a}{n}$.
 """
 
 # ╔═╡ abcafa59-e8a1-4438-9ff6-3e8fc9fbd28d
 md"""
 !!! exercise
-    Derive Simpson's rule, i.e. show that
+    Derive Simpson's rule, i.e. show that the missing step that
     ```math
-    \int_a^b p_{2,h}(x)\, dx = \sum_{i=1}^n \frac h6 \big( f(t_{i-1}) + 4f(m_{i-1}) + f(t_i) \big)
+	\int_{τ_{i-1}}^{τ_i} \widetilde{f}_{2,i}(x)\, dx = \frac{h}{6}\Big(
+	f(τ_{i-1}) + 4f(m_{i-1}) + f(τ_i)
+	\Big)
     ```
 """
 
@@ -373,7 +530,7 @@ function simpson(f, a, b, n)
 	# f:  Function
 	# [a, b]: Interval to integrate over
 	# n:  Number of pieces to break the interval into
-	h = (b - a) / n
+	h = (b - a) / n                    # Subinterval width
 	t = range(a, b, length=n+1)        # Subinterval boundaries
 	m = range(a+h/2, b-h/2, length=n)  # Subinterval midpoints
 
@@ -382,7 +539,7 @@ function simpson(f, a, b, n)
 	fm = f.(m)
 	integral = h * (ft[1]/6 + sum(ft[2:n])/3 + 2sum(fm)/3 + ft[n+1]/6)
 
-	(; integral, h=h/2)  # Note h/2 since the actual nodal distance is half of h
+	(; integral, h)
 end
 
 # ╔═╡ a255138c-74bd-4aad-b49a-0a16746f3bda
@@ -406,7 +563,7 @@ p_convergence = let
 
 	# Guiding lines
 	plot!(p, hs_trap, hs_trap.^2, ls=:dash, c=1, label=L"$O(h^2)$; slope $2$")
-	plot!(p, hs_trap, hs_trap.^4/1000, ls=:dash, c=2, label=L"$O(h^4)$; slope $4$")
+	plot!(p, hs_trap, hs_trap.^4/300, ls=:dash, c=2, label=L"$O(h^4)$; slope $4$")
 
 	xticks!(p, 10.0 .^ (0:-0.5:-3))
 	yticks!(p, 10.0 .^ (0:-2:-14))
@@ -417,7 +574,7 @@ md"""
 In line with the definition of algebraic convergence (and convergence order) for other approximation techniques we define the accuracy of a quadrature formula as:
 
 !!! info "Definition: Convergence order of numerical integration"
-	A numerical integration formula $Q_a^b(f)$ of the form (2)
+	A numerical integration formula $Q_a^b(f)$ of the form (3)
 	with equally spaced quadrature notes of separation $h$ is of **order $p$**
 	if a constant $α>0$ indepentent of $h$
 	(but possibly dependent on $f$) exists, such that
@@ -440,83 +597,83 @@ We notice that our numerical investigation suggests:
 md"""
 ## Error analysis
 
-In this lecture we only consider so-called **composite quadrature formulas**,
-i.e. formulas which satisfy
+By construction composite quadrature formulas always satisfy
 ```math
-Q_a^b(f) = \sum_{i=0}^{N-1} Q_{t_i}^{t_{i+1}}(f)
+Q_a^b(f) = \sum_{i=1}^{n} Q_{τ_{i-1}}^{τ_{i}}(f)
 ```
-where $Q_{t_i}^{t_{i+1}}(f)$ is the quadrature formula applied to the subinterval $[t_{i-1}, t_i]$, i.e. the application of the quadrature formula to $\int_{t_{i-1}}^{t_i} f(x) dx$ with no no subdivision of the integration interval.
+where we use $n$ subintervals in the numerical quadrature
+and $Q_{τ_{i-1}}^{τ_{i}}(f)$ is the application of the quadrature formula to exactly one such subinterval $[τ_{i-1}, τ_i]$. In other words $Q_{τ_{i-1}}^{τ_{i}}(f)$ is  the application of the quadrature formula to $\int_{τ_{i-1}}^{τ_i} f(x) dx$ with no subdivision of the integration interval.
+
 As a consequence we can decompose the error
 ```math
 \tag{4}
 \int_a^b f(x)\,dx - Q_a^b(f)
-= \sum_{i=0}^{N-1} \int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)
+= \sum_{i=1}^{n} \int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f)
 ```
-into error contributions from each of the intervals $[t_{i-1}, t_i]$.
-
+into error contributions from each of the subintervals $[τ_{i-1}, τ_i]$.
 Assume for simplicity that the function $f$ is smooth and we can thus
 build a Taylor expansion
 ```math
 f(x) = \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) \, (x-m_i)^k
 ```
-around the midpoint $m_i = \frac{t_{i+1} + t_i}{2}$ of the interval $[t_i, t_{i+1}]$.
+around the midpoint $m_i = \frac{τ_{i} + τ_{i-1}}{2}$ of the interval $[τ_{i-1}, τ_{i}]$.
 Based on this we can deduce a series for the exact integral:
 ```math
 \begin{aligned}
-\int_{t_i}^{t_{i+1}} f(x) dx
-&= \int_{t_i}^{t_{i+1}} \left[\sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) (x-m_i)^k \right]dx
+\int_{τ_{i-1}}^{τ_{i}} f(x) dx
+&= \int_{τ_{i-1}}^{τ_{i}} \left[\sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) (x-m_i)^k \right]dx
 \\
-&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) \int_{t_i}^{t_{i+1}} (x-m_i)^k dx \\
-&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) \int_{t_i}^{t_{i+1}} q_k(x) \,dx,
+&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) \int_{τ_{i-1}}^{τ_{i}} (x-m_i)^k dx \\
+&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) \int_{τ_{i-1}}^{τ_{i}} q_k(x) \,dx,
 \end{aligned}
 ```
-where we defined $q_k(x) = (x-m_i)^k$.
+where we defined $q_k(x) = (x-m_i)^k$ and in particular used that the integral is linear, i.e. that
+```math
+\int_{τ_{i-1}}^{τ_i}\Big(αf(x) + βg(x)\Big)\,dx
+= α\int_{τ_{i-1}}^{τ_i}f\,dx + β \int_{τ_{i-1}}^{τ_i}g(x)\,dx.
+```
 """
 
 # ╔═╡ 4144570b-f8d9-49c8-af6b-732966864755
 md"""
-If we apply a quadrature formula (2) to $f$ we can follow through with
-similar steps.
-Here note that for $Q_{t_i}^{t_{i+1}}$ the number of nodes
-is exactly two --- the beginning of the interval and the end,
-such that $N=1$ and the term $\frac{b-a}{N} = \frac{t_{i+1} - t_i}{1} = h$.
-We obtain:
+Now notice that quadrature formulas of the form (3) keep this linearity in the integrand, i.e. also satisfy
+```math
+Q_{τ_{i-1}}^{τ_i}(αf + βg)  = αQ_{τ_{i-1}}^{τ_i}(f) + β Q_{τ_{i-1}}^{τ_i}(g).
+```
+Therefore we can make a similar development for the quadrature formula approximation of the ingeral, leading to
 ```math
 \begin{aligned}
-Q_{t_i}^{t_{i+1}}(f) &= h\, \sum_{j=i}^{i+1} w_j f(t_j) \\
-&= h\, \sum_{j=i}^{i+1} w_j  \left[\sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_j) \, (t_j-m_j)^k \right]\\
-&= h\, \sum_{j=i}^{i+1} w_j  \left[\sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_j) \, q_k(t_j) \right]\\
-&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) \left[
-h\, \sum_{j=i}^{i+1} w_j \, q_k(t_j)
-\right] \\
-&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) Q_{t_i}^{t_{i+1}}(q_k)
-\end{aligned}.
+Q_{τ_{i-1}}^{τ_{i}}(f)
+&= Q_{τ_{i-1}}^{τ_{i}} \left(\sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) (x-m_i)^k \right)
+\\
+&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m_i) Q_{τ_{i-1}}^{τ_{i}} (q_k).
+\end{aligned}
 ```
 The difference between these expressions is exactly the error
 contribution from the interval $[t_{i}, t_{i+1}]$, namely
 ```math
 \tag{5}
 \begin{aligned}
-\int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)
-&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) \left[ \int_{t_i}^{t_{i+1}} q_k(x) \,dx - Q_{t_i}^{t_{i+1}}(q_k) \right].
+\int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f)
+&= \sum_{k=0}^\infty \frac{1}{k!} f^{(k)}(m) \left[ \int_{τ_{i-1}}^{τ_{i}} q_k(x) \,dx - Q_{τ_{i-1}}^{τ_{i}}(q_k) \right].
 \end{aligned}
 ```
 """
 
 # ╔═╡ 7812f9d7-cda7-4d05-a800-3f7bea2e0e8c
 md"""
-The error of the integration formula can thus be completely understood
-by studying the error $\int_{t_i}^{t_{i+1}} q_k(x) - Q_{t_i}^{t_{i+1}}(q_k)$.
+The **error of the integration formula** can thus be completely understood
+by studying the error $\int_{τ_{i-1}}^{τ_{i}} q_k(x) - Q_{τ_{i-1}}^{τ_{i}}(q_k)$.
 Since $q_k$ is just a polynomial of degree $k$
 we can thus understand the accuracy of quadrature formulas
-*for arbitrary functions* by studying the accuracy of quadrature formulas
-for *polynomials*,
+*for arbitrary functions* by studying the **accuracy of quadrature formulas
+for polynomials**,
 which is considerably simpler.
 
 One property of quadrature formulas is their **degree of exactness**:
 
 !!! info "Definition: Degree of exactness"
-	A numerical integration formula $Q_a^b(f) = \frac{b-a}{N}\, \sum_{i=1}^n w_i f(t_i)$ as given in (2)
+	A numerical integration formula $Q_a^b(f) = \frac{b-a}{N}\, \sum_{i=1}^n w_i f(t_i)$ as given in (3)
 	has a **degree of exactness $r$** if it integrates all
 	monomials $x^s$ with $0 \leq s \leq r$ ($s$ integer) exactly, i.e. if
 	```math
@@ -536,12 +693,12 @@ q_k(x) = ( x - m_i )^{k} = x^k + \left(\begin{smallmatrix}k\\1\end{smallmatrix}\
 ```
 only features monomials $x^s$ with $0 \leq s \leq k$.
 Therefore a formula with degree of exactness $r$ will have
-$\int_{t_i}^{t_{i+1}} q_k(x) \,dx - Q_{t_i}^{t_{i+1}}(q_k) = 0$ for $k \leq r$.
+$\int_{τ_{i-1}}^{τ_{i}} q_k(x) \,dx - Q_{τ_{i-1}}^{τ_{i}}(q_k) = 0$ for $k \leq r$.
 In (5) the first non-zero error term is thus
 ```math
 \begin{aligned}
-\left|\int_{t_i}^{t_{i+1}} q_{r+1}(x) \,dx - Q_{t_i}^{t_{i+1}}(q_{r+1})\right|
-&\stackrel{(\ast)}{=} \left|\int_{t_i}^{t_{i+1}} x^{r+1} \,dx - Q_{t_i}^{t_{i+1}}(x^{r+1})\right| \\
+\left|\int_{τ_{i-1}}^{τ_{i}} q_{r+1}(x) \,dx - Q_{τ_{i-1}}^{τ_{i}}(q_{r+1})\right|
+&\stackrel{(\ast)}{=} \left|\int_{τ_{i-1}}^{τ_{i}} x^{r+1} \,dx - Q_{τ_{i-1}}^{τ_{i}}(x^{r+1})\right| \\
 &\stackrel{(\S)}{\leq}
 \widetilde{α}_i h^{r+2}
 \end{aligned}
@@ -550,7 +707,7 @@ where in $(\ast)$ all powers in $x$ less than $r+1$ drop again because of $Q$'s 
 which are optional and will be presented below.
 This is also the leading-order error term, such that
 ```math
-\left|\int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)\right| ≤ \widetilde{α}_i h^{r+2}
+\left|\int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f)\right| ≤ \widetilde{α}_i h^{r+2}
 ```
 """
 
@@ -562,10 +719,10 @@ we obtain the total error as
 ```math
 \begin{aligned}
 \left|\int_a^b f(x)\,dx - Q_a^b(f)\right|
-&\leq \sum_{i=0}^{N-1} \left|\int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)\right|\\
-&\leq h^{r+2} \underbrace{\sum_{i=0}^{N-1} \widetilde{α}_i}_\text{$N$ terms}\\
-&\leq h^{r+1} \frac{b-a}{N} N \, \max_i \widetilde{α}_i \\
-&= C \, h^{r+1}
+&\leq \sum_{i=1}^{n} \left|\int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f)\right|\\
+&\leq h^{r+2} \underbrace{\sum_{i=1}^{n} \widetilde{α}_i}_\text{$n$ terms}\\
+&\leq h^{r+1} \frac{b-a}{n} \, n \, \max_i \widetilde{α}_i \\
+&= α \, h^{r+1}
 \end{aligned}
 ```
 where $α = (b-a)\, \max_i \widetilde{α}_i$.
@@ -576,10 +733,8 @@ We notice:
 # ╔═╡ 4a048166-315d-4bf6-b099-866c9e3f8813
 md"""
 !!! info "Theorem 1 (Convergence order, simple version)"
-	A numerical integration formula
-	$Q_a^b(f) = \frac{b-a}{N}\, \sum_{i=1}^n w_i f(t_i)$ as given in (2)
-	with **degree of exactness $r$ 
-	is of order $r+1$**
+	A composite quadrature formula
+	with **degree of exactness $r$ is of order $r+1$**
 	as long as the function $f$ is at least $r+1$ times differentiable.
 """
 
@@ -587,15 +742,16 @@ md"""
 Foldable("Optional: More details on Theorem 1",
 md"""
 !!! info "Theorem 1"
-	Let $Q_a^b(f)$ be a numerical integration formula of form (2)
-	with $N+1$ quadrature nodes of equal spacing $h = (b-a) / N$,
-	which approximates $I = \int_a^b f(x)\,dx$.
-	If $Q(f)$ has a degree of exactness $r$ then it is of order $r+1$
+	Let $Q_a^b(f)$ be a composite integration formula of form (3)
+	to approximate $I = \int_a^b f(x)\,dx$,
+	which splits the integration interval $[a, b]$ into $n$ subintervals
+	of equal width $h = \frac{b-a}{n}$.
+	If $Q_a^b(f)$ has a degree of exactness $r$ then the formula is of order $r+1$
 	as long as the function is $(r+1)$-times 
 	continuously differentiable on the interval $[a, b]$.
 	In particular we have
 	```math
-	\left| \int_a^b f(x)\,dx - Q(f) \right| \leq α \, \|f^{(r+1)}\|_\infty \, h^{r+1}
+	\left| \int_a^b f(x)\,dx - Q_a^b(f) \right| \leq α \, \|f^{(r+1)}\|_\infty \, h^{r+1}
 	```
 	where the constant $α = \frac{b-a}{2^r \, (r+1)!}$ depends neither on $f$ nor on $h$.
 
@@ -603,18 +759,18 @@ md"""
 **Proof:**
 As discussed in this lecture we consider only composite formulas, such that
 ```math
-Q_a^b(f) = \sum_{i=0}^{N-1} Q_{t_i}^{t_{i+1}}(f)
+Q_a^b(f) = \sum_{i=1}^{n} Q_{τ_{i-1}}^{τ_{i}}(f)
 ```
 and the error decomposition (4)
 ```math
 \int_a^b f(x)\,dx - Q_a^b(f)
-= \sum_{i=0}^{N-1} \int_{t_i}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f)
+= \sum_{i=1}^{n} \int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f)
 ```
 hold.
 
-We first the error in each interval $[t_{i-1}, t_i]$
+We first the error in each interval $[τ_{i-1}, τ_i]$
 for which we perform a Taylor expansion of $f$ around the midpoint
-$m_i = \frac{t_i + t_{i+1}}{2}$:
+$m_i = \frac{τ_{i-1} + τ_{i}}{2}$:
 ```math
 \begin{aligned}
 f(x) &= \underbrace{f(m_i) + f'(m_i) (x - m_i) + \cdots + 
@@ -629,47 +785,47 @@ and by $R^r_f$ the $r+1$-st degree Lagrange remainder term.
 
 Since the quadrature formula has degree of exactness $r$ we have that
 ```math
-Q_{t_i}^{t_{i+1}}(T_f^r) = \int_{t_{i}}^{t_{i+1}} T_f^r(x)\,dx.
+Q_{τ_{i-1}}^{τ_{i}}(T_f^r) = \int_{τ_{i-1}}^{τ_{i}} T_f^r(x)\,dx.
 ```
 Therefore
 ```math
 \tag{P}
 \begin{aligned}
-\left| \int_{t_{i}}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f) \right|
+\left| \int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f) \right|
 &= 
-\left| \int_{t_{i}}^{t_{i+1}} R^r_f(x)\,dx - Q_{t_i}^{t_{i+1}}(R^r_f) \right|\\
+\left| \int_{τ_{i-1}}^{τ_{i}} R^r_f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(R^r_f) \right|\\
 &\leq
-\left| \int_{t_{i}}^{t_{i+1}} R^r_f(x)\,dx\right| + \left| Q_{t_i}^{t_{i+1}}(R^r_f) \right|\\
+\left| \int_{τ_{i-1}}^{τ_{i}} R^r_f(x)\,dx\right| + \left| Q_{τ_{i-1}}^{τ_{i}}(R^r_f) \right|\\
 &\leq
-\int_{t_{i}}^{t_{i+1}} \left| R^r_f(x)\right|\,dx + Q_{t_i}^{t_{i+1}}\left(\left| R^r_f \right|\right).
+\int_{τ_{i-1}}^{τ_{i}} \left| R^r_f(x)\right|\,dx + Q_{τ_{i-1}}^{τ_{i}}\left(\left| R^r_f \right|\right).
 \end{aligned}
 ```
 Now note that
 ```math
 | R^r_f(x)| \leq 
-\frac{\max_{x \in [t_{i}, t_{i+1}]} |f^{(r+1)}(x)|}{(r+1)!}
+\frac{\max_{x \in [τ_{i-1}, τ_{i}]} |f^{(r+1)}(x)|}{(r+1)!}
 (h/2)^{r+1}
 ```
 such that we can develop equation (P) further to 
 ```math
 \begin{aligned}
-\left| \int_{t_{i}}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f) \right| &\leq
-\frac{(h/2)^{r+1}}{(r+1)!} \max_{x \in [t_{i}, t_{i+1}]} |f^{(r+1)}(x)|
-\left( \int_{t_{i}}^{t_{i+1}} 1 \, dx + Q_{t_i}^{t_{i+1}}(1) \right) \\
+\left| \int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f) \right| &\leq
+\frac{(h/2)^{r+1}}{(r+1)!} \max_{x \in [τ_{i-1}, τ_{i}]} |f^{(r+1)}(x)|
+\left( \int_{τ_{i-1}}^{τ_{i}} 1 \, dx + Q_{τ_{i-1}}^{τ_{i}}(1) \right) \\
 &\leq
-\frac{h^{r+1}}{2^{r+1} (r+1)!} \max_{x \in [t_{i}, t_{i+1}]} |f^{(r+1)}(x)|
+\frac{h^{r+1}}{2^{r+1} (r+1)!} \max_{x \in [τ_{i-1}, τ_{i}]} |f^{(r+1)}(x)|
 \, 2h \\
 &=
-\frac{h^{r+1}}{2^r (r+1)!} \max_{x \in [t_{i}, t_{i+1}]} |f^{(r+1)}(x)| \, h
+\frac{h^{r+1}}{2^r (r+1)!} \max_{x \in [τ_{i-1}, τ_{i}]} |f^{(r+1)}(x)| \, h
 \end{aligned}
 ```
 Therefore for a quadrature formula over the entire domain:
 ```math
 \begin{aligned}
 \left| \int_a^b f(x)\,dx - Q_a^b(f) \right|
-&= \left| \sum_{i=0}^{N-1} \int_{t_{i}}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f) \right|\\
-&\leq \sum_{i=0}^{N-1} \left| \int_{t_{i}}^{t_{i+1}} f(x)\,dx - Q_{t_i}^{t_{i+1}}(f) \right|\\
-&\leq \frac{h^{r+1}}{2^r (r+1)!} \max_{x \in [a, b]} |f^{(r+1)}(x)| \, \sum_{i=0}^{N-1} h \\
+&= \left| \sum_{i=1}^{n} \int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f) \right|\\
+&\leq \sum_{i=1}^{n} \left| \int_{τ_{i-1}}^{τ_{i}} f(x)\,dx - Q_{τ_{i-1}}^{τ_{i}}(f) \right|\\
+&\leq \frac{h^{r+1}}{2^r (r+1)!} \max_{x \in [a, b]} |f^{(r+1)}(x)| \, \sum_{i=1}^{n} h \\
 &=\frac{h^{r+1}}{2^r (r+1)!} \left\|f^{(r+1)}\right\|_\infty \, (b-a),
 \end{aligned}
 ```
@@ -698,34 +854,34 @@ md"""
 	We will confirm that Simpson's formula has degree of exactness $r=3$.
 
 	Recall that the idea of Simpson's formula was to split the integral
-	into $n$ equally sized subintervals $[t_{i-1}, t_i]$ as
+	into $n$ equally sized subintervals $[τ_{i-1}, τ_i]$ as
 	```math
-	\int_a^b f(x)\,dx = \sum_{i=1}^{n} \int_{t_{i-1}}^{t_i} f(x) \, dx
+	\int_a^b f(x)\,dx = \sum_{i=1}^{n} \int_{t_{τ-1}}^{τ_i} f(x) \, dx
 	```
 	and then on such a subinterval approximate
 	```math
 	\tag{7}
-	\int_{t_{i-1}}^{t_i} f(x) \, dx \approx
-	\frac h6 \big( f(t_{i-1}) + 4f(m_{i-1}) + f(t_i) \big).
+	\int_{τ_{i-1}}^{τ_i} f(x) \, dx \approx
+	\frac h6 \big( f(τ_{i-1}) + 4f(m_{i}) + f(τ_i) \big).
 	```
 	If the approximation in (7) is an equality on all subintervals
 	for the monomials with degree $\leq 3$, then Simpson's formula
 	is an equality for these monomials on the full interval $[a, b]$ as well.
 	Inserting $f(x) = x^s$ into (7) we notice that our task is to show
 	```math
-	\int_{t_{i-1}}^{t_i} x^s \, dx \textcolor{blue}{\,\mathbf{=}\,} 
-	\frac h6 \big( t^s_{i-1} + 4m^s_{i-1} + t^s_i \big)
+	\int_{τ_{i-1}}^{τ_i} x^s \, dx \textcolor{blue}{\,\mathbf{=}\,} 
+	\frac h6 \big( τ^s_{i-1} + 4m^s_{i} + τ^s_i \big)
 	\qquad \text{for $0 \leq s \leq 3$},
 	```
 	but that this does not hold for $s=4$.
 
 	An additional trick we can employ to simplify our calculations
 	is to assume that the integration interval is
-	$[t_{i-1}, t_i] = [-1, 1]$ with a length of
-	$h=2$, $t_{i-1} = -1$, $t_i = 1$, $m_{i-1} = 0$.
+	$[τ_{i-1}, τ_i] = [-1, 1]$ with a length of
+	$h=2$, $τ_{i-1} = -1$, $τ_i = 1$, $m_{i} = 0$.
 	While perhaps suprising this does not actually
 	change the generality of our result  [^1].
-    Inserting the values for $h$, $t_{i-1}$, $t_i$ and $m_i$ into the above expression
+    Inserting the values for $h$, $τ_{i-1}$, $τ_i$ and $m_i$ into the above expression
     we need to show that $0 \leq s \leq 3$
 	```math
 	\int_{-1}^{1} x^s \, dx \textcolor{blue}{\,\mathbf{=}\,} 
@@ -762,20 +918,33 @@ md"""
 		are already known to be integrated exactly at this stage.
 """
 
-# ╔═╡ 145edec6-a9c9-4d36-99fb-cb4c914ef603
-md"""## Extrapolation techniques
+# ╔═╡ 64d737da-77a3-4953-84be-cc26dc7213b0
+md"""
+## Optional: Using other polynomial basis sets
 
+In the construction of the Trapezoidal and Simpson's rules we decided to use equispaced nodes within the subintervals $[τ_{i-1}, τ_i]$ for building up our polynomial approximations $\widetilde{f}_i$ of the function $f$ within this integral. This is of course just *one possible* choice.
+
+In fact from our discussion about [Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html) techniques we only found equispaced polynomials to be suboptimal. Here are some alternatives:
+
+- If we use **Chebyshev nodes** instead of equispaced nodes than we obtain **Clenshaw-Curtis integration**. See [chapter 9.6](https://fncbook.com/spectral-integration/#clenshaw-curtis-integration) of Driscoll, Brown: Fundamentals of Numerical Computation for more details.
+- Closely related is the idea to use an interpolation of $f$ based on **Legendre polynomials**, resulting in **Gauss-Legendre integration**, see again [chapter 9.6](https://fncbook.com/spectral-integration/#gauss-legendre-integration) of Driscoll, Brown for details. This is one of the current state of the art numerical integration techniques.
+"""
+
+# ╔═╡ b5ad742c-dfc9-4423-8c40-7e284b96f5fc
+md"""## Optional: Extrapolation techniques
+"""
+
+# ╔═╡ 43808c4e-1cb5-480f-bca4-89d673b8a70b
+# TODO("What is confusing here is that before we did expansions (I - T_n(f) = stuff, but now we do I = T_n(f) + stuff. )")
+
+# ╔═╡ 5957a3a4-b33b-4351-88ee-4f579f9b655b
+
+md"""
 In numerical integration the **computationally expensive step** is usually the **evaluation of the function $f$** at the points of the quadrature nodes.
 Generally higher-order numerical integration formulas are able to achieve higher accuracy with the same or less function evaluations.
 We will discuss one systematic technique to obtain higher-order quadrature formulas
 called **extrapolation**.
 """
-
-# ╔═╡ 1080859f-c505-46ea-9d21-1a336325d8da
-TODO("Make the general treatment optional and focus mostly directly applying this to the Trapezoidal rule.")
-
-# ╔═╡ 635ae6b3-1770-431b-a799-0eefe20dfd0d
-TODO("What is confusing here is that before we did expansions (I - T_n(f) = stuff, but now we do I = T_n(f) + stuff. )")
 
 # ╔═╡ 9587ec30-95b1-4bcd-b8b3-18c0ce089e3c
 md"""
@@ -916,16 +1085,16 @@ md"""
 We now want to understand why (13) is equal to the form (3) of Simpson's formula we obtained earlier. First recall the definition
 ```math
 \begin{aligned}
-T_n(f) &= \frac h2 f(t_0) + \sum_{i=1}^{n-1} h\, f(t_i) + \frac h2 f(t_n) \\
+T_n(f) &= \frac h2 f(τ_0) + \sum_{i=1}^{n-1} h\, f(τ_i) + \frac h2 f(τ_n) \\
        &= \frac h2 f(a)   + \sum_{i=1}^{n-1} h\, f(a + i\, h) + \frac h2 f(b)
 \end{aligned}
 ```
-of the Trapezoid formula, where we used $h = \frac{b-a}{n}$ and $t_i = a + i \, h$ for $i = 0, \ldots, n$.
+of the Trapezoid formula, where we used $h = \frac{b-a}{n}$ and $τ_i = a + i \, h$ for $i = 0, \ldots, n$.
 Similarly we have
 ```math
 \begin{aligned}
 T_{2n}(f) &= \frac{\tilde{h}}{2} f(a) + \sum_{j=1}^{2n-1} \tilde{h}\, f(a + j\, \tilde{h}) + \frac{\tilde{h}}{2} f(b) \\
-&= \frac{\tilde{h}}{2} f(a) + \sum_{i=0}^{n-1} \tilde{h}\, f(a + (2i+1)\, \tilde{h})
+&= \frac{\tilde{h}}{2} f(a) + \sum_{i=1}^{n} \tilde{h}\, f(a + (2i-1)\, \tilde{h})
 + \sum_{i=1}^{n-1} \tilde{h}\, f(a + 2i\, \tilde{h})
 + \frac{\tilde{h}}{2} f(b)
 \end{aligned}
@@ -935,28 +1104,28 @@ and in the last line we have split the sum
 over $j$ into two sums, one for only the odd $j$ and one for only the even $j$.
 
 First we note the even $j$ to be identical to the quadrature nodes
-of $T_n$, i.e. $f(a + 2i\, \tilde{h}) = f(a + i\, h) = f(t_i)$
-for $i = 0, \ldots, n$.
+of $T_n$, i.e. $f(a + 2i\, \tilde{h}) = f(a + i\, h) = f(τ_i)$
+for $i = 1, \ldots, n-1$.
 The remaining odd $j$ we identify to be equal to the midpoints
 of our previous construction of Simpson's formula
 ```math
-f(a + (2i+1)\, \tilde{h}) = f\left(\frac{a + (i+1)\,h}{2} + \frac{a + i\,h}{2}\right)
-= f\left( \frac{t_i + t_{i+1}}{2} \right) = f(m_i)
+f(a + (2i-1)\, \tilde{h}) = f\left(\frac{a + (i-1)\,h}{2}+\frac{a + i\,h}{2}\right)
+= f\left( \frac{t_{i-1} + t_{i}}{2} \right) = f(m_{i})
 ```
 for $i = 0, \ldots, n-1$.
 With this we rewrite
 ```math
 \tag{19}
-T_{2n}(f) = \frac{h}{4} f(t_0) + \frac{h}{2} \sum_{i=0}^{n-1} f(m_i) + \frac{h}{2} \sum_{i=1}^{n-1}  f(t_i) + \frac{h}{4} f(t_n),
+T_{2n}(f) = \frac{h}{4} f(t_0) + \frac{h}{2} \sum_{i=1}^{n} f(m_i) + \frac{h}{2} \sum_{i=1}^{n-1}  f(t_i) + \frac{h}{4} f(t_n),
 ```
 which we insert into (13) to obtain
 ```math
 \begin{align*}
 S_{2n}(f) &= \frac{1}{3} \Big( 4\,T_{2n}(f) - T_n(f) \Big) \\
 &= 
-\frac{h}{3} f(t_0) + \frac{2h}{3} \sum_{i=0}^{n-1} f(m_i) + \frac{2h}{3} \sum_{i=1}^{n-1} f(t_i) + \frac{h}{3} f(t_n)\\
+\frac{h}{3} f(t_0) + \frac{2h}{3} \sum_{i=1}^{n} f(m_i) + \frac{2h}{3} \sum_{i=1}^{n-1} f(t_i) + \frac{h}{3} f(t_n)\\
 &- \frac h6 f(t_0) \hspace{7.6em} - \frac{h}{3}\sum_{i=1}^{n-1} f(t_i) - \frac h6 f(t_n)\\
-&= \frac h6 f(t_0) + \frac {2h}3 \sum_{i=0}^{n-1} f(m_i) + \frac h3 \sum_{i=1}^{n-1} f(t_i) + \frac h6 f(t_n).
+&= \frac h6 f(t_0) + \frac {2h}3 \sum_{i=1}^{n} f(m_i) + \frac h3 \sum_{i=1}^{n-1} f(t_i) + \frac h6 f(t_n).
 \end{align*}
 ```
 This is again the expression (3) we had previously for Simpson's formula.
@@ -964,7 +1133,7 @@ This is again the expression (3) we had previously for Simpson's formula.
 
 # ╔═╡ 5534dfa0-f5fb-47d7-9b43-b0f97adf76be
 md"""
-### Node doubling
+### Optional: Node doubling
 
 If we consider the integration formula $R_{4n}$ we notice that
 $R_{4n}$ depends on $S_{4n}$ and $S_{2n}$, which in turn depend on
@@ -989,27 +1158,27 @@ On the others the function values are already known (as they were needed at the 
 RobustLocalResource("https://github.com/epfl-matmat/numerical-analysis/blob/30a76271c3fa3be9d24896ecd2450d18fa505df3/src/img/node-doubling.svg", "img/node-doubling.svg", :width => 600)
 
 # ╔═╡ ea69e253-ff02-45b8-a760-4467260f36b4
-TODO("Using the drawing above this can be better explained, in particular T_{2n} easily re-written from T_n if one considers halfing the interval size ... perhaps some extra labels need to be introduced in the drawing above")
+# TODO("Using the drawing above this can be better explained, in particular T_{2n} easily re-written from T_n if one considers halfing the interval size ... perhaps some extra labels need to be introduced in the drawing above")
 
 # ╔═╡ d5885f27-7171-4a78-a32f-ead4a4791b0b
 md"""
 To make this explicit we use a formulation for the trapezoidal rule, which is developed in the part *Details on the equality of the two forms of Simpson's formula*, equation (19).
 As it states the trapezoidal rule with $2n$ subintervals can be expressed
 in terms of quantities of the trapezoidal rule with $n$ subintervals,
-that is in terms of the quadrature nodes $t_i = a + i \, h$ (for $i = 0, \ldots, n$),
-the nodal spacing $h = (b-a) / n$ and the midpoints $m_i = \frac{t_i + t_{i+1}}{2}$:
+that is in terms of the quadrature nodes $τ_i = a + i \, h$ (for $i = 0, \ldots, n$),
+the nodal spacing $h = (b-a) / n$ and the midpoints $m_i = \frac{τ_{i-1} + τ_{i}}{2}$:
 ```math
-T_{2n}(f) = \frac{h}{4} f(t_0) + \frac{h}{2} \sum_{i=0}^{n-1} f(m_i) + \frac{h}{2} \sum_{i=1}^{n-1}  f(t_i) + \frac{h}{4} f(t_n).
+T_{2n}(f) = \frac{h}{4} f(τ_0) + \frac{h}{2} \sum_{i=1}^{n} f(m_i) + \frac{h}{2} \sum_{i=1}^{n-1}  f(τ_i) + \frac{h}{4} f(τ_n).
 ```
-Noting $m_i = a + (2i+1)\, \frac{h}{2}$
-for $i=0, \ldots, n-1$
+Noting $m_i = a + (2i-1)\, \frac{h}{2}$
+for $i=1, \ldots, n$
 and using the definition of $T_n(f)$ this can be reformulated as
 ```math
 \tag{20}
-T_{2n}(f) = \frac12 T_{n}(f) + \frac{h}{2} \sum_{i=0}^{n-1} f\left(a + (2i+1)\, \frac{h}{2}\right).
+T_{2n}(f) = \frac12 T_{n}(f) + \frac{h}{2} \sum_{i=1}^{n} f\left(a + (2i-1)\, \frac{h}{2}\right).
 ```
-Since $a + (2i+1)\, \frac{h}{2} = a + (2i+1)\, \frac{b-a}{2n}$
-are just the *odd* quadrature nodes of the $T_{2n}(f)$
+Since $a + (2i-1)\, \frac{h}{2} = a + (2i-1)\, \frac{b-a}{2n}$
+for $i=1,\ldots,n$ are just the *odd* quadrature nodes of the $T_{2n}(f)$
 quadrature formula, we see that only these $n$ odd nodes
 need to be evaluated additionally when
 considering $T_{2n}(f)$ instead of $T_n(f)$.
@@ -1229,12 +1398,15 @@ like we did in the numerical example of the node doubling section.
 However, these ideas are out of scope for us.
 """
 
+# ╔═╡ 23993f4f-2d96-4bd8-9982-07d6b96d1d29
+md"Show outline $(@bind show_outline CheckBox(default=true))"
+
 # ╔═╡ 7d6e26e5-96ee-447d-86e4-27588726e429
-let
+if show_outline
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 320)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 360)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1425,7 +1597,7 @@ uuid = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
 version = "0.4.5"
 
 [[deps.FFMPEG_jll]]
-deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
 git-tree-sha1 = "01ba9d15e9eae375dc1eb9589df76b3572acd3f2"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "8.0.1+0"
@@ -2238,6 +2410,12 @@ git-tree-sha1 = "7ed9347888fac59a618302ee38216dd0379c480d"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
 version = "0.9.12+0"
 
+[[deps.Xorg_libpciaccess_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "4909eb8f1cbf6bd4b1c30dd18b2ead9019ef2fad"
+uuid = "a65dc6b1-eb27-53a1-bb3e-dea574b5389e"
+version = "0.18.1+0"
+
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
 git-tree-sha1 = "bfcaf7ec088eaba362093393fe11aa141fa15422"
@@ -2350,6 +2528,12 @@ git-tree-sha1 = "9bf7903af251d2050b467f76bdbe57ce541f7f4f"
 uuid = "1183f4f0-6f2a-5f1a-908b-139f9cdfea6f"
 version = "0.2.2+0"
 
+[[deps.libdrm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libpciaccess_jll"]
+git-tree-sha1 = "63aac0bcb0b582e11bad965cef4a689905456c03"
+uuid = "8e53e030-5e6c-5a89-a30b-be5b7263a166"
+version = "2.4.125+1"
+
 [[deps.libevdev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "56d643b57b188d30cccc25e331d416d3d358e557"
@@ -2373,6 +2557,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "6ab498eaf50e0495f89e7a5b582816e2efb95f64"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
 version = "1.6.54+0"
+
+[[deps.libva_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
+git-tree-sha1 = "7dbf96baae3310fe2fa0df0ccbb3c6288d5816c9"
+uuid = "9a156e7d-b971-5f62-b2c9-67348b8fb97c"
+version = "2.23.0+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll"]
@@ -2427,14 +2617,23 @@ version = "1.13.0+0"
 # ╠═f95ba764-ac44-45e0-a714-3fffe2066c7f
 # ╟─bfccad43-b336-4271-83eb-40af1ed36849
 # ╠═81c6042e-20a1-4aa7-b7ff-4a369126c22e
-# ╟─899f6285-331e-4cc5-8b0a-0e68c67082d2
-# ╟─86ff3f84-f234-4de1-9d78-54a289c9319e
-# ╟─d060f303-2dc6-4322-96eb-5a8deb3b7846
+# ╟─526ba7d0-846d-419c-90a7-9659b384353f
+# ╟─a24b3609-8d0b-4a33-b546-7c2c49a66ebe
+# ╟─18c04e73-ca49-428d-b9cd-efa3ae697af0
+# ╟─c63fa1a3-d96e-4a09-a914-85773be9ad0d
 # ╟─2da93494-ceff-40ec-90d3-3b214b134b5e
-# ╟─03290f7e-46fd-4511-aa00-673a75de180f
-# ╟─12235876-6af1-4091-b0ed-7e029b70992d
+# ╟─c1959ea2-d1b7-4c40-adb4-e99bbad9eb5f
+# ╟─2d5a6b35-4484-4f3e-8a92-d11a6580da6b
+# ╟─74fcb512-65cb-4df4-82b6-2e408b971913
+# ╟─899f6285-331e-4cc5-8b0a-0e68c67082d2
+# ╟─20d182af-1fbe-4027-8248-a7c94bcbb12c
+# ╟─9fb00e26-146a-4e82-861f-4345aa143c7a
+# ╟─5d4f0a34-1da1-4e12-a8aa-55b1322d4a41
+# ╟─cdb60089-57b1-43fb-9fc0-a0c700c18903
+# ╟─5f0178ad-c05b-4ac4-a008-b35d105cc7b2
+# ╟─26c60564-679e-48cc-b4e3-8715391604db
 # ╠═fb68914d-fc61-4160-abe3-7f311412de64
-# ╟─a1d83cb2-6e0d-4a53-a11f-60dc020249d4
+# ╟─feab81d1-1013-491e-b1d0-adb76d7aaadf
 # ╠═9c2919cb-8580-422e-82f3-cd70b9e15112
 # ╟─3c37067a-941f-4ec2-863d-741e0e76c694
 # ╠═f2381a2a-f940-4593-91e3-a37aef8127a0
@@ -2442,7 +2641,7 @@ version = "1.13.0+0"
 # ╠═bc197c36-9294-49ce-af73-514c35860d81
 # ╟─18506fc5-9019-4076-b77e-1c000d01b946
 # ╟─f189cf70-d72e-483c-af61-a3346ddd201d
-# ╟─5f0178ad-c05b-4ac4-a008-b35d105cc7b2
+# ╟─8ea21571-6a5c-4a07-b1a8-26c05eaf5422
 # ╟─c31c7012-6986-441f-ae99-5e2bb2b469e5
 # ╠═4fdd346f-a279-4686-b775-675cfe9f9f21
 # ╟─becdcc4e-ecff-46ad-8f3a-92d117e374f7
@@ -2463,9 +2662,10 @@ version = "1.13.0+0"
 # ╟─9bad55de-c2d7-44f9-9478-7b66751bfbfe
 # ╟─a4cf020a-bb95-4fed-ad50-11ebae1934f5
 # ╟─1c5167d5-0475-4522-bc5f-28df2f806d6b
-# ╟─145edec6-a9c9-4d36-99fb-cb4c914ef603
-# ╠═1080859f-c505-46ea-9d21-1a336325d8da
-# ╠═635ae6b3-1770-431b-a799-0eefe20dfd0d
+# ╟─64d737da-77a3-4953-84be-cc26dc7213b0
+# ╟─b5ad742c-dfc9-4423-8c40-7e284b96f5fc
+# ╠═43808c4e-1cb5-480f-bca4-89d673b8a70b
+# ╟─5957a3a4-b33b-4351-88ee-4f579f9b655b
 # ╟─9587ec30-95b1-4bcd-b8b3-18c0ce089e3c
 # ╟─15b22584-5f21-4f00-ac04-0643fb1dfd56
 # ╟─70eddba0-82fd-4b5e-8d52-a961c03db5a6
@@ -2501,6 +2701,7 @@ version = "1.13.0+0"
 # ╟─850c093f-ac5c-4175-b7d6-b8713718ecd5
 # ╠═571c5934-d5b4-4e7b-84f9-72437e8c794f
 # ╟─b41adad4-2cf5-44ca-a1b8-d70ab1ab97ef
+# ╟─23993f4f-2d96-4bd8-9982-07d6b96d1d29
 # ╟─7d6e26e5-96ee-447d-86e4-27588726e429
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
