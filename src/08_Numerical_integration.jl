@@ -116,7 +116,7 @@ Recall that to construct a $p$-th degree polynomial approximation $\widetilde{f}
 # ╔═╡ c63fa1a3-d96e-4a09-a914-85773be9ad0d
 md"""
 ##### Composite quadrature
-Here we first subdivide the interval $[a, b]$ into a set of $n$ subintervals $[τ_i, τ_{i+1}]$ with with $a = τ_0 < τ_1 < \cdots < τ_{n-1} < τ_n$. In general the $τ_i$ can be distributed arbitrarily in the interval $[a, b]$. However, for simplicity we will assume **intervals of equal size** using the definition
+Here we first subdivide the interval $[a, b]$ into a set of $n$ subintervals $[τ_i, τ_{i+1}]$ with $a = τ_0 < τ_1 < \cdots < τ_{n-1} < τ_n$. In general the $τ_i$ can be distributed arbitrarily in the interval $[a, b]$. However, for simplicity we will assume **intervals of equal size** using the definition
 ```math
 \tag{1}
 τ_i = a + i \, h, \qquad h = \frac{b-a}{n} \qquad \text{where $i = 0, 1, \ldots, n$}.
@@ -219,10 +219,10 @@ Following our discussion about composite quadrature rules a first idea is to per
 
 # ╔═╡ 9fb00e26-146a-4e82-861f-4345aa143c7a
 md"""
-To fit such a linear polynomial $\widetilde{f}_{1,i}$ two nodal points are sufficient in the subinterval. Knowing $f$ on the interval boundaries, i.e. having access to the data points $(τ_{i-1}, f(τ_{i-1}))$ and $(τ_i, f(τ_i))$ is thus sufficient. We construct an interpolynomial using the based on the [Lagrange basis described previously](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html#Lagrange-basis). Using aforementioned two datapoints we thus obtain
+To fit such a linear polynomial $\widetilde{f}_{1,i}$ two nodal points are sufficient in the subinterval. Knowing $f$ on the interval boundaries, i.e. having access to the data points $(τ_{i-1}, f(τ_{i-1}))$ and $(τ_i, f(τ_i))$ is thus sufficient. We construct an interpolynomial using the based on the [Lagrange basis described previously](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html#Lagrange-basis). Using the aforementioned two datapoints we thus obtain
 ```math
-\widetilde{f}_{1,i}(x) = f(τ_{i-1}) \underbrace{\frac{x - τ_{i}}{τ_{i-1} - τ_{i}}}_{\text{Langrange function of $τ_{i-1}$}}
-+ f(τ_i) \underbrace{\frac{x - τ_{i-1}}{τ_{i} - τ_{i-1}}}_{\text{Langrange function of $τ_{i}$}}.
+\widetilde{f}_{1,i}(x) = f(τ_{i-1}) \underbrace{\frac{x - τ_{i}}{τ_{i-1} - τ_{i}}}_{\text{Lagrange function of $τ_{i-1}$}}
++ f(τ_i) \underbrace{\frac{x - τ_{i-1}}{τ_{i} - τ_{i-1}}}_{\text{Lagrange function of $τ_{i}$}}.
 ```
 Recalling the definition of the subintervals (1), i.e. $τ_i = a + i \, h$, this is equal to
 ```math
@@ -467,11 +467,11 @@ by evaluating $f$ on the interval boundaries $τ_{i-1}$, $τ_{i}$, but also the 
 Again using a Lagrange basis we write
 ```math
 \widetilde{f}_{2,i}(x) = f(τ_{i-1}) \underbrace{\frac{x - m_{i}}{τ_{i-1} - m_{i}}
-\frac{x - τ_{i}}{τ_{i-1} - τ_{i}}}_{\text{Langrange function of $τ_{i-1}$}}
+\frac{x - τ_{i}}{τ_{i-1} - τ_{i}}}_{\text{Lagrange function of $τ_{i-1}$}}
 + f(m_i) \underbrace{\frac{x - τ_{i-1}}{m_{i} - τ_{i-1}}
-\frac{x - τ_{i}}{m_{i} - τ_{i}}}_{\text{Langrange function of $m_{i}$}}
+\frac{x - τ_{i}}{m_{i} - τ_{i}}}_{\text{Lagrange function of $m_{i}$}}
 + f(τ_i) \underbrace{\frac{x - τ_{i-1}}{τ_{i} - τ_{i-1}}
-\frac{x - m_i}{τ_{i} - m_i}}_{\text{Langrange function of $τ_{i}$}}.
+\frac{x - m_i}{τ_{i} - m_i}}_{\text{Lagrange function of $τ_{i}$}}.
 ```
 Employing this approximation in construction (2) gives 
 ```math
@@ -506,13 +506,13 @@ t_{2n} &= τ_n = b.
 \end{aligned}
 ```
 
-Therefore $N = 2n$ in (3) leading to a **nodal. distance** of $\frac{b-a}{2n} = \frac{h}{2}$ while the **subinterval size** remains as $h = τ_{i+1} - τ_i = \frac{b-a}{n}$.
+Therefore $N = 2n$ in (3) leading to a **nodal distance** of $\frac{b-a}{2n} = \frac{h}{2}$ while the **subinterval size** remains as $h = τ_{i+1} - τ_i = \frac{b-a}{n}$.
 """
 
 # ╔═╡ abcafa59-e8a1-4438-9ff6-3e8fc9fbd28d
 md"""
 !!! exercise
-    Derive Simpson's rule, i.e. show that the missing step that
+    Complete the missing step in the derivation of Simpson's rule, i.e. prove that:
     ```math
 	\int_{τ_{i-1}}^{τ_i} \widetilde{f}_{2,i}(x)\, dx = \frac{h}{6}\Big(
 	f(τ_{i-1}) + 4f(m_{i-1}) + f(τ_i)
