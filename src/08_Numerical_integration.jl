@@ -200,7 +200,7 @@ md"""
 !!! danger "Notational confusion N versus n versus h"
 	In this class we will use the following notation:
 	-   $N$ **number of integration nodes**
-	-   $n$ **number of subintervals** $[τ_{i-1} τ_i]$
+	-   $n$ **number of subintervals** $[τ_{i-1}, τ_i]$
 	-   $h$ **width of the subintervals** $h = τ_{i} - τ_{i-1}$
 	In general $N > n$ and therefore the *distance between the nodes* is usually smaller than $h$.
 """
