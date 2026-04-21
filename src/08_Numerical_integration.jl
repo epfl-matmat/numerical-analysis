@@ -90,12 +90,12 @@ end
 
 # ╔═╡ 526ba7d0-846d-419c-90a7-9659b384353f
 md"""
-## Composite quadrature formulas
+## Simple and composite quadrature formulas
 """
 
 # ╔═╡ a24b3609-8d0b-4a33-b546-7c2c49a66ebe
 md"""
-The task of **numerical integration** is to **approximate an integral** $I = \int_a^b f(x) \, dx$. We want to achieve this by **sampling the function** at $N$ carefully selected points $t_i$, $i=0, \ldots N$, followed by taking linear combinations of the results. We thus work towards approximations of the form
+The task of **numerical integration** is to **approximate an integral** $I = \int_a^b f(x) \, dx$. We want to achieve this by **sampling the function** at $N$ carefully selected points $t_i \in [a, b]$ with $i=1, \ldots N$, followed by taking linear combinations of the results. We thus work towards approximations of the form
 ```math
 I = \int_a^b f(x) \, dx ≈ \underbrace{\sum_{i=1}^N α_i f(t_i)}_{=Q_a^b(f)}.
 ```
@@ -110,13 +110,13 @@ Approximate $f$ by a function $\widetilde{f}$ that is easy to integrate, then pe
 - **polynomials can be integrated in closed form** and
 - we know standard procedures to to approximate functions as polynomials, namely **polynomial interpolation**, which we discussed in [the chapter on Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html).
 
-Recall that to construct a $p$-th degree polynomial approximation $\widetilde{f}$ we require $p+1$ samples of the function $f$. Therefore a simple quadrature formulas employing $N$ quadrature nodes effectively works by constructing an $N-1$ polynomial interpolation of $f$ on $[a, b]$.
+Recall that to construct a $p$-th degree polynomial approximation $\widetilde{f}$ we require $p+1$ samples of the function $f$. Therefore a simple quadrature formulas employing $N$ quadrature nodes effectively works by constructing an $(N-1)$-th degree polynomial interpolation of $f$ on $[a, b]$.
 """
 
 # ╔═╡ c63fa1a3-d96e-4a09-a914-85773be9ad0d
 md"""
 ##### Composite quadrature
-Here we first subdivide the interval $[a, b]$ into a set of $n$ subintervals $[τ_i, τ_{i+1}]$ with $a = τ_0 < τ_1 < \cdots < τ_{n-1} < τ_n$. In general the $τ_i$ can be distributed arbitrarily in the interval $[a, b]$. However, for simplicity we will assume **intervals of equal size** using the definition
+Here we first subdivide the interval $[a, b]$ into a set of $n$ subintervals $[τ_{i-1}, τ_{i}]$ with $a = τ_0 < τ_1 < \cdots < τ_{n-1} < τ_n$. We therefore have $n+1$ integral boundaries. In general the $τ_i$ can be distributed arbitrarily in the interval $[a, b]$. However, for simplicity we will assume **intervals of equal size** using the definition
 ```math
 \tag{1}
 τ_i = a + i \, h, \qquad h = \frac{b-a}{n} \qquad \text{where $i = 0, 1, \ldots, n$}.
@@ -199,10 +199,10 @@ There are two main reasons to prefer composite quadrature rules over simple ones
 md"""
 !!! danger "Notational confusion N versus n versus h"
 	In this class we will use the following notation:
-	-   $N$ **number of integration nodes**
-	-   $n$ **number of subintervals** $[τ_{i-1}, τ_i]$
+	-   $N$ **number of integration nodes** labelled $t_\textcolor{red}{1}, t_2, \ldots, t_N$
+	-   $n$ **number of subintervals** $[τ_{i-1}, τ_i]$, i.e. $n+1$ integral boundaries $τ_\textcolor{red}{0}, τ_1, \ldots, τ_n$
 	-   $h$ **width of the subintervals** $h = τ_{i} - τ_{i-1}$
-	In general $N > n$ and therefore the *distance between the nodes* is usually smaller than $h$.
+	In general $N > n+1$ and therefore the *distance between the nodes* is usually smaller than $h$.
 """
 
 # ╔═╡ 899f6285-331e-4cc5-8b0a-0e68c67082d2
@@ -242,7 +242,7 @@ I = \int_a^b f(x)\, dx &= \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} f(x)\, dx \\
 	+ \frac{f(τ_i)}{h}\int_{τ_{i-1}}^{τ_i} x - τ_{i-1} \, dx
 	\right) \\
 &= \sum_{i=1}^n \left(
-	\frac{f(τ_{i-1})}{h} \frac{h^2}{2} + \frac{f(τ_i)}{2} \frac{h^2}{2}
+	\frac{f(τ_{i-1})}{h} \frac{h^2}{2} + \frac{f(τ_i)}{h} \frac{h^2}{2}
 	\right) \\
 \end{aligned}
 ```
@@ -313,12 +313,12 @@ md"""
 The trapezoidal rule is just one representative of the wide class of numerical integration formulas. A general definition is:
 
 !!! info "Definition: Numerical integration formula"
-    A **numerical integration formula** for the $N+1$ equispaced **quadrature nodes**
-	$t_i$, $i=0, \ldots, N$ is the set of **weights** $w_0, w_1, \ldots w_N$,
+    A **numerical integration formula** for the $N$ equispaced **quadrature nodes**
+	$t_i$, $i=1, \ldots, N$ is the set of **weights** $w_1, w_1, \ldots w_N$,
     such that for an integrand $f : [a, b] \to \mathbb{R}$
     ```math
 	\tag{3}
-    \int_a^b f(x) dx \approx Q_a^b(f) = \frac{b-a}{N}\, \sum_{i=0}^N w_i f(t_i).
+    \int_a^b f(x) dx \approx Q_a^b(f) = \frac{b-a}{N-1}\, \sum_{i=1}^N w_i f(t_i).
 	```
 	The weights $w_i$ are independent of $f$.
  
@@ -327,23 +327,23 @@ The trapezoidal rule is just one representative of the wide class of numerical i
 By comparing with our derivation above, we realise:
 
 !!! info "Observation: Trapezoid formula"
-	The trapezoid formula is the numerical integration of the form (3) where the nodes are just equal to the subinterval boundaries, i.e. we have $N=n$ and
+	The trapezoid formula is the numerical integration of the form (3) where the $N$ nodes are just equal to the $n+1$ subinterval boundaries, i.e. we have $N=n+1$ and
 	```math
 	\begin{aligned}
-	t_0 &= τ_0 = a \\
-	t_1 &= τ_1 = a + 1 h \\
-	t_2 &= τ_2 = a + 2 h \\
+	t_1 &= τ_0 = a \\
+	t_2 &= τ_1 = a + 1 h \\
+	t_3 &= τ_2 = a + 2 h \\
 	\vdots\\
-	t_N &= τ_n = b.
+	t_{n+1} &= τ_{n} = b.
 	\end{aligned}
 	```
-	Here we used the subinterval width $h = \frac{b-a}{ne}$.
+	Here we used the subinterval width $h = \frac{b-a}{n} = \frac{b-a}{N-1}$.
 	The associated weights are
 	```math
-	w_i = \left\{ \begin{array}{ll} 1 & \text{if } 0 < i < n \\ \frac12& \text{if }i = 0 \text{ or } i = n \end{array}\right.
+	w_i = \left\{ \begin{array}{ll} 1 & \text{if } 0 < i < N \\ \frac12& \text{if }i = 0 \text{ or } i = N \end{array}\right.
 	```
 
-We will see later that nodes and interval boundaries do not agree for more general formulas. In fact we usually have $N > n$, i.e. more nodes than subintervals.
+We will see later that nodes and interval boundaries do not agree for more general formulas.
 """
 
 # ╔═╡ 26c60564-679e-48cc-b4e3-8715391604db
@@ -355,10 +355,10 @@ An implementation of the trapezoidal rule is:
 function trapezoid(f, a, b, n)
 	# f:  Function
 	# [a, b]: Interval to integrate over
-	# n:  Number of pieces to break the interval into
+	# n:  Number of subintervals
 	h = (b - a) / n
-	t = range(a, b, length=n+1)
-	y = [f(tₙ) for tₙ in t]
+	τ = range(a, b, length=n+1)  # Interval boundaries 
+	y = [f(τₙ) for τₙ in τ]
 	integral = h * (0.5y[1] + sum(y[2:n]) + 0.5y[n+1])
 	(; integral, h)
 end
@@ -395,9 +395,9 @@ begin
 	hs     = Float64[]
 	errors = Float64[]
 	for n in ns
-		res = trapezoid(f, 0, 1, n)
-		Tf   = res.integral  # Trapezoidal approximation
-		h     = res.h        # Quadrature node distances
+		res   = trapezoid(f, 0, 1, n)
+		Tf    = res.integral  # Trapezoidal approximation
+		h     = res.h         # Quadrature node distances
 		error = abs(Tf - exact)
 		@printf "n =%4d   T(f) = %.10f   error = %.10f\n" n Tf error
 		
@@ -461,7 +461,7 @@ md"""
 In the construction of the trapezoidal rule we employed linear approximations $\widetilde{f}_{1,i}$ of $f$ in each of the subintervals $[τ_{i-1}, τ_i]$. One may thus wonder: Why stop at using only linear polynomials?
 
 Indeed, **Simpson's formula** takes the idea one step further and
-constructs a quadratic approximation $\widetilde{f}_{2,i}$
+constructs a **quadratic approximation** $\widetilde{f}_{2,i}$
 within each interval $[τ_{i-1}, τ_{i}]$
 by evaluating $f$ on the interval boundaries $τ_{i-1}$, $τ_{i}$, but also the midpoint $m_i = \frac{τ_{i-1} + τ_{i}}{2}$ (recall we need *three points* to fit a quadratic polynomial).
 Again using a Lagrange basis we write
@@ -471,16 +471,16 @@ Again using a Lagrange basis we write
 + f(m_i) \underbrace{\frac{x - τ_{i-1}}{m_{i} - τ_{i-1}}
 \frac{x - τ_{i}}{m_{i} - τ_{i}}}_{\text{Lagrange function of $m_{i}$}}
 + f(τ_i) \underbrace{\frac{x - τ_{i-1}}{τ_{i} - τ_{i-1}}
-\frac{x - m_i}{τ_{i} - m_i}}_{\text{Lagrange function of $τ_{i}$}}.
+\frac{x - m_i}{τ_{i} - m_i}}_{\text{Lagrange funct. of $τ_{i}$}}.
 ```
 Employing this approximation in construction (2) gives 
 ```math
 \int_a^b f(x)\, dx = \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} f(x)\, dx \\
 \approx \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} \widetilde{f}_{2,i}(x)\, dx
 ```
-which requires us to integrate the quadratic polynomials $\widetilde{f}^2_i$ over the intervals $[τ_{i-1}, τ_i]$. This is a little harder to compute and will be done as an exercise. The resulting formula is Simpson's formula
+which requires us to integrate the quadratic polynomials $\widetilde{f}_{2,i}$ over the intervals $[τ_{i-1}, τ_i]$. This is a little harder to compute and will be done as an exercise. The resulting formula is Simpson's formula
 ```math
-\tag{3}
+\tag{S}
 \begin{aligned}
 \int_a^b f(x)\, dx &\approx S_{2n}(f)  = \sum_{i=1}^n \int_{τ_{i-1}}^{τ_i} \widetilde{f}_{2,i}(x)\, dx\\
 &= \sum_{i=1}^n \frac h6 \big( f(τ_{i-1}) + 4f(m_i) + f(τ_i) \big)\\
@@ -492,21 +492,21 @@ which requires us to integrate the quadratic polynomials $\widetilde{f}^2_i$ ove
 # ╔═╡ 5ee0ec01-54c3-48d8-8ba8-4460144002dd
 md"""
 While a little harder to see, this formula can also be brought into the form of (3):
-it employs **$2n + 1$ equispaced nodes**
+it employs **$N = 2n + 1$ equispaced nodes**
 --- namely the collection of both the $τ_i$ for $i=0, \ldots, n$ *and* the $m_i$ for $i=1,\ldots n$:
 ```math
 \begin{aligned}
-t_0 &= τ_0 = a \\
-t_1 &= m_1 = a + \frac12 h \\
-t_2 &= τ_1 = a + h \\
+t_1 &= τ_0 = a \\
+t_2 &= m_1 = a + \frac12 h \\
+t_3 &= τ_1 = a + h \\
 \vdots\\
-t_{2n-2} &= m_n = a + (n-1)\, h \\
-t_{2n-1} &= m_n = a + \frac{2n-1}{2} h \\
-t_{2n} &= τ_n = b.
+t_{2n-1} &= τ_{n-1} = a + (n-1)\, h \\
+t_{2n} &= m_n = a + \frac{2n-1}{2} h \\
+t_{2n+1} &= τ_n = b.
 \end{aligned}
 ```
 
-Therefore $N = 2n$ in (3) leading to a **nodal distance** of $\frac{b-a}{2n} = \frac{h}{2}$ while the **subinterval size** remains as $h = τ_{i+1} - τ_i = \frac{b-a}{n}$.
+Therefore $N = 2n+1$ in (3) leading to a **nodal distance** of $\frac{b-a}{N-1} = \frac{b-a}{2n} = \frac{h}{2}$ while the **subinterval size** remains as $h = τ_{i+1} - τ_i = \frac{b-a}{n}$.
 """
 
 # ╔═╡ abcafa59-e8a1-4438-9ff6-3e8fc9fbd28d
@@ -529,15 +529,15 @@ A Julia implementation of Simpson's rule is given below:
 function simpson(f, a, b, n)
 	# f:  Function
 	# [a, b]: Interval to integrate over
-	# n:  Number of pieces to break the interval into
+	# n:  Number of subintervals
 	h = (b - a) / n                    # Subinterval width
-	t = range(a, b, length=n+1)        # Subinterval boundaries
+	τ = range(a, b, length=n+1)        # Subinterval boundaries
 	m = range(a+h/2, b-h/2, length=n)  # Subinterval midpoints
 
 	# Evaluate f and compute approximation
-	ft = f.(t)
+	fτ = f.(τ)
 	fm = f.(m)
-	integral = h * (ft[1]/6 + sum(ft[2:n])/3 + 2sum(fm)/3 + ft[n+1]/6)
+	integral = h * (fτ[1]/6 + sum(fτ[2:n])/3 + 2sum(fm)/3 + fτ[n+1]/6)
 
 	(; integral, h)
 end
@@ -650,7 +650,7 @@ Q_{τ_{i-1}}^{τ_{i}}(f)
 \end{aligned}
 ```
 The difference between these expressions is exactly the error
-contribution from the interval $[t_{i}, t_{i+1}]$, namely
+contribution from the interval $[τ_{i-1}, τ_{i}]$, namely
 ```math
 \tag{5}
 \begin{aligned}
@@ -663,7 +663,7 @@ contribution from the interval $[t_{i}, t_{i+1}]$, namely
 # ╔═╡ 7812f9d7-cda7-4d05-a800-3f7bea2e0e8c
 md"""
 The **error of the integration formula** can thus be completely understood
-by studying the error $\int_{τ_{i-1}}^{τ_{i}} q_k(x) - Q_{τ_{i-1}}^{τ_{i}}(q_k)$.
+by studying the error $\int_{τ_{i-1}}^{τ_{i}} q_k(x) \, dx - Q_{τ_{i-1}}^{τ_{i}}(q_k)$.
 Since $q_k$ is just a polynomial of degree $k$
 we can thus understand the accuracy of quadrature formulas
 *for arbitrary functions* by studying the **accuracy of quadrature formulas
@@ -713,7 +713,7 @@ This is also the leading-order error term, such that
 
 # ╔═╡ 9cb44731-9d50-4718-9d4d-8fffca3a387f
 md"""
-The error in each of the the $N$ subintervals thus converges with $(r+2)$-th order,
+The error in each of the the $n$ subintervals thus converges with $(r+2)$-th order,
 such that combining with (4) and using the triangle inequality
 we obtain the total error as
 ```math
@@ -920,14 +920,14 @@ md"""
 
 # ╔═╡ 64d737da-77a3-4953-84be-cc26dc7213b0
 md"""
-## Optional: Using other polynomial basis sets
+## Using other polynomial basis sets
 
 In the construction of the Trapezoidal and Simpson's rules we decided to use equispaced nodes within the subintervals $[τ_{i-1}, τ_i]$ for building up our polynomial approximations $\widetilde{f}_i$ of the function $f$ within this integral. This is of course just *one possible* choice.
 
 In fact from our discussion about [Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html) techniques we only found equispaced polynomials to be suboptimal. Here are some alternatives:
 
 - If we use **Chebyshev nodes** instead of equispaced nodes than we obtain **Clenshaw-Curtis integration**. See [chapter 9.6](https://fncbook.com/spectral-integration/#clenshaw-curtis-integration) of Driscoll, Brown: Fundamentals of Numerical Computation for more details.
-- Closely related is the idea to use an interpolation of $f$ based on **Legendre polynomials**, resulting in **Gauss-Legendre integration**, see again [chapter 9.6](https://fncbook.com/spectral-integration/#gauss-legendre-integration) of Driscoll, Brown for details. This is one of the current state of the art numerical integration techniques.
+- Closely related is the idea to use an interpolation of $f$ based on **Legendre polynomials**, resulting in **Gauss-Legendre integration**, see again [chapter 9.6](https://fncbook.com/spectral-integration/#gauss-legendre-integration) of Driscoll, Brown for detaausils. This is one of the current state of the art numerical integration techniques. You will learn more about Gauss-Legendre integration in the exercises of this week.
 """
 
 # ╔═╡ b5ad742c-dfc9-4423-8c40-7e284b96f5fc
@@ -1423,10 +1423,10 @@ QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 [compat]
 HypertextLiteral = "~1.0.0"
 LaTeXStrings = "~1.4.0"
-Plots = "~1.41.5"
+Plots = "~1.41.6"
 PlutoTeachingTools = "~0.4.7"
 PlutoUI = "~0.7.79"
-QuadGK = "~2.11.2"
+QuadGK = "~2.11.3"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1435,7 +1435,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.4"
 manifest_format = "2.0"
-project_hash = "5d440eb54b728519694fc2798d6c4bb93358a388"
+project_hash = "b2b7900c4e5c4c515f5f8886ca42d54404389585"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1473,10 +1473,10 @@ uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.9+0"
 
 [[deps.Cairo_jll]]
-deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "fde3bf89aead2e723284a8ff9cdf5b551ed700e8"
+deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+git-tree-sha1 = "d0efe2c6fdcdaa1c161d206aa8b933788397ec71"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
-version = "1.18.5+0"
+version = "1.18.6+0"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
@@ -1525,9 +1525,9 @@ version = "1.3.0+1"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
-git-tree-sha1 = "d9d26935a0bcffc87d2613ce14c527c99fc543fd"
+git-tree-sha1 = "21d088c496ea22914fe80906eb5bce65755e5ec8"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
-version = "2.5.0"
+version = "2.5.1"
 
 [[deps.Contour]]
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
@@ -1541,9 +1541,9 @@ version = "1.16.0"
 
 [[deps.DataStructures]]
 deps = ["OrderedCollections"]
-git-tree-sha1 = "e357641bb3e0638d353c4b29ea0e40ea644066a6"
+git-tree-sha1 = "e86f4a2805f7f19bec5129bc9150c38208e5dc23"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.19.3"
+version = "0.19.4"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -1598,9 +1598,9 @@ version = "0.4.5"
 
 [[deps.FFMPEG_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
-git-tree-sha1 = "01ba9d15e9eae375dc1eb9589df76b3572acd3f2"
+git-tree-sha1 = "66381d7059b5f3f6162f28831854008040a4e905"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
-version = "8.0.1+0"
+version = "8.0.1+1"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -1625,9 +1625,9 @@ version = "1.3.7"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "2c5512e11c791d1baed2049c5652441b28fc6a31"
+git-tree-sha1 = "70329abc09b886fd2c5d94ad2d9527639c421e3e"
 uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
-version = "2.13.4+0"
+version = "2.14.3+1"
 
 [[deps.FriBidi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1637,15 +1637,15 @@ version = "1.0.17+0"
 
 [[deps.GLFW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll", "libdecor_jll", "xkbcommon_jll"]
-git-tree-sha1 = "b7bfd56fa66616138dfe5237da4dc13bbd83c67f"
+git-tree-sha1 = "9e0fb9e54594c47f278d75063980e43066e26e20"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
-version = "3.4.1+0"
+version = "3.4.1+1"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Qt6Wayland_jll", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
-git-tree-sha1 = "ee0585b62671ce88e48d3409733230b401c9775c"
+git-tree-sha1 = "44716a1a667cb867ee0e9ec8edc31c3e4aa5afdc"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.73.22"
+version = "0.73.24"
 
     [deps.GR.extensions]
     IJuliaExt = "IJulia"
@@ -1655,9 +1655,9 @@ version = "0.73.22"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "FreeType2_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt6Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "7dd7173f7129a1b6f84e0f03e0890cd1189b0659"
+git-tree-sha1 = "be8a1b8065959e24fdc1b51402f39f3b6f0f6653"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.73.22+0"
+version = "0.73.24+0"
 
 [[deps.GettextRuntime_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll"]
@@ -1690,9 +1690,9 @@ version = "1.0.2"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "PrecompileTools", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "5e6fe50ae7f23d171f44e311c2960294aaa0beb5"
+git-tree-sha1 = "51059d23c8bb67911a2e6fd5130229113735fc7e"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.10.19"
+version = "1.11.0"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll"]
@@ -1754,9 +1754,9 @@ version = "1.4.0"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "b6893345fd6658c8e475d40155789f4860ac3b21"
+git-tree-sha1 = "c0c9b76f3520863909825cbecdef58cd63de705a"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "3.1.4+0"
+version = "3.1.5+0"
 
 [[deps.JuliaSyntaxHighlighting]]
 deps = ["StyledStrings"]
@@ -1771,21 +1771,15 @@ version = "3.100.3+0"
 
 [[deps.LERC_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "aaafe88dccbd957a8d82f7d05be9b69172e0cee3"
+git-tree-sha1 = "17b94ecafcfa45e8360a4fc9ca6b583b049e4e37"
 uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
-version = "4.0.1+0"
+version = "4.1.0+0"
 
 [[deps.LLVMOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "eb62a3deb62fc6d8822c0c4bef73e4412419c5d8"
 uuid = "1d63c593-3942-5779-bab2-d838dc0a180e"
 version = "18.1.8+0"
-
-[[deps.LZO_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "1c602b1127f4751facb671441ca72715cc95938a"
-uuid = "dd4b983a-f0e5-5f8d-a1b7-129d4a5fb1ac"
-version = "2.10.3+0"
 
 [[deps.LaTeXStrings]]
 git-tree-sha1 = "dda21b8cbd6a6c40d9d02a73230f9d70fed6918c"
@@ -1859,9 +1853,9 @@ version = "1.18.0+0"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "97bbca976196f2a1eb9607131cb108c69ec3f8a6"
+git-tree-sha1 = "cc3ad4faf30015a3e8094c9b5b7f19e85bdf2386"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
-version = "2.41.3+0"
+version = "2.42.0+0"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
@@ -1871,9 +1865,9 @@ version = "4.7.2+0"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "d0205286d9eceadc518742860bf23f703779a3d6"
+git-tree-sha1 = "d620582b1f0cbe2c72dd1d5bd195a9ce73370ab1"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
-version = "2.41.3+0"
+version = "2.42.0+0"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
@@ -1923,9 +1917,9 @@ version = "1.11.0"
 
 [[deps.MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
-git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
+git-tree-sha1 = "8785729fa736197687541f7053f6d8ab7fc44f92"
 uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.1.9"
+version = "1.1.10"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2007,9 +2001,9 @@ version = "10.44.0+1"
 
 [[deps.Pango_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "0662b083e11420952f2e62e17eddae7fc07d5997"
+git-tree-sha1 = "58e5ed5e386e156bd93e86b305ebd21ac63d2d04"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
-version = "1.57.0+0"
+version = "1.57.1+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
@@ -2046,9 +2040,9 @@ version = "1.4.4"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "TOML", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "1cc8ad0762e59e713ee3ef28f9b78b2c9f4ca078"
+git-tree-sha1 = "cb20a4eacda080e517e4deb9cfb6c7c518131265"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.41.5"
+version = "1.41.6"
 
     [deps.Plots.extensions]
     FileIOExt = "FileIO"
@@ -2084,9 +2078,9 @@ version = "1.3.3"
 
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "522f093a29b31a93e34eaea17ba055d850edea28"
+git-tree-sha1 = "8b770b60760d4451834fe79dd483e318eee709c4"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.5.1"
+version = "1.5.2"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -2094,39 +2088,45 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 version = "1.11.0"
 
 [[deps.PtrArrays]]
-git-tree-sha1 = "1d36ef11a9aaf1e8b74dacc6a731dd1de8fd493d"
+git-tree-sha1 = "4fbbafbc6251b883f4d2705356f3641f3652a7fe"
 uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
-version = "1.3.0"
+version = "1.4.0"
 
 [[deps.Qt6Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Vulkan_Loader_jll", "Xorg_libSM_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_cursor_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "libinput_jll", "xkbcommon_jll"]
-git-tree-sha1 = "34f7e5d2861083ec7596af8b8c092531facf2192"
+git-tree-sha1 = "d7a4bff94f42208ce3cf6bc8e4e7d1d663e7ee8b"
 uuid = "c0090381-4147-56d7-9ebc-da0b1113ec56"
-version = "6.8.2+2"
+version = "6.10.2+1"
 
 [[deps.Qt6Declarative_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6ShaderTools_jll"]
-git-tree-sha1 = "da7adf145cce0d44e892626e647f9dcbe9cb3e10"
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6ShaderTools_jll", "Qt6Svg_jll"]
+git-tree-sha1 = "d5b7dd0e226774cbd87e2790e34def09245c7eab"
 uuid = "629bc702-f1f5-5709-abd5-49b8460ea067"
-version = "6.8.2+1"
+version = "6.10.2+1"
 
 [[deps.Qt6ShaderTools_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll"]
-git-tree-sha1 = "9eca9fc3fe515d619ce004c83c31ffd3f85c7ccf"
+git-tree-sha1 = "4d85eedf69d875982c46643f6b4f66919d7e157b"
 uuid = "ce943373-25bb-56aa-8eca-768745ed7b5a"
-version = "6.8.2+1"
+version = "6.10.2+1"
+
+[[deps.Qt6Svg_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll"]
+git-tree-sha1 = "81587ff5ff25a4e1115ce191e36285ede0334c9d"
+uuid = "6de9746b-f93d-5813-b365-ba18ad4a9cf3"
+version = "6.10.2+0"
 
 [[deps.Qt6Wayland_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6Declarative_jll"]
-git-tree-sha1 = "8f528b0851b5b7025032818eb5abbeb8a736f853"
+git-tree-sha1 = "672c938b4b4e3e0169a07a5f227029d4905456f2"
 uuid = "e99dba38-086e-5de3-a5b1-6e4c66e897c3"
-version = "6.8.2+2"
+version = "6.10.2+1"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "9da16da70037ba9d701192e27befedefb91ec284"
+git-tree-sha1 = "5e8e8b0ab68215d7a2b14b9921a946fee794749e"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.11.2"
+version = "2.11.3"
 
     [deps.QuadGK.extensions]
     QuadGKEnzymeExt = "Enzyme"
@@ -2243,16 +2243,18 @@ version = "0.34.10"
 
 [[deps.StructUtils]]
 deps = ["Dates", "UUIDs"]
-git-tree-sha1 = "9297459be9e338e546f5c4bedb59b3b5674da7f1"
+git-tree-sha1 = "fa95b3b097bcef5845c142ea2e085f1b2591e92c"
 uuid = "ec057cc2-7a8d-4b58-b3b3-92acb9f63b42"
-version = "2.6.2"
+version = "2.7.1"
 
     [deps.StructUtils.extensions]
     StructUtilsMeasurementsExt = ["Measurements"]
+    StructUtilsStaticArraysCoreExt = ["StaticArraysCore"]
     StructUtilsTablesExt = ["Tables"]
 
     [deps.StructUtils.weakdeps]
     Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
+    StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
     Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [[deps.StyledStrings]]
@@ -2334,9 +2336,9 @@ version = "1.24.0+0"
 
 [[deps.XZ_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "9cce64c0fdd1960b597ba7ecda2950b5ed957438"
+git-tree-sha1 = "b29c22e245d092b8b4e8d3c09ad7baa586d9f573"
 uuid = "ffd25f8a-64ca-5728-b0f7-c24cf3aae800"
-version = "5.8.2+0"
+version = "5.8.3+0"
 
 [[deps.Xorg_libICE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2352,9 +2354,9 @@ version = "1.2.6+0"
 
 [[deps.Xorg_libX11_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
-git-tree-sha1 = "b5899b25d17bf1889d25906fb9deed5da0c15b3b"
+git-tree-sha1 = "808090ede1d41644447dd5cbafced4731c56bd2f"
 uuid = "4f6342f7-b3d2-589e-9d20-edeb45f2b2bc"
-version = "1.8.12+0"
+version = "1.8.13+0"
 
 [[deps.Xorg_libXau_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2376,9 +2378,9 @@ version = "1.1.6+0"
 
 [[deps.Xorg_libXext_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
-git-tree-sha1 = "a4c0ee07ad36bf8bbce1c3bb52d21fb1e0b987fb"
+git-tree-sha1 = "1a4a26870bf1e5d26cd585e38038d399d7e65706"
 uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
-version = "1.3.7+0"
+version = "1.3.8+0"
 
 [[deps.Xorg_libXfixes_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
@@ -2394,15 +2396,15 @@ version = "1.8.3+0"
 
 [[deps.Xorg_libXinerama_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll"]
-git-tree-sha1 = "a5bc75478d323358a90dc36766f3c99ba7feb024"
+git-tree-sha1 = "0ba01bc7396896a4ace8aab67db31403c71628f4"
 uuid = "d1454406-59df-5ea1-beac-c340f2130bc3"
-version = "1.1.6+0"
+version = "1.1.7+0"
 
 [[deps.Xorg_libXrandr_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll", "Xorg_libXrender_jll"]
-git-tree-sha1 = "aff463c82a773cb86061bce8d53a0d976854923e"
+git-tree-sha1 = "6c174ef70c96c76f4c3f4d3cfbe09d018bcd1b53"
 uuid = "ec84b674-ba8e-5d96-8ba1-2a689ba10484"
-version = "1.5.5+0"
+version = "1.5.6+0"
 
 [[deps.Xorg_libXrender_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
@@ -2424,9 +2426,9 @@ version = "1.17.1+0"
 
 [[deps.Xorg_libxkbfile_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
-git-tree-sha1 = "e3150c7400c41e207012b41659591f083f3ef795"
+git-tree-sha1 = "ed756a03e95fff88d8f738ebc2849431bdd4fd1a"
 uuid = "cc61e674-0454-545c-8b26-ed2c68acab7a"
-version = "1.1.3+0"
+version = "1.2.0+0"
 
 [[deps.Xorg_xcb_util_cursor_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_jll", "Xorg_xcb_util_renderutil_jll"]
@@ -2507,9 +2509,9 @@ version = "0.61.1+0"
 
 [[deps.libaom_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "371cc681c00a3ccc3fbc5c0fb91f58ba9bec1ecf"
+git-tree-sha1 = "850b06095ee71f0135d644ffd8a52850699581ed"
 uuid = "a4ae2306-e953-59d6-aa16-d00cac43593b"
-version = "3.13.1+0"
+version = "3.13.3+0"
 
 [[deps.libass_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
@@ -2554,9 +2556,9 @@ version = "1.28.1+0"
 
 [[deps.libpng_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "6ab498eaf50e0495f89e7a5b582816e2efb95f64"
+git-tree-sha1 = "e51150d5ab85cee6fc36726850f0e627ad2e4aba"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
-version = "1.6.54+0"
+version = "1.6.58+0"
 
 [[deps.libva_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
