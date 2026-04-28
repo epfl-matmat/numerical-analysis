@@ -66,11 +66,8 @@ md"""
 ## Stationary heat equation in one dimension
 """
 
-# ╔═╡ 012324d2-31fb-4e1a-a164-64580758ba8f
-TODO("Change image")
-
 # ╔═╡ 93b28014-c767-4f40-b27c-4646f63faa89
-RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/30a76271c3fa3be9d24896ecd2450d18fa505df3/src/img/heat-equation.svg", "img/heat-equation.svg", :width => 500)
+RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/ab92c724d96689f4ebbc5059ca9bac3baa6ac61b/src/img/heat-equation.svg", "img/heat-equation.svg", :width => 500)
 
 # ╔═╡ f1b662de-b4cf-4a73-9c00-580a2ea8a428
 md"""
@@ -2940,7 +2937,6 @@ version = "1.13.0+0"
 # ╟─206ae56c-fcfa-4d6f-93e4-30f03dee8f90
 # ╟─8c818dad-6789-4771-9eab-4e4ba78f5612
 # ╟─cf1055db-a773-4dc2-bd66-0ae840c656a4
-# ╠═012324d2-31fb-4e1a-a164-64580758ba8f
 # ╟─93b28014-c767-4f40-b27c-4646f63faa89
 # ╟─f1b662de-b4cf-4a73-9c00-580a2ea8a428
 # ╟─b5c3ed4b-3c4d-40d5-9171-94187416b363
