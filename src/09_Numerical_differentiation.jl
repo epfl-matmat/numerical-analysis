@@ -50,9 +50,9 @@ v(t) = 64t * (1 − t) * (1 − 2t)^2 * (1 − 8t + 8t^2)^2
 
 # ╔═╡ 80df99a7-3e31-4418-9314-399116831e72
 let
-	p = plot(v;
+	xs = range(-0.5, 1.5; length=400)
+	p = plot(xs, v.(xs);
 			 ylims=(-10, 2),
-			 xlims=(-0.5, 1.5),
 			 linewidth=2,
 		     label="",
 			 xlabel="t",
