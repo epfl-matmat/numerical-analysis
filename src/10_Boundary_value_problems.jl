@@ -225,7 +225,7 @@ we first **perform a discretisation**: Instead of solving the problem on all of 
 	\tag{3}
 	x_i = a + i \, h, \qquad \forall i = 0, \ldots, N, \qquad h = \frac{b-a}{N}.
 ```
-Note, that similar to previous chapters our node indexing starts at $0$.
+Note, that here our node indexing starts at $0$.
 
 Since the functions $p$, $q$ and $r$ are given to us, we can easily compute discretised representations
 ```math
@@ -246,12 +246,12 @@ md"""
 To answer this point, let us consider a general function $f$ for which we know the values $f(x_i)$ on the nodal points for $i=0,\ldots,N$. Our goal is to find a vector  $\mathbf{g}$ such that $g_i ≈ f'(x_i)$, i.e. we have a **representation of the derivative of $f$ on the nodal points**.
 From [chapter 09 on Numerical differentiation](https://teaching.matmat.org/numerical-analysis/09_Numerical_differentiation.html) we already know the *forward* finite difference formula, which suggests
 ```math
-g_i = D_h^+ f(x_i) = \frac{f_{i+1} - f_i}{h} \qquad \text{for $i=0, \ldots, N-1$}.
+g_i = D_h^+ f(x_i) = \frac{f(x_{i}+h) - f(x_i)}{h} = \frac{f(x_{i+1}) - f(x_i)}{h} = \frac{f_{i+1} - f_i}{h} \qquad \text{for $i=0, \ldots, N-1$}.
 ```
 Notably we cannot apply this formula to $i=N$ because then the formula would refer to the value $f_{N+1}$, which we do not know.
 However, in this setting the *backwards* finite-difference formula applies:
 ```math
-g_N = D_h^- f(x_N) = \frac{f_{N} - f_{N-1}}{h}
+g_N = D_h^- f(x_N) = \frac{f(x_{N}) - f(x_{N}-h)}{h} = \frac{f_{N} - f_{N-1}}{h}
 ```
 Collecting the function values of $f$ in a vector
 ```math
