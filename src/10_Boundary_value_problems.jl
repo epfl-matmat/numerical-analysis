@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -42,24 +42,23 @@ md"""
 The goal of boundary value problems is to reconstruct the function values $u(x, t)$
 of a function $u$ on an entire domain $x \in [a, b]$ 
 and for all times $t$ knowing only two things
-- The behaviour of (some) derivatives of $u$ and
 - Some information about $u$ at the boundary $x=a$ and $x=b$
   for the initial time $t=0$. For example we may know
   the values $u(a, 0)$ and $u(b, 0)$.
+- The relationship between $u$ and its derivative at each point in space-time $(x, t)$.
 
 Classic examples of boundary value problems include
 - the [heat equation](https://en.wikipedia.org/wiki/Heat_equation),
   where $u(x, t)$ is the temperature at time $t$ and position $x$
-  of a material, or
+  of a material --- and the flux of heat at $(x, t)$ itself depends on the temperature at this point in space and time, or
 - [Poisson's equation](https://en.wikipedia.org/wiki/Poisson%27s_equation)
   where $u(x, t)$ is the electrostatic potential at position $x$ and time $t$
-  corresponding to a given time-dependent density of electronic charges, or
+  corresponding to a given time-dependent density of electronic charges --- where the charge itself determines the electrostatic potential acting at each point $(x, t)$, or
 - the [diffusion equation](https://en.wikipedia.org/wiki/Diffusion_equation)
   where $u(x, t)$ is the concentration of some solute at time $t$
   at position $x$ in the solution.
 
-In this lecture, to simplify matters and to make this more concrete,
-we will only consider one example, namely the **heat equation**.
+We will first consider the heat equation as one example.
 """
 
 # ╔═╡ cf1055db-a773-4dc2-bd66-0ae840c656a4
@@ -68,11 +67,11 @@ md"""
 """
 
 # ╔═╡ 93b28014-c767-4f40-b27c-4646f63faa89
-RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/30a76271c3fa3be9d24896ecd2450d18fa505df3/src/img/heat-equation.svg", "img/heat-equation.svg", :width => 500)
+RobustLocalResource("https://raw.githubusercontent.com/epfl-matmat/numerical-analysis/ab92c724d96689f4ebbc5059ca9bac3baa6ac61b/src/img/heat-equation.svg", "img/heat-equation.svg", :width => 500)
 
 # ╔═╡ f1b662de-b4cf-4a73-9c00-580a2ea8a428
 md"""
-We consider a metal bar extending over the interval $[0, L]$. For a given moment in time $t$ we denote the **temperature** at a point $x \in [0, L]$ by $u(x, t)$. The **heat flux** we fruther denote by $\phi(x, t)$ and allow for an **external source of heat** $f(x)$, e.g. by one more more heat guns pointed at the metal bar.
+We consider a metal bar extending over the interval $[a, b]$. For a given moment in time $t$ we denote the **temperature** at a point $x \in [a, b]$ by $u(x, t)$. The **heat flux** we fruther denote by $\phi(x, t)$ and allow for an **external source of heat** $f(x)$, e.g. by one more more heat guns pointed at the metal bar.
 """
 
 # ╔═╡ b5c3ed4b-3c4d-40d5-9171-94187416b363
@@ -105,7 +104,7 @@ Combining with **Fourier's law**
 ```
 where $k$ is the thermal conductivity, we obtain the equation
 ```math
-c ρ \, \frac{\partial u}{\partial t}(x, t) = k \frac{\partial^2 u}{\partial x^2}(x, t) + f(x) \qquad x \in (0, L), \ t > 0
+c ρ \, \frac{\partial u}{\partial t}(x, t) = k \frac{\partial^2 u}{\partial x^2}(x, t) + f(x) \qquad x \in (a, b), \ t > 0
 ```
 which is the **heat equation** in one dimension,
 a **partial differential equation**.
@@ -116,262 +115,649 @@ The heat equation describes the **evolution of the temperature in a system**
 # ╔═╡ 59f11469-c86e-4dc4-9eed-039101aaa058
 md"""
 To simplify matters in this lecture 
-**we restrict** ourselves to the case of the **stationary heat equation**, i.e. the case where we assume the **temperature $u(x, t)$** to be in a state where it **no longer changes with time**, i.e. $\frac{\partial u}{\partial t} = 0$.
+**we restrict** ourselves to the case of the **stationary boundary value problems**, i.e. where all time derivatives vanish. In the case of the heat equation we would thus assume the **temperature $u(x, t)$** to be in a state where it **no longer changes with time**, i.e. $\frac{\partial u}{\partial t} = 0$.
 Dropping thus the zero terms and the dependency on $t$ we obtain the **stationary heat equation**
 ```math
--k\, \frac{\partial^2 u}{\partial x^2}(x) = f(x) \qquad x \in (0, L).
+-k\, u''(x) = f(x) \qquad x \in (a, b).
 ```
+where we used the common notation $u'' = \frac{\partial^2 u}{\partial x^2}$ for spatial derivatives.
 """
 
 # ╔═╡ 3e10cf8e-d5aa-4b3e-a7be-12ccdc2f3cf7
 md"""
-To fully specify the problem and find a unique solution we still **need to indicate what happens at the extremities of the bar**, i.e. at $u(0)$ and at $u(L)$.
-Since these two points sit at the boundary of our computational domain $[0, L]$ we usually call these conditions on $u$ **boundary conditions**. 
-"""
+To fully specify the problem and find a unique solution we still **need to indicate what happens at the extremities of the bar**, i.e. at $u(a)$ and at $u(b)$.
+Since these two points sit at the boundary of our computational domain $[a, b]$ we usually call these conditions on $u$ **boundary conditions**. 
 
-# ╔═╡ 7fd851e6-3180-4008-a4c0-0e08edae9954
-md"""
-We sketch the two most common cases:
-
-- Consider the case where the bar is in contact with heat baths of constant temperature. A temperature $b_0$ for the left-hand side bath and $b_L$ for the right-hand side bath. In this case we know $u(0) = b_0$ and $u(L) = b_L$. We obtain the **heat equation using Dirichlet boundary conditions**:
-  ```math
-  \tag{1}
-  \left\{
-  \begin{aligned}
-  -k \, \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L).\\
-  u(0) &= b_0\\
-  u(L) &= b_L
-  \end{aligned}
-  \right.
-  ```
-- The bar may also be insulating at the boundary, such that no heat may be allowed to flow in or out of the extremities. In this case the boundary conditions are $0 = -k \frac{\partial u}{\partial x}(0)$ and $0 = -k \frac{\partial u}{\partial x}(L)$ (zero heat flux).
-  We obtain a **heat equation with Neumann boundary conditions**, where the flux at the boundary is controlled:
-  ```math
-  \tag{2}
-  \left\{
-  \begin{aligned}
-  -k \, \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L).\\
-  \frac{\partial u}{\partial x}(0) &= - \frac{\phi_0}{k} \\
-  \frac{\partial u}{\partial x}(L) &= - \frac{\phi_L}{k}
-  \end{aligned}
-  \right.
-  ```
-  where in the insulating case $\phi_0 = \phi_L = 0$. We will not consider Neumann problems any further here.
-
-Since for such kind of problems knowing the boundary is imperative to obtain a unique solution one refers to such problems as **boundary value problems**.
-"""
-
-# ╔═╡ 52c7ce42-152d-40fd-a910-78f755fcae47
-md"""
-## Finite difference approximation
-
-We focus on the case of a Dirichlet boundary (1) with $k = 1$.
-Our goal is thus to find a function $u : [0, L] \to \mathbb{R}$ with
+One simple type of boundary conditions is to just set these extremal points to some values, i.e. enforce $u(a) = γ_a$ and $u(b) = γ_b$. Physically this implies a condition where the bar is in contact with heat baths of constant temperature, such that the temperature values at the boundary are known. We obtain the **heat equation using Dirichlet boundary conditions**:
 ```math
 \left\{
 \begin{aligned}
-- \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L)\\
-u(0) &= b_0, \quad u(L) = b_L,
+-k \, u''(x) &=  f(x) \qquad x \in (a, b).\\
+u(a) &= γ_a\\
+u(b) &= γ_b
 \end{aligned}
 \right.
 ```
-were $b_0, b_L \in \mathbb{R}$.
-Similar to our approach when [solving initial value problems (chapter 12)](https://teaching.matmat.org/numerical-analysis/12_Initial_value_problems.html)
-we **divide the full interval $[0, L]$ into $N+1$ subintervals** $[x_j, x_{j+1}]$
-of uniform size $h$, i.e. 
-```math
-x_j = j\, h \quad j = 0, \ldots, N+1, \qquad h = \frac{L}{N+1}.
-```
-Our goal is thus to find approximate points $u_j$ such that $u_j ≈ u(x_j)$ at the nodes $x_j$.
+
+Note that other types of boundary conditions are possible, see for example [chapter 10.1](https://fncbook.com/tpbvp/) of Driscoll, Brown: Fundamentals of Numerical Computation for a more general treatment.
+
+For completeness we now provide the general definition of a boundary value problem (BVP) before specialising to the case we will focus on in this course.
 """
 
-# ╔═╡ 782dff7d-76f5-4977-98cb-81881a05331a
-TODO("IVP is now after BCP, adjust reference accordingly")
-
-# ╔═╡ 82788dfd-3462-4f8e-b0c8-9e196dac23a9
+# ╔═╡ 23f9e709-1f77-4a96-bb09-2d358cdecc76
 md"""
-Due to the Dirichlet boundary conditions $u(0) = b_0$ and $u(L) = b_L$.
-To satisfy these we neccessarily need $u_0 = b_0$ and $u_{N+1} = b_L$.
-The unknowns of our problems are therefore those
-$u_j$ with $1 ≤ j ≤ N$
---- the **internal nodes** of the interval.
-"""
-
-# ╔═╡ d43ecff3-89a3-4edd-95c2-7262e317ce29
-md"""
-These internal nodes $u(x_j)$ need to satisfy
-```math
-- \frac{\partial^2 u}{\partial x^2}(x_j) = f(x_j) \qquad \forall\, 1 ≤ j ≤ N.
-```
-As the derivatives of $u$ are unknown to us we employ a
-**[central finite-difference formula](https://teaching.matmat.org/numerical-analysis/09_Numerical_differentiation.html)**
-to replace this derivative by the approximation
-```math
-\tag{3}
-f(x_j) = -\frac{\partial^2 u}{\partial x^2}(x_j) ≈ -\frac{u(x_{j-1}) - 2u(x_j) + u(x_{j+1})}{h^2} \qquad \forall\, 1 ≤ j ≤ N
-```
-or in terms of $u_j$:
-```math
-\tag{4}
-\frac{-u_{j-1} + 2u_j - u_{j+1}}{h^2} = f(x_j) \qquad \forall\, 1 ≤ j ≤ N.
-```
-"""
-
-# ╔═╡ 1fb53091-89c8-4f70-ab4b-ca2371b830b2
-md"""
-Due to our **imposed boundary conditions** $u_0 = b_0$ and $u_{N+1} = b_L$,
-such that we can simplify the equations for $j = 1$ and $j=N$ as follows:
-```math
-\begin{aligned}
-j&=1: & \frac{-b_0 + 2u_1 - u_2}{h^2} &= f(x_1) \quad &\Leftrightarrow \quad \frac{2u_1 - u_2}{h^2} &= f(x_1) + \frac{b_0}{h^2}\\
-j&=N: & \frac{-u_{N-1} + 2u_N - b_L}{h^2} &= f(x_N) \quad &\Leftrightarrow \quad \frac{-u_{N-1} +2u_N}{h^2} &= f(x_N) + \frac{b_L}{h^2}\\
-\end{aligned}
-```
-Collecting everything we obtain the system of equations
-```math
-\tag{5}
-\left\{
-\begin{aligned}
-\frac{2u_1 - u_2}{h^2} &= f(x_1) + \frac{b_0}{h^2} && j=1\\
-\frac{-u_{j-1} + 2u_j - u_{j+1}}{h^2} &= f(x_j)  && \forall\, 2 ≤ j ≤ N-1 \\
-\frac{-u_{N-1} +2u_N}{h^2} &= f(x_N) + \frac{b_L}{h^2} && j=N
-\end{aligned}
-\right.
-```
-"""
-
-# ╔═╡ 129d2e86-49e6-4c5f-aca1-0cb45d923294
-Foldable("Optional: Does the problem (5) always have a solution ?",
-md"""
-An important question in the mathematical literature for problems such as (5)
-is whether this problem is **well-posed**, that is whether a unique solution to such problems even exists at all.
-
-For the boundary value problems we consider in this chapter it turns out that such a solution always exists, provided that the incoming heat $f$ and the boundary values $b_0$ and $b_L$ are finite. More precisely we have the following result:
-
-!!! info "Theorem 1"
-	For every $\mathbf{f} = (f(x_1), f(x_2), \ldots f(x_n))^T \in \mathbb{R}^N$
-	and all $b_0, b_L \in \mathbb{R}$, the system of equations shown in (5)
-	admits a unique solution
-	$\mathbf{u} = (u_1, \ldots, u_N)^T \in \mathbb{R}^N$ with
+!!! info "Definition: Boundary value problems (general definition)"
+	Given functions $ϕ$, $g_{a}$ and $g_{b}$ as well as a problem domain $[a, b]$
+	a boundary-value problem is the set of equations
 	```math
-	\tag{6}
-	\max_{j=1,\ldots,N} |u_j| ≤ \frac18 \max_{j=1,\ldots,N} |f(x_j)| + \max(|b_0|, |b_L|).
-	```
-
-Colloquially speaking this Theorem ensures that the solution $\mathbf{u}$ cannot take too large values and moreover it tells us that the solution values are always controlled by the norm of the vector $\mathbf{f}$ and the boundary values $b_0$ and $b_L$.
-""")
-
-# ╔═╡ cbcd1b1e-7755-4177-b52a-f361ee025e01
-md"""
-Finally, to write problem (5) more compactly we introduce
-a **vector of all unknowns** $\mathbf{u} = (u_1, \ldots, u_N)^T \in \mathbb{R}^N$,  define the **system matrix** $\mathbf{A} \in \mathbb{R}^{N\times N}$
-as well as the **right-hand side** $\mathbf{b} \in \mathbb{R}^N$ with
-```math
-\tag{7}
-\mathbf{A} = \frac{1}{h^2} \begin{pmatrix}
-2  & -1 \\
--1 & 2 & -1\\
-   & -1 & 2 & \ddots \\
-   &  &  \ddots & \ddots & -1 \\
-&&& -1 & 2
-\end{pmatrix}
-\qquad\qquad
-\mathbf{b} = \begin{pmatrix}
-f(x_1) + \frac{b_0}{h^2} \\ f(x_2) \\ \vdots \\ f(x_{N-1}) \\ f(x_N) + \frac{b_L}{h^2}
-\end{pmatrix}.
-```
-With these objects the problem can be written as a linear system
-```math
-\tag{8}
-\mathbf{A} \mathbf{u} = \mathbf{b}.
-```
-which is to be solved for the unknows $\mathbf{u}$.
-"""
-
-# ╔═╡ c21502ce-777f-491a-a536-ff499fc172fc
-md"""
-We notice that $\mathbf{A}$ is **symmetric and tridiagonal**. Additionally one can show $\mathbf{A}$ to be **positive definite**.
-Problem (8) can therefore be **efficiently solved** using [direct methods based on (sparse) LU factorisation (chapter 5)](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html) or an [iterative approaches (chapter 6)](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html), e.g. the conjugate gradient method.
-"""
-
-# ╔═╡ c2bb42b3-4fee-4ad4-84c0-06f58c7f7665
-md"""
-We summarise:
-
-!!! info "Algorithm 1: Finite differences for Dirichlet bounary value problems"
-	Given a boundary value problem with Dirichlet boundary conditions
-	```math
-	\tag{9}
 	\left\{
 	\begin{aligned}
-	- \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L)\\
-	u(0) &= b_0, \quad u(L) = b_L,
+	u''(x) &=  ϕ(x, u, u'') \qquad x \in (a, b),\\
+	g_{a}(u(a), u'(a)) &= 0, \\
+	g_{b}(u(b), u'(b)) &= 0
 	\end{aligned}
 	\right.
 	```
-	and nodes $x_j = j\, h$ with $j = 0, \ldots, N$ and $h = \frac{L}{N+1}$
-	solve the linear system $\mathbf{A} \mathbf{u} = \mathbf{b}$
-	with $\mathbf{A}$ and $\mathbf{b}$ given in (7)
-	for $\mathbf{u} = (u_1, \ldots, u_N)^T$ and $u_0 = b_0$, $u_{N+1} = b_L$.
+	to be solved for the unknown function $u : [a, b] → \mathbb{R}$.
 
-	The values $u_0, u_1, \ldots, u_{N+1}$ approximate the solution $u(x)$
-	at the nodal points $\{x_j\}_{j=0}^{N+1}$.
+	Notice that $ϕ$ thus takes as input a point $x$, the *entire* function $u$ and the *entire* function $u'$.
+
+	The functions $g_{a}$ and $g_{b}$ take two values, namely the function value and the derivative value at the boundary points $a$, respectively $b$. These functions are called **boundary conditions**.
+
+To simplify matters for this course we will make two restrictions to this setting:
+
+- We will only consider **linear boundary value problems**, that is problems where the the functions $ϕ$, $g_{a}$ and $g_{b}$ are linear in the arguments involving $u$ and $u'$. Specifically this means that $\phi(x,u,u') = -p(x)\,u'(x) - q(x)\,u(x) + r(x)$, where $p$, $q$ and $r$ are known functions from $[a, b]$ to $\mathbb{R}$.
+
+- We will only consider **Dirichlet boundary conditions**, that is cases where $g_{a}(u(a), u'(a)) = u(a) - γ_a$ and $g_{b}(u(b), u'(b)) = u(b) - γ_b$ where $γ_a, γ_b \in \mathbb{R}$.
 """
 
-# ╔═╡ e38a1d5b-a35c-4942-aeb2-0e91668ac8f3
+# ╔═╡ 6df8394f-6457-4db0-86e5-7a9dd7d65c9a
 md"""
-One implementation of Algorithm 1, which solves the linear system using LU factorisation is:
+!!! info "Definition: Linear Dirichlet boundary value problem (our setting)"
+	Given a domain $[a, b]$ and functions
+	$p : [a, b] \to \mathbb{R}$, 
+	$q : [a, b] \to \mathbb{R}$, 
+	$r : [a, b] \to \mathbb{R}$
+	as well as boundary values $γ_a, γ_b \in \mathbb{R}$
+	find the function $u : [a, b] \to \mathbb{R}$ such that
+	```math
+	\tag{1}
+	\left\{
+	\begin{aligned}
+	u''(x) + p(x) \, u'(x) + q(x) \, u(x) &= r(x) \qquad x \in (a, b),\\
+	u(a) &= γ_a \\
+	u(b) &= γ_b
+	\end{aligned}
+	\right.
+	```
 """
 
-# ╔═╡ 3bc63106-3d1c-4b4e-a6a6-682e09475cb4
-function fd_dirichlet(f, L, b₀, bₗ, N)
-	# f:  Function describing the external heat source
-	# L:  Length of the metal rod
-	# b₀: Left-hand side boundary value
-	# bₗ: Right-hand side boundary value
-	# N:  Number of nodal points for the finite-differences scheme
-	
-	h = L / (N+1)             # Step size
-	x = [i * h for i in 1:N]  # Nodal points
-
-	# Build system matrix A
-	diagonal    = 2ones(N)   / h^2
-	offdiagonal = -ones(N-1) / h^2
-	A = SymTridiagonal(diagonal, offdiagonal)
-
-	# Build right-hand side
-	b = [f(xⱼ) for xⱼ in x]  # Evaluate function f at nodal points
-
-	# Set terms due to boundary conditions
-	b[1] = f(x[1]) + b₀ / h^2
-	b[N] = f(x[N]) + bₗ / h^2
-
-	# Solve problem using LU factorisation
-	u = A \ b
-
-	(; u, x, h, A, b)  # Return intermediates and results
-end
-
-# ╔═╡ 4c9e3775-bb3e-4ce9-b18e-251aac342b5d
+# ╔═╡ b4b33be9-bb9a-4fe9-af48-8883c2fbc7e9
 md"""
-Let us consider the example
+In line with the discussion at the beginning of this notebook, we recover the 
+stationary heat equation from equation (1) by setting $p(x) = 0$, $q(x) = 0$ and $r(x) = -f(x) / k$, resulting in the problem
 ```math
+\tag{2}
 \left\{
 \begin{aligned}
-- \frac{\partial^2 u}{\partial x^2}(x) &= \sin(x) \qquad x \in (0, 2π)\\
-u(0) &= 1, \quad u(L) = 2,
+u''(x) &= -\frac{1}{k} f(x) \qquad x \in (a, b).\\
+u(a) &= γ_a, \, u(b) = γ_b
 \end{aligned}
 \right.
 ```
-i.e. the case of 
 """
 
-# ╔═╡ 9f4df9d4-e0cb-4706-8158-0da7a6505442
+# ╔═╡ b00a37d1-37ad-41b5-ba88-d6582ef680cb
+# TODO("Sketch also how the Poisson equation and the diffusion equation arise.")
+
+# ╔═╡ be847fe0-7447-493b-9087-f4a1d961edba
+md"""
+## Differentiation matrices
+
+Having introduced the problem setting of boundary value problems (1), we will now build a numerical scheme for solving such problems in practice.
+
+Similar to our discussion in the previous chapters on 
+[Interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html),
+[Numerical integration](https://teaching.matmat.org/numerical-analysis/08_Numerical_integration.html)
+or [Numerical differentiation](https://teaching.matmat.org/numerical-analysis/09_Numerical_differentiation.html) 
+we first **perform a discretisation**: Instead of solving the problem on all of the continous interval $[a, b]$ we discretise the interval into $N$ subintervals. Taking $N$ pieces of equal length $h = \frac{b-a}{N}$ leads to the nodes
+```math
+	\tag{3}
+	x_i = a + i \, h, \qquad \forall i = 0, \ldots, N, \qquad h = \frac{b-a}{N}.
+```
+Note, that here our node indexing starts at $0$.
+
+Since the functions $p$, $q$ and $r$ are given to us, we can easily compute discretised representations
+```math
+p_i = p(x_i), \quad q_i = q(x_i), \quad r_i = r(x_i), \qquad \forall i = 0, \ldots, N,
+```
+which we can denote as the vectors, for example
+```math
+\mathbf{r} = \begin{pmatrix} r_0 \\ r_1 \\ \vdots \\ r_{N} \end{pmatrix}
+ = \begin{pmatrix} r(x_0) \\ r(x_1) \\ \vdots \\ r(x_{N}) \end{pmatrix}\in \mathbb{R}^{n+1}.
+```
+In analogy, **solving a boundary value problem (1) in the discretised setting**
+boils down to **finding a vector ${\mathbf u} \in \mathbb{R}^{n+1}$** such that its **entries ${u}_i$ are approximations to $u(x_i)$** for $i=0, \ldots, N$, i.e. the exact solution $u$ evaluated at the nodes $x_i$.
+Before we discuss in details how to do this (see the section on the [collocation method](#Collocation-method) below), we first need to understand how one can express the derivative $u'(x_i)$ and $u''(x_i)$ in terms of the values $u(x_i)$.
+"""
+
+# ╔═╡ a184ac2c-97ae-4221-a64e-215e9cadeb80
+md"""
+To answer this point, let us consider a general function $f$ for which we know the values $f(x_i)$ on the nodal points for $i=0,\ldots,N$. Our goal is to find a vector  $\mathbf{g}$ such that $g_i ≈ f'(x_i)$, i.e. we have a **representation of the derivative of $f$ on the nodal points**.
+From [chapter 09 on Numerical differentiation](https://teaching.matmat.org/numerical-analysis/09_Numerical_differentiation.html) we already know the *forward* finite difference formula, which suggests
+```math
+g_i = D_h^+ f(x_i) = \frac{f(x_{i}+h) - f(x_i)}{h} = \frac{f(x_{i+1}) - f(x_i)}{h} = \frac{f_{i+1} - f_i}{h} \qquad \text{for $i=0, \ldots, N-1$}.
+```
+Notably we cannot apply this formula to $i=N$ because then the formula would refer to the value $f_{N+1}$, which we do not know.
+However, in this setting the *backwards* finite-difference formula applies:
+```math
+g_N = D_h^- f(x_N) = \frac{f(x_{N}) - f(x_{N}-h)}{h} = \frac{f_{N} - f_{N-1}}{h}
+```
+Collecting the function values of $f$ in a vector
+```math
+\mathbf{f} = \begin{pmatrix} f(x_0) \\ f(x_1) \\ \vdots \\ f(x_N) \end{pmatrix}\in \mathbb{R}^{N+1}
+```
+leads to the vector equation
+```math
+\begin{pmatrix} f'(x_0) \\ f'(x_1) \\ \vdots \\ f'(x_N) \end{pmatrix}
+\approx \mathbf{g} = \widetilde{\mathbf{D}}_{x} \mathbf{f},
+\qquad
+\widetilde{\mathbf{D}}_{x} = \frac{1}{h} \begin{pmatrix}
+-1 & 1 \\
+& -1 & 1 \\
+&& \ddots & \ddots \\
+&&& -1 & 1 \\
+&&& -1 & 1
+\end{pmatrix}.
+```
+Notice that for the square matrix $\widetilde{\mathbf{D}}_{x} \in \mathbb{R}^{(N+1)\times (N+1)}$ all elements we do not show are zero.
+
+Here, the matrix $\widetilde{\mathbf{D}}_{x} \in \mathbb{R}^{(N+1)\times (N+1)}$ provides a discrete approximation of the derivative operator $\frac{d}{dx}$: it maps a vector $\mathbf{f}$ (representing a discretised form of the function $f$) to a vector $\mathbf{g}$, which represents a discretised form of the derivative $f'$.
+"""
+
+# ╔═╡ 3be4502b-95af-4ca8-8fd4-4c8cb659a858
+md"""
+In the construction of the matrix $\widetilde{\mathbf{D}}_{x}$ we used only first-order finite-difference formulas. As a result $\widetilde{\mathbf{D}}_{x}$ only provides a first-order approximation to the derivative operator.
+
+A more accurate construction is to employ a second-order finite difference formula wherever possible and fall back to the second-order forward / second-order backward formulas on the boundary points. This leads to
+
+!!! info "Definition: Second-order differentiation matrix for first derivative"
+	A second-order differentiation matrix for the **first** derivative is
+	```math
+	\mathbf{D}_x = \frac{1}{h} \begin{pmatrix}
+	-\frac{3}{2} & 2 & -\frac12 \\
+	-\frac12 & 0 & \frac12 \\
+	& \ddots& \ddots & \ddots \\
+	&&-\frac12 & 0 & \frac12 \\
+	&& \frac12 & -2 & \frac32
+	\end{pmatrix} \in \mathbb{R}^{(N+1)\times(N+1)}
+	```
+	where the nodes are given in equation (3).
+"""
+
+# ╔═╡ f44f3230-0062-49db-a488-f19910b58792
+md"""
+For solving boundary value problems (1) we not only need to be able to numerically compute first derivatives, but we also need to be able to compute second derivatives as well, that is we seek a differentiation matrix $\mathbf{D}_{xx}$ such that
+```math
+\begin{pmatrix}
+	f''(x_0) \\ f''(x_1) \\ \vdots \\ f''(x_N)
+\end{pmatrix}
+≈
+\mathbf{D}_{xx}
+\begin{pmatrix}
+	f(x_0) \\ f(x_1) \\ \vdots \\ f(x_N).
+\end{pmatrix}
+```
+Using a second-order central finite difference scheme where possible and else a second-order one-sided scheme gives:
+
+!!! info "Definition: Second-order differentiation matrix for second derivative"
+	A second-order differentiation matrix for the **second** derivative is
+	```math
+	\mathbf{D}_{xx} = \frac{1}{h^2} \begin{pmatrix}
+	2 & -5 & 4 & -1 \\
+	1 & -2 & 1 \\
+	& 1 & -2 & 1 \\
+	&& \ddots& \ddots & \ddots \\
+	&&&1 & -2 & 1 \\
+	&& -1 & 4 & -5 & 2
+	\end{pmatrix} \in \mathbb{R}^{(N+1)\times(N+1)}
+	```
+	where the nodes are given in equation (3).
+
+An implementation returning the second-order matrices $\mathbf D_x$ and $\mathbf D_{xx}$ for approximating $\frac{d}{dx}$ and $\frac{d^2}{dx^2}$ is given below:
+"""
+
+# ╔═╡ 393313f4-f2b0-4f2e-b175-ae24c0514e58
+function diffmats(N, a, b)
+	# N:  Number of subintervals for discretisation, i.e. there will be N+1 nodes 
+	# a:  Starting point of the computational domain [a, b]
+	# b:  End point of the computational domain
+
+	h = (b-a) / N
+	x = [a + i*h for i in 0:N]  # Nodes
+
+	# Fill Dₓ with central finite difference formula (correct for most rows)
+	dx_sub   = fill(-1/2 / h, N)  # Subdiagonal   of Dₓ
+	dx_super = fill( 1/2 / h, N)  # Superdiagonal of Dₓ
+	Dₓ = diagm(-1 => dx_sub, 1 => dx_super)
+
+	# Adjust first and last row of Dₓ
+	Dₓ[1, 1:3]         = [-3/2,  2, -1/2] / h  # Fix first row (forward  finite diff)
+	Dₓ[end, end-2:end] = [ 1/2, -2,  3/2] / h  # Fix last  row (backward finite diff)
+
+	# Fill Dₓₓ with central finite differences (correct for most rows)
+	dxx_main = fill(-2 / h^2, N+1)  # Main diagonal  of Dₓₓ
+	dxx_side = fill( 1 / h^2, N)    # Side diagonals of Dₓₓ
+	Dₓₓ = diagm(-1 => dxx_side, 0 => dxx_main, 1 => dxx_side)
+
+	# Adjust first and last row of Dₓₓ
+	Dₓₓ[1,   1:4]       = [2, -5, 4, -1] / h^2  # First row (forward  finite diff)
+	Dₓₓ[end, end-3:end] = [-1, 4, -5, 2] / h^2  # Last row  (backward finite diff)
+
+	(; x, Dₓ, Dₓₓ, h)
+end
+
+# ╔═╡ e2ed03ad-f720-4e29-afdc-1c1c6bc233c0
+md"""
+!!! warning "Example: Using differentiation matrices"
+	In this example we want to test the first-order and second-order differentiation matrices $D_x$ and $D_{xx}$. We consider the following function
+	```math
+	f_\text{exp} = x + e^{\sin(4x)}
+	```
+	on the interval $[-1, 1]$.
+	The exact first and second derivatives are
+	```math
+	\begin{aligned}
+	f_\text{exp}'(x)  &= 1 + 4\cos(4x) e^{\sin(4x)} \\
+	f_\text{exp}''(x) &= 4 (4\cos^2(4x) - 4 \sin(4x)) e^{\sin(4x)}
+	\end{aligned}
+	```
+	We start by discretising on $20$ equispaced nodes (i.e. $N=19$ subintervals):
+"""
+
+# ╔═╡ 93bf2a7a-a926-4e0d-b127-889a0b82dcd2
 begin
-	b₀ = 1
-	bₗ = 2
-	L = 2π
-	f(x) = sin(x)
+	fexp(x)     = x + exp( sin(4x) )
+	dx_fexp(x)  = 1 + 4cos(4x) * exp( sin(4x) )  # Reference derivative
+	dx2_fexp(x) = 4 * ( 4cos(4x)^2 - 4sin(4x) ) * exp( sin(4x) )  # and 2nd deriv.
+end;
+
+# ╔═╡ 94b97d6c-6c45-4887-b15e-5731ae5bbe9c
+t, Dₓ, Dₓₓ = diffmats(19, -1, 1)
+
+# ╔═╡ 80df1d2f-24f9-4503-9075-eb5a37a486bd
+md"and we evaluate $f_\text{exp}$ on the nodes:"
+
+# ╔═╡ cdc1fc28-714b-45e1-ad51-31c6d70dcce3
+fexp_t = fexp.(t)
+
+# ╔═╡ 22876147-cac6-4c56-921a-8d86e605bdeb
+md"Next we obtain approximate derivatives using the matrix-vector multiplication with the differentiation matrices:"
+
+# ╔═╡ b0c8cf85-b034-41c6-a808-6562ace45768
+begin
+	dx_fexp_t  = Dₓ  * fexp_t
+	dx2_fexp_t = Dₓₓ * fexp_t
+end;
+
+# ╔═╡ 0e66bac1-a66a-47e9-aa22-b1f95ce2e45d
+md"Comparing against the reference values shows a rather poor accuracy:"
+
+# ╔═╡ 796c699d-f6d3-40b3-aa48-fff0d627bb51
+let
+	p = plot(dx_fexp, xlims=[-1.05, 1.05], xaxis=L"x", yaxis=L"f'(x)", label="reference", lw=2, legend=:topleft)
+	p = scatter!(p, t, dx_fexp_t, label="approximation")
+
+	q = plot(dx2_fexp, xlims=[-1.05, 1.05], xaxis=L"x", yaxis=L"f''(x)", label="reference", lw=2, legend=false)
+	q = scatter!(q, t, dx2_fexp_t, label="approximation")
+
+	plot(p, q)
+end
+
+# ╔═╡ 78cf3006-47c8-48c2-be3a-2a518ff4731d
+md"""
+Since we took a second-order finite difference formula, we would expect a second-order convergence. Plotting the maximal error of the approximated derivative values `dx_fexp_t` respectively `dx2_fexp_t`, that is
+```julia
+maximum(abs.(dx_fexp.(t)  - dx_fexp_t))
+```
+and
+```julia
+maximum(abs.(dx2_fexp.(t) - dx2_fexp_t))
+```
+against the subinterval size $h$ on a log-log plot confirms this:
+"""
+
+# ╔═╡ ba98bfcb-a716-49e2-bc0b-7294bdaff012
+let
+	Ns = round.(Int, 2.0 .^ (4:0.5:11))
+	hs = zeros(length(Ns))
+	error_df  = zeros(length(Ns))
+	error_df2 = zeros(length(Ns))
+	for k in 1:length(Ns)
+		t, Dₓ, Dₓₓ, h = diffmats(Ns[k], -1, 1)		
+		fexp_t = fexp.(t)
+		error_df[k]  = maximum(abs.(dx_fexp.(t)  - Dₓ  * fexp_t))
+		error_df2[k] = maximum(abs.(dx2_fexp.(t) - Dₓₓ * fexp_t))
+		hs[k] = h
+	end
+
+	p = plot(; xaxis=:log, xlabel=L"h", yaxis=:log, ylabel="maximal error", xflip=true)
+	plot!(p, hs, error_df,  mark=:o, lw=2, label=L"f'")
+	plot!(p, hs, error_df2, mark=:o, lw=2, label=L"f''")
+
+	# Guide line
+	plot!(p, hs, 30 * hs .^ 2, lw=2, ls=:dash, c=:black, label=L"h^2")
+	
+	xticks!(p, 10 .^ (-1:-0.5:-3))
+	yticks!(p, 10 .^ (1:-1.0:-4))
+
+	p
+end
+
+# ╔═╡ 8d1cf059-05b1-44da-a51c-0157bb06efe9
+md"""
+## Collocation method
+
+We will now construct a numerical method based on the finite differences differentiation matrices for solving the linear boundary value problem
+```math
+\left\{
+\begin{aligned}
+u''(x) + p(x) \, u'(x) + q(x) \, u(x) &= r(x) \qquad x \in (a, b),\\
+u(a) &= γ_a \\
+u(b) &= γ_b
+\end{aligned}
+\right.
+```
+with equispaced nodes
+```math
+x_i = a + i \, h, \qquad \forall i = 0, \ldots, N, \qquad h = \frac{b-a}{N}.
+```
+Rather than solving for the function $u : [a,b] \to \mathbb{R}$
+we will instead seek the vector $\tilde{\mathbf u} \in \mathbb{R}^{n+1}$
+of its approximate function values at the nodes $x_i$:
+```math
+\tilde{\mathbf{u}} = \begin{pmatrix} \tilde{u}_0 \\ \tilde{u}_1 \\ \vdots \\ \tilde{u}_{N} \end{pmatrix}
+\textcolor{red}{\approx}
+\begin{pmatrix} u(x_0) \\ u(x_1) \\ \vdots \\ u (x_{N}) \end{pmatrix}.
+```
+The key idea of **collocation** is to use the BVP equation (1) evaluated *at the same nodal points* $x_i$ to impose additional constraints on the solution vector. Concretely we use the differentiation matrices to approximate derivatives of the solution, i.e.
+```math
+\tag{4}
+\begin{pmatrix} u'(x_0) \\ u'(x_1) \\ \vdots \\ u'(x_{N}) \end{pmatrix}
+\textcolor{red}{\approx}
+\tilde{\mathbf{u}}' := \mathbf{D}_x \tilde{\mathbf{u}}
+\quad \text{and}\quad
+\begin{pmatrix} u''(x_0) \\ u''(x_1) \\ \vdots \\ u''(x_{N}) \end{pmatrix}
+\textcolor{red}{\approx}
+\tilde{\mathbf{u}}'' := \mathbf{D}_{xx} \tilde{\mathbf{u}}
+```
+"""
+
+# ╔═╡ 4f7bd62c-792c-4abb-ac93-28bb0169e739
+md"""
+With these definitions the discrete form of the first line of equation (1)
+therefore
+becomes
+```math
+\tilde{\mathbf{u}}'' + \mathbf{P} \tilde{\mathbf{u}}' + \mathbf{Q} \tilde{\mathbf{u}} = \mathbf{r}
+```
+where
+```math
+\mathbf{P} = \begin{pmatrix} p(x_0) \\ &\ddots \\ &&p(x_N) \end{pmatrix},
+\quad
+\mathbf{Q} = \begin{pmatrix} q(x_0) \\ &\ddots \\ &&q(x_N) \end{pmatrix},
+\quad
+\mathbf{r} = \begin{pmatrix} r(x_0) \\\vdots \\ r(x_{N}) \end{pmatrix}.
+```
+Using equation (4) we can rewrite this as
+```math
+\tag{5}
+\mathbf{L} \tilde{\mathbf{u}} = \mathbf{r}
+\quad \text{where} \quad \mathbf{L} = \mathbf{D}_{xx} + \mathbf{P} \mathbf{D}_x + \mathbf{Q}
+```
+where we note $\mathbf{L} \in \mathbb{R}^{(N+1)\times(N+1)}$,
+i.e. this is a linear system with $N+1$ equations and $N+1$ unknowns.
+Notice further that since $\mathbf{D}_{xx}$, $\mathbf{D}_{x}$, $\mathbf{P}$, $\mathbf{Q}$ are all sparse, banded matrices also $\mathbf{L}$ is sparse and banded.
+"""
+
+# ╔═╡ 41326216-32f2-412f-b1a4-45c287f3b640
+md"""
+The final step is to notice that the boundary conditions (last two lines of equation (1)) take the form of two additional conditions
+```math
+u_0 = γ_a, \qquad u_N = γ_b,
+```
+which are so far not yet taken into account in equation (5).
+The easiest way to achieve this is to replace the first and last equation in the linear system of equation (5) exactly by these two equations given by the boundary conditions.
+To make this clear, let us first write equation (5) more explicitly as
+```math
+\begin{pmatrix}
+L_{00} & L_{01} & \cdots & L_{0N} \\
+L_{10} & L_{11} & \cdots & L_{1N} \\
+\vdots & \vdots & \ddots & \vdots \\
+L_{N-1,0} & L_{N-1,1} & \cdots & L_{N-1,N} \\
+L_{N0} & L_{N1} & \cdots & L_{NN}
+\end{pmatrix}
+\begin{pmatrix} \tilde{u}_0 \\ \tilde{u}_1 \\ \vdots \\ \tilde{u}_{N-1} \\ \tilde{u}_N \end{pmatrix}
+=
+\begin{pmatrix} r_0 \\ r_1 \\ \vdots \\ r_{N-1} \\ r_N \end{pmatrix}.
+```
+Now we replace the first equation by $u_0 = γ_a$
+and the last equation by $u_N = γ_b$, this yields
+```math
+\begin{pmatrix}
+\textcolor{red}{1} & \textcolor{red}{0} & \textcolor{red}{\cdots} & \textcolor{red}{0} \\
+L_{10} & L_{11} & \cdots & L_{1N} \\
+\vdots & \vdots & \ddots & \vdots \\
+L_{N-1,0} & L_{N-1,1} & \cdots & L_{N-1,N} \\
+\textcolor{red}{0} & \textcolor{red}{0} &  \textcolor{red}{\cdots}& \textcolor{red}{1}
+\end{pmatrix}
+\begin{pmatrix} \tilde{u}_0 \\ \tilde{u}_1 \\ \vdots \\ \tilde{u}_{N-1} \\ \tilde{u}_N \end{pmatrix}
+=
+\begin{pmatrix} \textcolor{red}{γ_a} \\ r_1 \\ \vdots \\ r_{N-1} \\ \textcolor{red}{γ_b} \end{pmatrix}.
+```
+Finally we make the notation more compact by introducing the $(N-1) \times (N+1)$ matrix
+```math
+\mathbf{E} = \left(\begin{array}{c|ccc|c}
+0     & 1& & &  0 \\
+\vdots&  &\ddots& &  \vdots \\ 
+0     &  & & 1&  0
+\end{array} \right)
+```
+which is constructed such that the product $\mathbf{E}\mathbf{L}$ of this matrix with an $(N+1) \times (N+1)$ matrix $\mathbf{L}$ deletes the first and last rows of $\mathbf{L}$. Similarly $\mathbf{E} \mathbf{r}$ deletes the first and last rows of a matrix $\mathbf{r}$. Let us demonstrate this on a $4\times4$ example:
+"""
+
+# ╔═╡ 51552b34-01b4-4ef0-866c-6ff6c33a3462
+E_2by4 = [0 1 0 0;
+		  0 0 1 0]
+
+# ╔═╡ 5d361452-2eef-4503-a80f-151277d3b855
+M = [00 01 02 03;
+	 10 11 12 13;
+	 20 21 22 23;
+     30 31 32 33]
+
+# ╔═╡ 8ddf3426-1d5d-42ee-b44a-3c4ea1ed5f4c
+E_2by4 * M
+
+# ╔═╡ b2418c32-854f-469c-ac9d-4fb7b93d5b79
+md"""
+Using $\mathbf{E}$ we can write the linear system more compactly as
+```math
+\tag{6}
+\underbrace{
+\begin{pmatrix}
+\textcolor{red}{1} & \textcolor{red}{0} & \textcolor{red}{\cdots} & \textcolor{red}{0} & \textcolor{red}{0} \\
+\hline
+&&\mathbf{E}\mathbf{L} \\
+\hline
+\textcolor{red}{0} & \textcolor{red}{0} &  \textcolor{red}{\cdots}&  \textcolor{red}{0} & \textcolor{red}{1}
+\end{pmatrix}}_{=\mathbf{A}}
+\tilde{\mathbf{u}}
+=
+\underbrace{\begin{pmatrix} \textcolor{red}{γ_a} \\\hline \mathbf{E}\mathbf{r} \\\hline \textcolor{red}{γ_b} \end{pmatrix}}_{=\mathbf{b}}.
+```
+This is an $(N+1) \times (N+1)$ linear system $\mathbf{A} \mathbf{u} = \mathbf{b}$ with unknown $\mathbf{u}$ and --- as we will observe in more detail below --- a sparse, banded matrix $\mathbf{A}$.
+Problem (6) can therefore be **efficiently solved** using [direct methods based on (sparse) LU factorisation (chapter 5)](https://teaching.matmat.org/numerical-analysis/05_Direct_methods.html) or an [iterative approaches (chapter 6)](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html).
+"""
+
+# ╔═╡ f1991ea0-9270-4c27-8032-4f4db84330e4
+md"""
+!!! warning "Example: Setting up a collocation linear system"
+	As an example we discretise the boundary value problem
+	```math
+	u'' = u - x u', \quad u(0) = -2, \quad u(2) = 3.
+	```
+
+	- **Step 1: Selection of nodes:**
+	  We choose an equispaced grid with $N=4$ subintervals. As a result we have
+	  the following discretisation nodes
+	  ```math
+	  h = \frac{2-0}{4} = \frac12 \quad \Rightarrow \quad x_0 = 0, x_1 = \frac12, x_2 = 1, x_3=\frac32, x_4 = 2
+	  ```
+
+	- **Step 2: Setup of operator $L$:**
+	  Bringing the differential equation into the form of equation (1),
+	  i.e. $u'' + x u' - u = 0$ we notice $p(x) = x$, $q(x) = -1$ and $r(x) = 0$.
+	  Therefore
+	  ```math
+	  \mathbf{P} = \begin{pmatrix}0 \\&1/2\\&&1\\&&&3/2\\&&&&2\end{pmatrix},
+	  \quad
+	  \mathbf{Q} = -\begin{pmatrix}1 \\&1\\&&1\\&&&1\\&&&&1\end{pmatrix},
+	  \quad
+	  \mathbf{r} = \begin{pmatrix}0\\0\\0\\0\\0\end{pmatrix}
+	  ```
+	  Using the second-order differentiation matrices $\mathbf{D}ₓ$ and $\mathbf{D}ₓₓ$ we therefore obtain:
+	  ```math
+	  \begin{aligned}
+	  \mathbf{L} &= \mathbf{D}ₓₓ + \mathbf{P} \mathbf{D}ₓ + \mathbf{Q} \\
+	  &= \frac{1}{(1/2)^2} \begin{pmatrix}
+	  2 & -5 & 4 & -1 \\
+	  1 & -2 & 1 \\
+	  & 1 & -2 & 1 \\
+	  && 1 & -2 & 1 \\
+	  & -1 & 4 & -5 & 2
+	  \end{pmatrix}
+	  + \mathbf{P} \frac{1}{1/2} \begin{pmatrix}
+	  -\frac{3}{2} & 2 & -\frac12 \\
+	  -\frac12 & 0 & \frac12 \\
+	  & -\frac12 & 0 & \frac12 \\
+	  &&-\frac12 & 0 & \frac12 \\
+	  && \frac12 & -2 & \frac32
+	  \end{pmatrix}
+	  + \mathbf{Q} \\
+	  &= \begin{pmatrix}
+	  7   & -20 & 16  & -4 & 0 \\
+	  7/2 & -9  & 9/2 &  0 & 0 \\
+	  0   & 3   & -9  & 5  & 0 \\
+	  0   & 0   & 5/2 & -9 & 11/2 \\
+	  0   & -4  & 18  & -28 & 13
+	  \end{pmatrix}
+	  \end{aligned}
+	  ```
+
+	- **Step 3: Application of boundary conditions:**
+	  To apply the boundary conditions we change the first and last lines
+	  of the discretised differential equation $\mathbf{L} \mathbf{u} = \mathbf{r}$
+	  arriving at the linear system $\mathbf{A} \mathbf{u} = \mathbf{b}$ with
+	  ```math
+	  \mathbf{A} = \begin{pmatrix}
+	  1   & 0 & 0  & 0 & 0 \\
+	  7/2 & -9  & 9/2 &  0 & 0 \\
+	  0   & 3   & -9  & 5  & 0 \\
+	  0   & 0   & 5/2 & -9 & 11/2 \\
+	  0   & 0  & 0  & 0 & 1
+	  \end{pmatrix} \qquad
+	  \mathbf{b} = \begin{pmatrix} -2 \\ 0 \\ 0 \\ 0 \\ 3 \end{pmatrix}
+	  ```
+
+	- **Step 4: Solution of linear system (6):**
+	  The collocated system $\mathbf{A} \mathbf{u} = \mathbf{b}$ we can now
+	  solve using LU factorisation:
+"""
+
+# ╔═╡ 27338f87-6f0a-4577-8cec-8eaba0c9d411
+let
+	A = [1     0  0     0  0;
+		 7/2  -9  9/2   0  0;
+		 0     3  -9    5  0;
+		 0     0  5/2  -9  11/2;
+		 0     0  0     0    1]
+	b = [-2;
+		  0;
+		  0;
+		  0;
+		  3]
+	A \ b
+end
+
+# ╔═╡ b1d08025-3557-4045-9646-a42faae8b91c
+md"""
+Finally we present a generic implementation of the collocation method for solving linear boundary value problems based on the `diffmats` function and LU factorisation to solve the arising linear system:
+"""
+
+# ╔═╡ df13e0b3-ff18-4dc7-8d46-0a2f786cdbeb
+function fd_bvp(N, a, b, p, q, r, γa, γb)
+	# Solves the differential equation
+	#   u''(x) + p(x) u'(x) + q(x) u(x) = r(x)
+	# in the domain [a, b] with Dirichlet boundary conditions u(a) = γa, u(b) = γb
+	#
+	# N:  Number of subintervals for discretisation, i.e. there will be N+1 nodes 
+	# a:  Starting point of the computational domain [a, b]
+	# b:  End point of the computational domain
+	# p, q, r:  Julia functions to define the unknowns in the equation above
+	# γa, γb:   Dirichlet boundary values
+
+	(; x, Dₓ, Dₓₓ, h) = diffmats(N, a, b)
+
+	# Assemble discretised differential equation operator L
+	P = Diagonal(p.(x))
+	Q = Diagonal(q.(x))
+	L = Dₓₓ + P * Dₓ + Q
+
+	# Apply bounary conditions
+	A = zeros(N+1, N+1)
+	A[2:end-1, :] = L[2:end-1, :]  # Set, but exclude first and last row of L 
+	A[1, 1] = A[end, end] = 1      # Set upper left and lower-right corners
+
+	b = zeros(N+1)
+	b[2:end-1] = r.(x[2:end-1])  # Set, but exclude first and last entry
+	b[1]   = γa  # Set first entry
+	b[end] = γb  # Set last entry
+	
+	# Solve the linear system
+	u = A \ b
+
+	(; x, u, h, A, b, Dₓ, Dₓₓ)
+end
+
+# ╔═╡ 79d958dd-7b0e-428f-ba17-eb9983857504
+md"""
+To test this implementation we consider the following heat equation
+```math
+\left\{
+\begin{aligned}
+- u''(x) &= \sin(x) \qquad x \in (0, 2π)\\
+u(0) &= 1, \quad u(2π) = 2,
+\end{aligned}
+\right.
+```
+which is to be solved in the interval $[0, 2π]$.
+
+Rewriting this equation as $u''(x) = -\sin(x)$ and comparing with the
+interface of the function `fd_bvp` we notice the following parameters:
+"""
+
+# ╔═╡ 3bf1ee87-d42c-429d-8a07-f080f369f61f
+begin
+	p(x) = 0.0
+	q(x) = 0.0
+	r(x) = -sin(x)
+
+	a = 0.0  # Interval begin
+	b = 2π   # Interval end
+	
+	γa = 1   # Left  boundary value
+	γb = 2   # Right boundary value
 end;
 
 # ╔═╡ 9f87dc91-c763-46b8-9277-2cc5f9a92cc0
@@ -382,60 +768,57 @@ In this case the exact solution can be found analytically as
 # ╔═╡ 785b3c50-b008-4ec3-943e-d2e874942f7f
 u_exact(x) = sin(x) + x/2π + 1
 
-# ╔═╡ e49d8cb7-dcf6-4449-9ecc-ab49f3c1bf28
-md"""
-Let's solve it with finite differences
-"""
+# ╔═╡ fadf5e83-d5b4-48b9-911b-7f1309f02234
+md"We solve this using finite differences"
 
-# ╔═╡ 0dbcfaa4-3e0e-470b-8412-4eb0a471bd40
+# ╔═╡ f32bc6ac-f84d-453d-8cab-c06491410c24
 md"and plot the result:"
 
 # ╔═╡ 0bb8239c-22c0-4420-8ae7-59c5c00436a2
-md"`N = ` $(@bind N Slider(10:5:100; default=10, show_value=true))"
+md"`N = ` $(@bind N Slider(6:1:30; default=6, show_value=true))"
 
-# ╔═╡ b0342965-0c56-4ae8-a092-9f4ac565d249
-res_fd = fd_dirichlet(f, L, b₀, bₗ, N);
+# ╔═╡ 452d1b69-42db-4ab0-889b-bc48ae0ec365
+res_fd = fd_bvp(N, a, b, p, q, r, γa, γb);
 
 # ╔═╡ 474dee17-627a-49b1-84e8-d692346d8aa0
 let
-	plot(u_exact; xlims=(-0.1, L+0.1), legend=:topright,
+	plot(u_exact; xlims=(a-0.1, b+0.1), legend=:topright,
 	     label="reference", lw=2, xlabel=L"x", ylabel=L"u(t)",
 	     title=L"-\frac{\partial^2 u}{\partial x^2} = \sin(x)")
 
 	plot!(res_fd.x, res_fd.u; label="Finite differences N=$N", mark=:o, lw=2, ls=:dash)
-
-	scatter!([0, L], [b₀, bₗ], label="Boundary values", mark=:o, c=3)
 end
+
+# ╔═╡ 69ca61cc-5482-45c1-99fc-0ef780771759
+md"`h = ` $(round((b-a)/N; digits=2))"
 
 # ╔═╡ 814ac12b-5ed7-4512-b053-fbe729b90ce6
 md"""
-Note that the plot of the finite-difference solution does not include the nodal point at the boundaries ($x = 0$ and $x = 2π$ --- shown in green in the plot).
-
-
 We observe that as the number of points `N` is increased,
 the solution visually becomes more and more accurate.
 The output of our numerical procedure are 
-the computed points $u_1, u_2, \ldots u_N$.
-These points are meant to approximate the true function values 
-$u(x_1), u(x_2), \ldots, u(x_N)$ of $u$ evaluated at the nodal points.
+the computed points $u_0, u_1, \ldots u_N$.
+These points approximate the true function values 
+$u(x_0), u(x_1), \ldots, u(x_N)$ of $u$ evaluated at the nodal points.
 A measure for the accuracy of our obtained solution is thus
 the maximal deviation any of these computed points has from
-from the true $u(x_j)$.
+from the true $u(x_i)$.
 This measure is called the **global error** defined by
 ```math
-|e_j| = |u(x_j) - u_j| \qquad \text{for $j = 1, \ldots, N$}.
+|e_i| = |u(x_i) - u_i| \qquad \text{for $i = 1, \ldots, N$}.
 ```
 
-Numerically, by observing how this global error changes
-as $N$ increases, we observe **quadratic convergence**:
+Since we used a quadratic difference formulas for building
+the differentiation matrices $Dₓ$ and $Dₓₓ$ we obtain
+**quadratic convergence** in this global error with increasing $N$:
 """
 
 # ╔═╡ 7a647ffe-000e-4bb7-a348-033cd75b1369
 let
-	Ns = [ round(Int, 5 * 10^k) for k in 0:0.5:4 ]
+	Ns = [ round(Int, 5 * 10^k) for k in 0:0.25:2.5 ]
 	errors = Float64[]
 	for N in Ns
-		res_fd = fd_dirichlet(f, L, b₀, bₗ, N)
+		res_fd = fd_bvp(N, a, b, p, q, r, γa, γb)
 		x = res_fd.x
 		u = res_fd.u
 		error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
@@ -446,12 +829,12 @@ let
 			   xaxis=:log, yaxis=:log,
 	           xlabel=L"N", ylabel="Largest global error",
 	           legend=:bottomleft,
-	           xlims=(1, 3e5), ylims=(1e-13, 10))
+	           xlims=(1, 5e3), ylims=(1e-7, 10))
 	plot!(p, Ns, errors; lw=2, mark=:o, c=1, label="Error")
-	plot!(p, Ns, 0.02(first(Ns) ./ Ns).^2, ls=:dash, lw=2, label=L"O(n^{-2})", c=1)
+	plot!(p, Ns, 0.02(first(Ns) ./ Ns).^2, ls=:dash, lw=2, label=L"N^{-2} = O(h^2)", c=1)
 
-	xticks!(p, 10.0 .^ (0:1:5))
-	yticks!(p, 10.0 .^ (0:-2:-12))
+	xticks!(p, 10.0 .^ (0:1:3))
+	yticks!(p, 10.0 .^ (0:-2:-6))
 	p
 end
 
@@ -467,23 +850,84 @@ In line with this discussion we define convergence for numerical schemes for bou
 	\max_{j=0,\ldots,N+1} |u(x_j) - u_j| ≤ α \, h^p
 	```
 	provided that the solution $u$ is sufficiently regular.
+"""
 
-	For the **central finite difference scheme** discussed here $p=2$.
+# ╔═╡ 359e61a3-d7fc-402f-ad6c-24b4301885d6
+md"""
+Since we used a quadratic difference formulas for building
+the differentiation matrices $Dₓ$ and $Dₓₓ$ we obtain indeed quadratic convergence $p=2$, as is formally summarised in the following theorem.
+"""
+
+# ╔═╡ f05ac977-45b4-4bd1-baf0-8a2d50525ec9
+md"""
+!!! info "Theorem 1: Global error of finite differences"
+	Under the assumption that the exact solution $u$ of the Dirichlet boundary value problem (1) is **four times differentiable**,
+	the finite-difference scheme of equations (5) and (6)
+	involving the **second-order differentiation matrices**
+	$\mathbf{D}_{x}$ and $\mathbf{D}_{xx}$
+	converges as 
+	```math
+	\max_{j=1,\ldots,N} |u(x_j) - u_j| ≤ α \, \|u''''\|_\infty \, h^2
+	```
+	where $α > 0$ is a constant that independent of $u$ and $h$.
+	It thus achieves **quadratic convergence**.
+"""
+
+# ╔═╡ b3a1222b-52cc-49ff-af74-cc472bd40999
+md"""
+The proof of this result goes beyond the scope of this course and can for example be found in chapter 7.4 of *Introduction to Numerical Analysis* by Stoer and Bulirsch. The key observation to take a way from this developments is:
+
+!!! info "Observation: Convergence order of BVP scheme and FD formula"
+	Provided our solution function $u$ can be infinitely often differentiated continously, than we can **obtain $p$-th order convergence** (as $h\to0$ or $N\to\infty$) of the solution vector  $\tilde{\mathbf u}$ obtained in (6)
+	provided that we consistently use **$p$-th order finite-difference formulas** to build *both* the differentiation matrices $Dₓ$ and $Dₓₓ$ in (5).
 """
 
 # ╔═╡ d9fb073d-042c-4724-834f-bcdb0cc4aec6
 md"""
 ### Numerical stability
 
-Let us push the convergence plot from above a little further:
+We want to push the convergence plot from above a little further. For this we employ an implementation of `fd_bvp` that directly sets up the matrix `A` as a sparse matrix. Unfold the cell below to see the implementation.
 """
+
+# ╔═╡ 75311119-2d3a-4ca4-bddb-5a595ffb09a4
+function fd_bvp_fast(N, a, b, p, q, r, γa, γb)
+	@assert iszero(p(randn()))  # Assume p(x) = 0.0 for now
+
+	# Faster version of fd_bvp by building a sparse matrix A
+	h = (b-a) / N
+	x = [a + i*h for i in 0:N]  # Nodes
+
+	# Build Dₓₓ, but without first and last row
+	dxx_main  = [0.0; fill(-2.0, N-1); 0.0] ./ h^2
+	dxx_sub   = [fill(1.0, N-1); 0.0] ./ h^2
+	dxx_super = [0.0; fill(1.0, N-1)] ./ h^2
+	Dₓₓ = Tridiagonal(dxx_sub, dxx_main, dxx_super)
+
+	# Assemble discretised differential equation operator
+	# (but without first and last row)
+	Q = Diagonal([0; q.(x[2:end-1]); 0])
+	A = Dₓₓ + Q
+
+	# Apply boundary conditions
+	A[1, 1] = A[end, end] = 1.0
+
+	b = [γa; r.(x[2:end-1]); γb]
+	
+	# Solve the linear system
+	u = A \ b
+
+	(; x, u, h, A, b, Dₓ, Dₓₓ)
+end
+
+# ╔═╡ b482d8e2-901a-4d8b-85af-e0fbc5c46d4f
+fd_bvp_fast(N, a, b, p, q, r, γa, γb).A
 
 # ╔═╡ 2fd3f387-b950-462f-a06a-eabd458fe10e
 let
-	Ns = [ round(Int, 5 * 10^k) for k in 2:0.1:5.2 ]
+	Ns = [ round(Int, 5 * 10^k) for k in 2:0.1:5.5 ]
 	errors = Float64[]
 	for N in Ns
-		res_fd = fd_dirichlet(f, L, b₀, bₗ, N)
+		res_fd = fd_bvp_fast(N, a, b, p, q, r, γa, γb)
 		x = res_fd.x
 		u = res_fd.u
 		error = [ u_exact(x[j]) - u[j] for j in 1:length(x)]
@@ -523,7 +967,7 @@ As it turns out the **condition number of the system matrix $\mathbf{A}$ grows**
 # ╔═╡ f3819d92-c61a-49b2-a77b-9837cbed0cae
 let
 	Ns = [5, 10, 50, 80, 200, 500, 1000]
-	condition_numbers = [cond(fd_dirichlet(f, L, b₀, bₗ, N).A) for N in Ns]
+	condition_numbers = [cond(fd_bvp_fast(N, a, b, p, q, r, γa, γb).A) for N in Ns]
 
 	p = plot(Ns, condition_numbers; mark=:o, yaxis=:log, xaxis=:log, lw=2, xlabel=L"N", ylabel=L"κ(A)", legend=:topleft, label=L"Condition number of $A$", ylims=(1, 10^13), xlims=(1, 3e6), yticks=(10.0 .^ (0:2:12)), xticks=(10.0 .^ (0:1:6)))
 	plot!(p, Ns -> Ns^2, ls=:dash, lw=2, label=L"O(N^2) = O(h^{-2})")
@@ -549,142 +993,8 @@ such that increasing $N$ beyond $10^5$ thus causes the total
 observed error of the numerical procedure to increase again.
 """
 
-# ╔═╡ e35398a8-d8e5-4b19-b5a9-2c7ab6b497e9
-md"""
-### Optional: Error analysis of the discretisation error
-
-Let us come back to the observed quadratic convergence
-in the regime of small $N$ where the discretisation error dominates.
-Ignoring thus the floating-point error we conclude that the global error 
-```math
-|e_j| = |u(x_j) - u_j| \qquad \text{for $j = 1, \ldots, N$}.
-```
-should scale as $\max_{j=1,\ldots,N} |u(x_j) - u_j| ≤ α\, h^2$ for some constant $α$.
-In this section we will make this more quantitative.
-"""
-
-# ╔═╡ e70af7c2-6df6-4724-8a82-7f3fc5c1fadf
-md"""
-First, since the value $u_j$ at each nodal point is determined by solving (4),
-i.e. by replacing the *exact* function values $u(x_{j-1})$, $u(x_j)$ and $u_{j+1}$
-by the approximations $u_{j-1}$, $u_{j}$ and $u_{j+1}$,
-there are in fact two contributions to the global error:
-1. The error due to employing the finite difference formula in (3)
-   instead of the exact partial derivative $\frac{\partial^2 u}{\partial x^2}$.
-2. The propagation of error from the neighbours $u_{j-1}$ / $u_{j+1}$ to $u_j$ it self and vice versa.
-"""
-
-# ╔═╡ 7fc0e2c7-fdf5-458a-9c54-63f906cb63ad
-md"""
-We start by understanding the first contribution,
-which is the **local error** due to employing the finite difference formula (3).
-
-!!! info "Definition: Local truncation error"
-	Given the exact solution $u(x_j)$ of problem (9) evaluated at the nodal points $x_j = j\,h$ for $j = 0, \ldots, N+1$ of the finite difference scheme of Algorithm 1, we define the **local truncation error** at the node $x_j$ as
-	```math
-	\tag{10}
-	\tau^h_j = \frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} - f(x_j)
-	\qquad j = 1, \ldots, N.
-	```
-	That is the local truncation error is the residual of the numerical scheme (4)
-	when we replace the approximated solution $u_j$ by the exact solution $u(x_j)$.
-"""
-
-# ╔═╡ 1f3b6898-3ff1-40b5-bcc2-97db023fc0e3
-md"""
-In our case one can show for the local truncation error:
-
-!!! info "Lemma 2: Bound on the local truncation error"
-	If the solution $u$ is four times differentiable the local truncation error (10) satisfies
-	```math
-	\tag{11}
-	\max_{j=1,\ldots,N} |τ^h_j| ≤ \frac{h^2}{12} \max_{x\in[0,L]}|u''''(x)|
-	= \frac{h^2}{12} \|u''''\|_\infty.
-	```
-"""
-
-# ╔═╡ 5fa3718d-d58c-492f-9e04-1bca93d8b9fd
-md"""
-> **Proof sketch:**
-> Since $u$ is the exact solution to (9) we have that $f(x_j) = -\frac{\partial^2 u}{\partial x^2}(x_j)$ for all $j = 1, \ldots, N$. Therefore
-> ```math
-> \begin{aligned}
-> \tau^h_j &= \frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} - f(x_j)\\
-> &= \frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} + \frac{\partial^2 u}{\partial x^2}(x_j) \\
-> &= -\frac{u(x_{j} - h) - 2u(x_j) + u(x_{j}+h)}{h^2} + u''(x_j)
-> \end{aligned}
-> ```
-> Considering a Taylor expansion to fourth order of $u(x_j \pm h)$
-> around $x_j$ than leads to the result.
-"""
-
-# ╔═╡ b811d679-e80b-41e1-8e85-dd81d01f00a7
-md"""
-Next we tackle the second aspect,
-namely how this local truncation error propagates to give global error.
-
-By rearranging the definition of the local truncation error (10),
-we find that the exact solution satisfies the discrete problem
-```math
-\tag{12}
-\frac{-u(x_{j-1}) + 2u(x_j) - u(x_{j+1})}{h^2} = f(x_j) + \tau^h_j 	\qquad j = 1, \ldots, N.
-```
-In contrast according to (4) the approximate solution satisfies
-```math
-\tag{4}
-\frac{-u_{j-1} + 2u_j - u_{j+1}}{h^2} = f(x_j) 	\qquad j = 1, \ldots, N.
-```
-Subtracting (4) from (12) thus leads to
-```math
-\frac{-e_{j-1} + 2e_j - e_{j+1}}{h^2}
-= \tau^h_j 	\qquad j = 1, \ldots, N,
-```
-where we used the definition of the error $e_j = u(x_j) - u_j$.
-At the boundary, where we set $u_0 = b_0 = u(0)$ and $u_{N+1} = b_L = u(L)$
-we have $e_0 = e_{N+1} = 0$, such that the error satisfies
-```math
-\tag{13}
-\left\{
-\begin{aligned}
-\frac{2e_1 - e_2}{h^2} &= τ^h_1  && j=1\\
-\frac{-e_{j-1} + 2e_j - e_{j+1}}{h^2} &= τ^h_j  && \forall\, 2 ≤ j ≤ N-1 \\
-\frac{-e_{N-1} +2e_N}{h^2} &= τ^h_N && j=N,
-\end{aligned}
-\right.
-```
-which is again a discretised Dirichlet bounary value problem (5) with the conditions that $f(x_j) = τ^h_j$ and $b_0=b_L=0$.
-
-We can therefore apply equation (14) of Theorem 1 
-(see the folded section *Optional: Does the problem (5) always have a solution ?*)
-to problem (13) and conclude
-```math
-\tag{15}
-\max_{j=1,\ldots,N} |e_j| ≤ \frac{1}{8} \max_{j=1,\ldots,N} |τ^h_j|,
-```
-which relates the local truncation error to the error at each nodal point.
-"""
-
-# ╔═╡ f472502a-678f-479a-ab18-9ba0af7cde2f
-md"""
-Combining this result with Lemma 2 yields
-
-!!! info "Theorem 3: Global error of finite differences"
-	Under the assumption that the exact solution $u$ of the Dirichlet boundary value problem (9) is four times differentiable,
-	the finite differences scheme of Algorithm 1 converges as
-	```math
-	\tag{16}
-	\max_{j=1,\ldots,N} |u(x_j) - u_j| ≤ α \, h^2
-	```
-	where $α = \frac{1}{96} \|u''''\|_\infty$.
-	It thus achieves **quadratic convergence**.
-"""
-
-# ╔═╡ b3d4248c-6f83-4594-a41a-d6c3c7e8d405
-TODO("Show application of finite difference method to a second example Boundary Value Problem.
-
-	 A good example could be the Allan-Cahn equation (Demo 10.5.5 in Driscoll Brown)
-	 
-")
+# ╔═╡ 858a60ba-8d0c-43d8-908d-0bb413c79285
+TODO("Needs an adaptive pass from here.")
 
 # ╔═╡ 23307b35-c76e-487d-906a-18f65b691d79
 md"""
@@ -1426,8 +1736,11 @@ More information on the approach can be found for example in
 [chapter 10.6](https://tobydriscoll.net/fnc-julia/bvp/galerkin.html) of Driscoll, Brown: *Fundamentals of Numerical Computation*.
 """
 
+# ╔═╡ 9143e06a-9f27-44d1-ae2c-c50ce8dfdd30
+md"Show outline $(@bind show_outline CheckBox(default=true))"
+
 # ╔═╡ 3348115a-2fd4-4935-9dba-b85d9e0c95f5
-let
+if show_outline
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
@@ -1447,7 +1760,7 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 [compat]
 HypertextLiteral = "~1.0.0"
 LaTeXStrings = "~1.4.0"
-Plots = "~1.41.5"
+Plots = "~1.41.6"
 PlutoTeachingTools = "~0.4.7"
 PlutoUI = "~0.7.79"
 """
@@ -1458,7 +1771,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.4"
 manifest_format = "2.0"
-project_hash = "fdf601eb6ead9d900e9760019cc217f54937d8d9"
+project_hash = "3a4816e2df6a778f82d0d0d5844c73951d782f6d"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1496,10 +1809,10 @@ uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.9+0"
 
 [[deps.Cairo_jll]]
-deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "fde3bf89aead2e723284a8ff9cdf5b551ed700e8"
+deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+git-tree-sha1 = "d0efe2c6fdcdaa1c161d206aa8b933788397ec71"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
-version = "1.18.5+0"
+version = "1.18.6+0"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
@@ -1548,9 +1861,9 @@ version = "1.3.0+1"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
-git-tree-sha1 = "d9d26935a0bcffc87d2613ce14c527c99fc543fd"
+git-tree-sha1 = "21d088c496ea22914fe80906eb5bce65755e5ec8"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
-version = "2.5.0"
+version = "2.5.1"
 
 [[deps.Contour]]
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
@@ -1564,9 +1877,9 @@ version = "1.16.0"
 
 [[deps.DataStructures]]
 deps = ["OrderedCollections"]
-git-tree-sha1 = "e357641bb3e0638d353c4b29ea0e40ea644066a6"
+git-tree-sha1 = "e86f4a2805f7f19bec5129bc9150c38208e5dc23"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.19.3"
+version = "0.19.4"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -1609,9 +1922,9 @@ version = "0.1.11"
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "27af30de8b5445644e8ffe3bcb0d72049c089cf1"
+git-tree-sha1 = "9cb7fe11da6adb8683cbacf8aa9b5237941e3a75"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
-version = "2.7.3+0"
+version = "2.7.5+0"
 
 [[deps.FFMPEG]]
 deps = ["FFMPEG_jll"]
@@ -1620,10 +1933,10 @@ uuid = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
 version = "0.4.5"
 
 [[deps.FFMPEG_jll]]
-deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
-git-tree-sha1 = "01ba9d15e9eae375dc1eb9589df76b3572acd3f2"
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
+git-tree-sha1 = "cac41ca6b2d399adfc95e51240566f8a60a80806"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
-version = "8.0.1+0"
+version = "8.1.0+0"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -1648,9 +1961,9 @@ version = "1.3.7"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "2c5512e11c791d1baed2049c5652441b28fc6a31"
+git-tree-sha1 = "70329abc09b886fd2c5d94ad2d9527639c421e3e"
 uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
-version = "2.13.4+0"
+version = "2.14.3+1"
 
 [[deps.FriBidi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1660,15 +1973,15 @@ version = "1.0.17+0"
 
 [[deps.GLFW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll", "libdecor_jll", "xkbcommon_jll"]
-git-tree-sha1 = "b7bfd56fa66616138dfe5237da4dc13bbd83c67f"
+git-tree-sha1 = "9e0fb9e54594c47f278d75063980e43066e26e20"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
-version = "3.4.1+0"
+version = "3.4.1+1"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Qt6Wayland_jll", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
-git-tree-sha1 = "ee0585b62671ce88e48d3409733230b401c9775c"
+git-tree-sha1 = "44716a1a667cb867ee0e9ec8edc31c3e4aa5afdc"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.73.22"
+version = "0.73.24"
 
     [deps.GR.extensions]
     IJuliaExt = "IJulia"
@@ -1678,9 +1991,9 @@ version = "0.73.22"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "FreeType2_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt6Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "7dd7173f7129a1b6f84e0f03e0890cd1189b0659"
+git-tree-sha1 = "be8a1b8065959e24fdc1b51402f39f3b6f0f6653"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.73.22+0"
+version = "0.73.24+0"
 
 [[deps.GettextRuntime_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll"]
@@ -1713,9 +2026,9 @@ version = "1.0.2"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "PrecompileTools", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "5e6fe50ae7f23d171f44e311c2960294aaa0beb5"
+git-tree-sha1 = "51059d23c8bb67911a2e6fd5130229113735fc7e"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.10.19"
+version = "1.11.0"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll"]
@@ -1765,9 +2078,9 @@ version = "1.7.1"
 
 [[deps.JSON]]
 deps = ["Dates", "Logging", "Parsers", "PrecompileTools", "StructUtils", "UUIDs", "Unicode"]
-git-tree-sha1 = "b3ad4a0255688dcb895a52fafbaae3023b588a90"
+git-tree-sha1 = "67c6f1f085cb2671c93fe34244c9cccde30f7a26"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-version = "1.4.0"
+version = "1.5.0"
 
     [deps.JSON.extensions]
     JSONArrowExt = ["ArrowTypes"]
@@ -1777,9 +2090,9 @@ version = "1.4.0"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "b6893345fd6658c8e475d40155789f4860ac3b21"
+git-tree-sha1 = "c0c9b76f3520863909825cbecdef58cd63de705a"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "3.1.4+0"
+version = "3.1.5+0"
 
 [[deps.JuliaSyntaxHighlighting]]
 deps = ["StyledStrings"]
@@ -1794,21 +2107,15 @@ version = "3.100.3+0"
 
 [[deps.LERC_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "aaafe88dccbd957a8d82f7d05be9b69172e0cee3"
+git-tree-sha1 = "17b94ecafcfa45e8360a4fc9ca6b583b049e4e37"
 uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
-version = "4.0.1+0"
+version = "4.1.0+0"
 
 [[deps.LLVMOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "eb62a3deb62fc6d8822c0c4bef73e4412419c5d8"
 uuid = "1d63c593-3942-5779-bab2-d838dc0a180e"
 version = "18.1.8+0"
-
-[[deps.LZO_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "1c602b1127f4751facb671441ca72715cc95938a"
-uuid = "dd4b983a-f0e5-5f8d-a1b7-129d4a5fb1ac"
-version = "2.10.3+0"
 
 [[deps.LaTeXStrings]]
 git-tree-sha1 = "dda21b8cbd6a6c40d9d02a73230f9d70fed6918c"
@@ -1882,9 +2189,9 @@ version = "1.18.0+0"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "97bbca976196f2a1eb9607131cb108c69ec3f8a6"
+git-tree-sha1 = "cc3ad4faf30015a3e8094c9b5b7f19e85bdf2386"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
-version = "2.41.3+0"
+version = "2.42.0+0"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
@@ -1894,9 +2201,9 @@ version = "4.7.2+0"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "d0205286d9eceadc518742860bf23f703779a3d6"
+git-tree-sha1 = "d620582b1f0cbe2c72dd1d5bd195a9ce73370ab1"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
-version = "2.41.3+0"
+version = "2.42.0+0"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
@@ -1946,9 +2253,9 @@ version = "1.11.0"
 
 [[deps.MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
-git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
+git-tree-sha1 = "8785729fa736197687541f7053f6d8ab7fc44f92"
 uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.1.9"
+version = "1.1.10"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2030,9 +2337,9 @@ version = "10.44.0+1"
 
 [[deps.Pango_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "0662b083e11420952f2e62e17eddae7fc07d5997"
+git-tree-sha1 = "58e5ed5e386e156bd93e86b305ebd21ac63d2d04"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
-version = "1.57.0+0"
+version = "1.57.1+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
@@ -2069,9 +2376,9 @@ version = "1.4.4"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "TOML", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "1cc8ad0762e59e713ee3ef28f9b78b2c9f4ca078"
+git-tree-sha1 = "cb20a4eacda080e517e4deb9cfb6c7c518131265"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.41.5"
+version = "1.41.6"
 
     [deps.Plots.extensions]
     FileIOExt = "FileIO"
@@ -2107,9 +2414,9 @@ version = "1.3.3"
 
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "522f093a29b31a93e34eaea17ba055d850edea28"
+git-tree-sha1 = "8b770b60760d4451834fe79dd483e318eee709c4"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.5.1"
+version = "1.5.2"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -2117,33 +2424,39 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 version = "1.11.0"
 
 [[deps.PtrArrays]]
-git-tree-sha1 = "1d36ef11a9aaf1e8b74dacc6a731dd1de8fd493d"
+git-tree-sha1 = "4fbbafbc6251b883f4d2705356f3641f3652a7fe"
 uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
-version = "1.3.0"
+version = "1.4.0"
 
 [[deps.Qt6Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Vulkan_Loader_jll", "Xorg_libSM_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_cursor_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "libinput_jll", "xkbcommon_jll"]
-git-tree-sha1 = "34f7e5d2861083ec7596af8b8c092531facf2192"
+git-tree-sha1 = "d7a4bff94f42208ce3cf6bc8e4e7d1d663e7ee8b"
 uuid = "c0090381-4147-56d7-9ebc-da0b1113ec56"
-version = "6.8.2+2"
+version = "6.10.2+1"
 
 [[deps.Qt6Declarative_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6ShaderTools_jll"]
-git-tree-sha1 = "da7adf145cce0d44e892626e647f9dcbe9cb3e10"
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6ShaderTools_jll", "Qt6Svg_jll"]
+git-tree-sha1 = "d5b7dd0e226774cbd87e2790e34def09245c7eab"
 uuid = "629bc702-f1f5-5709-abd5-49b8460ea067"
-version = "6.8.2+1"
+version = "6.10.2+1"
 
 [[deps.Qt6ShaderTools_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll"]
-git-tree-sha1 = "9eca9fc3fe515d619ce004c83c31ffd3f85c7ccf"
+git-tree-sha1 = "4d85eedf69d875982c46643f6b4f66919d7e157b"
 uuid = "ce943373-25bb-56aa-8eca-768745ed7b5a"
-version = "6.8.2+1"
+version = "6.10.2+1"
+
+[[deps.Qt6Svg_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll"]
+git-tree-sha1 = "81587ff5ff25a4e1115ce191e36285ede0334c9d"
+uuid = "6de9746b-f93d-5813-b365-ba18ad4a9cf3"
+version = "6.10.2+0"
 
 [[deps.Qt6Wayland_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6Declarative_jll"]
-git-tree-sha1 = "8f528b0851b5b7025032818eb5abbeb8a736f853"
+git-tree-sha1 = "672c938b4b4e3e0169a07a5f227029d4905456f2"
 uuid = "e99dba38-086e-5de3-a5b1-6e4c66e897c3"
-version = "6.8.2+2"
+version = "6.10.2+1"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
@@ -2254,16 +2567,18 @@ version = "0.34.10"
 
 [[deps.StructUtils]]
 deps = ["Dates", "UUIDs"]
-git-tree-sha1 = "9297459be9e338e546f5c4bedb59b3b5674da7f1"
+git-tree-sha1 = "86f5831495301b2a1387476cb30f86af7ab99194"
 uuid = "ec057cc2-7a8d-4b58-b3b3-92acb9f63b42"
-version = "2.6.2"
+version = "2.8.0"
 
     [deps.StructUtils.extensions]
     StructUtilsMeasurementsExt = ["Measurements"]
+    StructUtilsStaticArraysCoreExt = ["StaticArraysCore"]
     StructUtilsTablesExt = ["Tables"]
 
     [deps.StructUtils.weakdeps]
     Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
+    StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
     Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [[deps.StyledStrings]]
@@ -2345,9 +2660,9 @@ version = "1.24.0+0"
 
 [[deps.XZ_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "9cce64c0fdd1960b597ba7ecda2950b5ed957438"
+git-tree-sha1 = "b29c22e245d092b8b4e8d3c09ad7baa586d9f573"
 uuid = "ffd25f8a-64ca-5728-b0f7-c24cf3aae800"
-version = "5.8.2+0"
+version = "5.8.3+0"
 
 [[deps.Xorg_libICE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2363,9 +2678,9 @@ version = "1.2.6+0"
 
 [[deps.Xorg_libX11_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
-git-tree-sha1 = "b5899b25d17bf1889d25906fb9deed5da0c15b3b"
+git-tree-sha1 = "808090ede1d41644447dd5cbafced4731c56bd2f"
 uuid = "4f6342f7-b3d2-589e-9d20-edeb45f2b2bc"
-version = "1.8.12+0"
+version = "1.8.13+0"
 
 [[deps.Xorg_libXau_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2387,9 +2702,9 @@ version = "1.1.6+0"
 
 [[deps.Xorg_libXext_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
-git-tree-sha1 = "a4c0ee07ad36bf8bbce1c3bb52d21fb1e0b987fb"
+git-tree-sha1 = "1a4a26870bf1e5d26cd585e38038d399d7e65706"
 uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
-version = "1.3.7+0"
+version = "1.3.8+0"
 
 [[deps.Xorg_libXfixes_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
@@ -2405,21 +2720,27 @@ version = "1.8.3+0"
 
 [[deps.Xorg_libXinerama_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll"]
-git-tree-sha1 = "a5bc75478d323358a90dc36766f3c99ba7feb024"
+git-tree-sha1 = "0ba01bc7396896a4ace8aab67db31403c71628f4"
 uuid = "d1454406-59df-5ea1-beac-c340f2130bc3"
-version = "1.1.6+0"
+version = "1.1.7+0"
 
 [[deps.Xorg_libXrandr_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll", "Xorg_libXrender_jll"]
-git-tree-sha1 = "aff463c82a773cb86061bce8d53a0d976854923e"
+git-tree-sha1 = "6c174ef70c96c76f4c3f4d3cfbe09d018bcd1b53"
 uuid = "ec84b674-ba8e-5d96-8ba1-2a689ba10484"
-version = "1.5.5+0"
+version = "1.5.6+0"
 
 [[deps.Xorg_libXrender_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
 git-tree-sha1 = "7ed9347888fac59a618302ee38216dd0379c480d"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
 version = "0.9.12+0"
+
+[[deps.Xorg_libpciaccess_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "4909eb8f1cbf6bd4b1c30dd18b2ead9019ef2fad"
+uuid = "a65dc6b1-eb27-53a1-bb3e-dea574b5389e"
+version = "0.18.1+0"
 
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
@@ -2429,9 +2750,9 @@ version = "1.17.1+0"
 
 [[deps.Xorg_libxkbfile_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
-git-tree-sha1 = "e3150c7400c41e207012b41659591f083f3ef795"
+git-tree-sha1 = "ed756a03e95fff88d8f738ebc2849431bdd4fd1a"
 uuid = "cc61e674-0454-545c-8b26-ed2c68acab7a"
-version = "1.1.3+0"
+version = "1.2.0+0"
 
 [[deps.Xorg_xcb_util_cursor_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_jll", "Xorg_xcb_util_renderutil_jll"]
@@ -2512,9 +2833,9 @@ version = "0.61.1+0"
 
 [[deps.libaom_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "371cc681c00a3ccc3fbc5c0fb91f58ba9bec1ecf"
+git-tree-sha1 = "850b06095ee71f0135d644ffd8a52850699581ed"
 uuid = "a4ae2306-e953-59d6-aa16-d00cac43593b"
-version = "3.13.1+0"
+version = "3.13.3+0"
 
 [[deps.libass_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
@@ -2532,6 +2853,12 @@ deps = ["Artifacts", "Dbus_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pango_
 git-tree-sha1 = "9bf7903af251d2050b467f76bdbe57ce541f7f4f"
 uuid = "1183f4f0-6f2a-5f1a-908b-139f9cdfea6f"
 version = "0.2.2+0"
+
+[[deps.libdrm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libpciaccess_jll"]
+git-tree-sha1 = "63aac0bcb0b582e11bad965cef4a689905456c03"
+uuid = "8e53e030-5e6c-5a89-a30b-be5b7263a166"
+version = "2.4.125+1"
 
 [[deps.libevdev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2553,9 +2880,15 @@ version = "1.28.1+0"
 
 [[deps.libpng_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "6ab498eaf50e0495f89e7a5b582816e2efb95f64"
+git-tree-sha1 = "e51150d5ab85cee6fc36726850f0e627ad2e4aba"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
-version = "1.6.54+0"
+version = "1.6.58+0"
+
+[[deps.libva_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
+git-tree-sha1 = "7dbf96baae3310fe2fa0df0ccbb3c6288d5816c9"
+uuid = "9a156e7d-b971-5f62-b2c9-67348b8fb97c"
+version = "2.23.0+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll"]
@@ -2610,43 +2943,61 @@ version = "1.13.0+0"
 # ╟─226a30be-f721-4f3d-8d49-abddca22f661
 # ╟─59f11469-c86e-4dc4-9eed-039101aaa058
 # ╟─3e10cf8e-d5aa-4b3e-a7be-12ccdc2f3cf7
-# ╟─7fd851e6-3180-4008-a4c0-0e08edae9954
-# ╟─52c7ce42-152d-40fd-a910-78f755fcae47
-# ╠═782dff7d-76f5-4977-98cb-81881a05331a
-# ╟─82788dfd-3462-4f8e-b0c8-9e196dac23a9
-# ╟─d43ecff3-89a3-4edd-95c2-7262e317ce29
-# ╟─1fb53091-89c8-4f70-ab4b-ca2371b830b2
-# ╟─129d2e86-49e6-4c5f-aca1-0cb45d923294
-# ╟─cbcd1b1e-7755-4177-b52a-f361ee025e01
-# ╟─c21502ce-777f-491a-a536-ff499fc172fc
-# ╟─c2bb42b3-4fee-4ad4-84c0-06f58c7f7665
-# ╟─e38a1d5b-a35c-4942-aeb2-0e91668ac8f3
-# ╠═3bc63106-3d1c-4b4e-a6a6-682e09475cb4
-# ╟─4c9e3775-bb3e-4ce9-b18e-251aac342b5d
-# ╠═9f4df9d4-e0cb-4706-8158-0da7a6505442
+# ╟─23f9e709-1f77-4a96-bb09-2d358cdecc76
+# ╟─6df8394f-6457-4db0-86e5-7a9dd7d65c9a
+# ╟─b4b33be9-bb9a-4fe9-af48-8883c2fbc7e9
+# ╠═b00a37d1-37ad-41b5-ba88-d6582ef680cb
+# ╟─be847fe0-7447-493b-9087-f4a1d961edba
+# ╟─a184ac2c-97ae-4221-a64e-215e9cadeb80
+# ╟─3be4502b-95af-4ca8-8fd4-4c8cb659a858
+# ╟─f44f3230-0062-49db-a488-f19910b58792
+# ╠═393313f4-f2b0-4f2e-b175-ae24c0514e58
+# ╟─e2ed03ad-f720-4e29-afdc-1c1c6bc233c0
+# ╠═93bf2a7a-a926-4e0d-b127-889a0b82dcd2
+# ╠═94b97d6c-6c45-4887-b15e-5731ae5bbe9c
+# ╟─80df1d2f-24f9-4503-9075-eb5a37a486bd
+# ╠═cdc1fc28-714b-45e1-ad51-31c6d70dcce3
+# ╟─22876147-cac6-4c56-921a-8d86e605bdeb
+# ╠═b0c8cf85-b034-41c6-a808-6562ace45768
+# ╟─0e66bac1-a66a-47e9-aa22-b1f95ce2e45d
+# ╠═796c699d-f6d3-40b3-aa48-fff0d627bb51
+# ╟─78cf3006-47c8-48c2-be3a-2a518ff4731d
+# ╠═ba98bfcb-a716-49e2-bc0b-7294bdaff012
+# ╟─8d1cf059-05b1-44da-a51c-0157bb06efe9
+# ╟─4f7bd62c-792c-4abb-ac93-28bb0169e739
+# ╟─41326216-32f2-412f-b1a4-45c287f3b640
+# ╠═51552b34-01b4-4ef0-866c-6ff6c33a3462
+# ╠═5d361452-2eef-4503-a80f-151277d3b855
+# ╠═8ddf3426-1d5d-42ee-b44a-3c4ea1ed5f4c
+# ╟─b2418c32-854f-469c-ac9d-4fb7b93d5b79
+# ╟─f1991ea0-9270-4c27-8032-4f4db84330e4
+# ╠═27338f87-6f0a-4577-8cec-8eaba0c9d411
+# ╟─b1d08025-3557-4045-9646-a42faae8b91c
+# ╠═df13e0b3-ff18-4dc7-8d46-0a2f786cdbeb
+# ╟─79d958dd-7b0e-428f-ba17-eb9983857504
+# ╠═3bf1ee87-d42c-429d-8a07-f080f369f61f
 # ╟─9f87dc91-c763-46b8-9277-2cc5f9a92cc0
 # ╠═785b3c50-b008-4ec3-943e-d2e874942f7f
-# ╟─e49d8cb7-dcf6-4449-9ecc-ab49f3c1bf28
-# ╠═b0342965-0c56-4ae8-a092-9f4ac565d249
-# ╟─0dbcfaa4-3e0e-470b-8412-4eb0a471bd40
+# ╟─fadf5e83-d5b4-48b9-911b-7f1309f02234
+# ╠═452d1b69-42db-4ab0-889b-bc48ae0ec365
+# ╟─f32bc6ac-f84d-453d-8cab-c06491410c24
 # ╠═474dee17-627a-49b1-84e8-d692346d8aa0
 # ╟─0bb8239c-22c0-4420-8ae7-59c5c00436a2
+# ╟─69ca61cc-5482-45c1-99fc-0ef780771759
 # ╟─814ac12b-5ed7-4512-b053-fbe729b90ce6
 # ╠═7a647ffe-000e-4bb7-a348-033cd75b1369
 # ╟─52961854-695e-44e7-b8e2-20ed7ff07cda
+# ╟─359e61a3-d7fc-402f-ad6c-24b4301885d6
+# ╟─f05ac977-45b4-4bd1-baf0-8a2d50525ec9
+# ╟─b3a1222b-52cc-49ff-af74-cc472bd40999
 # ╟─d9fb073d-042c-4724-834f-bcdb0cc4aec6
-# ╟─2fd3f387-b950-462f-a06a-eabd458fe10e
+# ╟─75311119-2d3a-4ca4-bddb-5a595ffb09a4
+# ╠═b482d8e2-901a-4d8b-85af-e0fbc5c46d4f
+# ╠═2fd3f387-b950-462f-a06a-eabd458fe10e
 # ╟─8039250a-c79a-4009-9a53-81307b8e0ace
 # ╟─f3819d92-c61a-49b2-a77b-9837cbed0cae
 # ╟─30b8bac2-7c95-4fee-bbde-b04a36258857
-# ╟─e35398a8-d8e5-4b19-b5a9-2c7ab6b497e9
-# ╟─e70af7c2-6df6-4724-8a82-7f3fc5c1fadf
-# ╟─7fc0e2c7-fdf5-458a-9c54-63f906cb63ad
-# ╟─1f3b6898-3ff1-40b5-bcc2-97db023fc0e3
-# ╟─5fa3718d-d58c-492f-9e04-1bca93d8b9fd
-# ╟─b811d679-e80b-41e1-8e85-dd81d01f00a7
-# ╟─f472502a-678f-479a-ab18-9ba0af7cde2f
-# ╠═b3d4248c-6f83-4594-a41a-d6c3c7e8d405
+# ╠═858a60ba-8d0c-43d8-908d-0bb413c79285
 # ╟─23307b35-c76e-487d-906a-18f65b691d79
 # ╟─7ae614fb-f2e0-46af-a557-6a378f6553e8
 # ╟─962ca311-c2ed-46eb-b043-827ecfb64ac3
@@ -2692,6 +3043,7 @@ version = "1.13.0+0"
 # ╠═1c8966d7-8a12-4b25-9c51-93dea0faeb14
 # ╠═25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
 # ╟─8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
+# ╟─9143e06a-9f27-44d1-ae2c-c50ce8dfdd30
 # ╟─3348115a-2fd4-4935-9dba-b85d9e0c95f5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

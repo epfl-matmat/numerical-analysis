@@ -81,7 +81,7 @@ In this chapter we will consider numerical techniques for computing such derivat
 md"""
 ## First order derivatives
 
-Given a regular function $f : [a, b] \to \mathbb{R}$ our goal is to **approximate numerically its derivative** $f'$ in a point $x \in [a, b]$. We will allow ourselves **only to perform $n$ pointwise evaluations** $f(t_i)$ with $t_i \in [a, b]$ and $i = 1, \ldots, n$ and **take linear combinations of these results**. That is we work towards approximations of the form
+Given a regular function $f : [a, b] \to \mathbb{R}$ our goal is to **approximate numerically its derivative** $f'$ in a point $x \in [a, b]$. We will allow ourselves **only to perform $n$ pointwise evaluations** $f(x_i)$ with $x_i \in [a, b]$ and $i = 1, \ldots, n$ and **take linear combinations of these results**. That is we work towards approximations of the form
 ```math
     f'(x) ≈ \sum_{i=1}^m α_i f(x_i),
 ```
@@ -253,10 +253,12 @@ Visualisation of the derivatives obtained by these methods as slopes:
 - Central finite differences: $(@bind show_central CheckBox(default=true))
 """
 
+# ╔═╡ fd6903dd-3e13-4da1-8ec0-34fe0a090a17
+md"`h = ` $(@bind h Slider([0.01, 0.05, 0.1]; show_value=true, default=0.1))"
+
 # ╔═╡ 2ea81c7f-fd18-48c5-9676-2e460c66e35f
 let
 	x₀ = 0.5
-	h  = 0.1
 
 	fdash      = exp(x₀+1) * cos(exp(x₀+1))
 	df_left    = 1/h  * (f(x₀ + h) - f(x₀))
@@ -521,7 +523,7 @@ the computer will thus actually compute
 &= f'(x) + \frac{f''(\xi)}{2} h + \frac{ϵ_1}{h}f(x+h) - \frac{ϵ_2}{h} f(x),
 \end{aligned}
 ```
-where $|ϵ_1| ≤ \epsilon_M$, $|ϵ_2| ≤ \epsilon_M$
+where $|ϵ_1| ≤ \frac{\epsilon_M}{2}$, $|ϵ_2| ≤ \frac{\epsilon_M}{2}$
 and $\xi \in (x, x+h)$. Collecting everything we obtain the error
 of the computed finite-difference approximation to $f'(x)$ as
 ```math
@@ -530,9 +532,9 @@ of the computed finite-difference approximation to $f'(x)$ as
 |f'(x) - \widetilde{D}^+_h f(x)|
 &= \left|\frac{f''(\xi)}{2} h + \frac{ϵ_1}{h}f(x+h) - \frac{ϵ_2}{h} f(x)\right| \\
 &≤ \frac{h}{2} |f''(\xi)| + \frac{|ϵ_1|}{h} |f(x+h)| + \frac{|ϵ_2|}{h} |f(x)| \\
-&≤ \frac{h}{2} \max_{x \in [a, b]} |f''(x)| + 2 \, \max_{x \in [a, b]} |f(x)| \, \frac{\epsilon_M}{h} \\
+&≤ \frac{h}{2} \max_{x \in [a, b]} |f''(x)| + 2 \, \max_{x \in [a, b]} |f(x)| \, \frac{\epsilon_M}{2h} \\
 &= \underbrace{\frac{h}{2} \|f''\|_\infty}_{\text{trunc. error}}
-+ \underbrace{\frac{2 \epsilon_M}{h} \|f\|_\infty}_{\text{round-off error}}
++ \underbrace{\frac{\epsilon_M}{h} \|f\|_\infty}_{\text{round-off error}}
 \end{aligned}
 ```
 """
@@ -552,19 +554,19 @@ To obtain which $h$ gives the best sweet spot
 we want to **balance both errors**. Utilising equation (6)
 the total error of the approximation is bounded by
 ```math
-\text{error}(h) = \frac{h}{2} \|f''\|_\infty + \frac{2 \epsilon_M}{h} \|f\|_\infty.
+\text{error}(h) = \frac{h}{2} \|f''\|_\infty + \frac{\epsilon_M}{h} \|f\|_\infty.
 ```
 This function has a **single minimum**, which we can compute by
 ```math
-0 = \frac{d\,\text{error}}{dh} \qquad \Rightarrow \qquad \frac{\|f''\|_\infty}{2} - \frac{2\, \epsilon_M \, \|f\|_\infty}{h^2} = 0
+0 = \frac{d\,\text{error}}{dh} \qquad \Rightarrow \qquad \frac{\|f''\|_\infty}{2} - \frac{\epsilon_M \, \|f\|_\infty}{h^2} = 0
 ```
 The **optimal node distance** $h_\text{opt}$, which **minimises the error**,
 is thus
 ```math
 \tag{7}
-h_\text{opt} = \sqrt{\frac{4 \|f\|_\infty}{\|f''\|_\infty}} \, \sqrt{\epsilon_M}.
+h_\text{opt} = \sqrt{\frac{2 \|f\|_\infty}{\|f''\|_\infty}} \, \sqrt{\epsilon_M}.
 ```
-In our example we have $\|f\|_\infty = 1$ and $\|f''\|_\infty ≈ |f''(1)| ≈ e^4 ≈ 55$ and therefore $h_\text{opt}$ is of order $\sqrt{10^{-16}} = 10^{-8}$,
+In our example ($f(x) = \sin(e^{x+1})$) we have $\|f\|_\infty = 1$ and $\|f''\|_\infty ≈ |f''(1)| ≈ e^4 ≈ 55$ and therefore $h_\text{opt}$ is of order $\sqrt{10^{-16}} = 10^{-8}$,
 which we also observed numerically.
 """
 
@@ -704,6 +706,8 @@ see for example [chapter 5.4](https://tobydriscoll.net/fnc-julia/localapprox/fin
 # ╔═╡ cb27d648-dc8b-4840-925a-b122ce5d4fd5
 md"""
 ### Determination of finite differences coefficients
+*(We will only go through this quickly and put more focus on [methods based on polynomial interpolation](#Using-interpolating-polynomials).)*
+
 The definition (2) of a finite difference formula already
 introduced the general expression
 ```math
@@ -936,19 +940,11 @@ md"""
     In this case, we are approximating a second derivative, so the derivation order is 2, and it turns out that this formula has an approximation error in $\mathcal O (h^2)$ so the approximation order is also 2.
 """
 
-# ╔═╡ 9ff5697a-90a0-4fb3-a93b-e99e3c14b11e
-md"""
-## Side-stepping the finite precision problem: Going complex
-
-TODO("Include this fantastic remark by Nick Highham:
-
-https://www.siam.org/publications/siam-news/articles/differentiation-without-a-difference
-")
-
-"""
+# ╔═╡ b6418149-6c31-44d7-a8d3-95d8418daa59
+md"Show outline $(@bind show_outline CheckBox(default=true))"
 
 # ╔═╡ 9c8ad9b0-50eb-478e-b63c-26a868765230
-let
+if show_outline
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
@@ -2570,6 +2566,7 @@ version = "1.13.0+0"
 # ╟─84595c02-e2bc-4ef7-8a24-eb501c4ef0e9
 # ╟─12c00f60-63d6-4be3-9e0b-45934e29e9ca
 # ╟─4e996740-ac6f-4c83-87ed-f0e09aa45e89
+# ╟─fd6903dd-3e13-4da1-8ec0-34fe0a090a17
 # ╟─2ea81c7f-fd18-48c5-9676-2e460c66e35f
 # ╟─6c316ead-2b3e-47e3-b625-2b33ff410d89
 # ╠═d9649df4-8507-4668-9c21-ab8946de21fc
@@ -2619,7 +2616,7 @@ version = "1.13.0+0"
 # ╟─ca3564d3-059e-40ce-bbcd-a04594e8ac24
 # ╟─56368f98-6f51-49be-8333-6fa1b9c64cf1
 # ╟─2adfac60-ec91-4c70-ae0c-f460f47d37dc
-# ╠═9ff5697a-90a0-4fb3-a93b-e99e3c14b11e
+# ╟─b6418149-6c31-44d7-a8d3-95d8418daa59
 # ╟─9c8ad9b0-50eb-478e-b63c-26a868765230
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
