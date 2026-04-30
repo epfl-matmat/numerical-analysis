@@ -139,7 +139,7 @@ u(b) &= γ_b
 \right.
 ```
 
-Note that other types of boundary conditions are possible, see for example [chapter 10.1](https://fncbook.com/tpbvp/) of Driscoll, Brown: Fundamentals of Numerical Computation for a more general treatment.
+Note that other types of boundary conditions are possible, see for example [chapter 10.1](https://fncbook.com/tpbvp/) of Driscoll, Brown: *Fundamentals of Numerical Computation* for a more general treatment.
 
 For completeness we now provide the general definition of a boundary value problem (BVP) before specialising to the case we will focus on in this course.
 """
@@ -813,6 +813,9 @@ the differentiation matrices $Dₓ$ and $Dₓₓ$ we obtain
 **quadratic convergence** in this global error with increasing $N$:
 """
 
+# ╔═╡ 789ce0a6-21f0-44ec-b792-645054f5b9d5
+# TODO("Move all convergence plots into plots in terms of h")
+
 # ╔═╡ 7a647ffe-000e-4bb7-a348-033cd75b1369
 let
 	Ns = [ round(Int, 5 * 10^k) for k in 0:0.25:2.5 ]
@@ -993,104 +996,120 @@ such that increasing $N$ beyond $10^5$ thus causes the total
 observed error of the numerical procedure to increase again.
 """
 
-# ╔═╡ 858a60ba-8d0c-43d8-908d-0bb413c79285
-TODO("Needs an adaptive pass from here.")
-
-# ╔═╡ 23307b35-c76e-487d-906a-18f65b691d79
+# ╔═╡ 9543b810-8773-4b74-9e1c-21bb790c467c
 md"""
 ## Galerkin methods 
 
-Let us return to the general heat equation using Dirichlet boundary conditions:
-
+In the above section we aimed at solving the linear boundary value problem from equation (1), that is
 ```math
-\tag{17}
+\tag{7}
 \left\{
 \begin{aligned}
--k \, \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L).\\
-u(0) &= b_0, \quad u(L) = b_L
+u''(x) + p(x) \, u'(x) + q(x) \, u(x) &= r(x) \qquad x \in (a, b) \\
+u(a) = γ_a, \quad u(b) &= γ_b,
 \end{aligned}
 \right.
 ```
+where the function $u : [a, b] \to \mathbb{R}$ is the principle unknown. Our approach relied on discretising this problem and employing finite-fifference differentiation matrices instead of exact derivatives.
 
-We saw that **with finite differences** the increasing condition number of the system matrix $\mathbf{A}$ as we increase $N$ makes it **impossible to obtain the solution to arbitrary accuracy**.
-In the above example we were unable to obtain a solution
-to higher accuracy than $10^{-10}$, irrespective of what value for $N$ we chose.
-In this section we will develop an alternative approach to solve boundary value problems, which is more general.
+This worked, but the maximal total accuracy was limited due to the increasing condition number of the system matrix $\mathbf{A}$ as we increase the number of subintervals $N$. As a resut it was **impossible to obtain the solution to arbitrary accuracy**.
+"""
+
+# ╔═╡ bb2ff930-ca44-4ef8-a342-b050db548a0f
+md"""
+In this section we develop an alternative approach to solve boundary value problems, which is based on *integration* instead of differentiation.
+For this we will restrict ourselves to the simpler case of a **zero Dirichlet boundary**, i.e. $γ_a = γ_b = 0$. In this setting equation (7) can be rewritten as [^1]:
+
+```math
+\tag{8}
+\left\{
+\begin{aligned}
+- \frac{d}{dx} \left[ κ(x) u'(x) \right] + σ(x) u(x) &= f(x) \quad x \in (a, b) \\
+u(a) = 0, \quad u(b) &= 0,
+\end{aligned} \right.
+```
+where $κ : [a, b] \to \mathbb{R}$, $σ : [a, b] \to \mathbb{R}$
+and $f : [a, b] \to \mathbb{R}$ are given functions and we seek $u : [a, b] \to \mathbb{R}$ as before.
+
+[^1]: Note, that this transformation is not obvious, but in principle always possible, see the discussion in [chapter 10.6](https://fncbook.com/galerkin/) of Driscoll, Brown: *Fundamentals of Numerical Computation* for more details.
 """
 
 # ╔═╡ 7ae614fb-f2e0-46af-a557-6a378f6553e8
 md"""
+### Weak formulation
+
 Let us assume we are given some smooth function $\psi(x)$,
 the so-called **test function**,
 for which we will additionally assume that it **vanishes at the boundary**,
-i.e. $\psi(0) = \psi(L) = 0$.
-If we multiply the first line of (17) by this function and integrate over the full computational domain $[0, L]$, this yields:
+i.e. $\psi(a) = \psi(b) = 0$.
+If we multiply the first line of (8) by this function and integrate over the full computational domain $[a, b]$, this yields:
 ```math
-\tag{18}
+\tag{10}
 \begin{aligned}
-\int_{0}^L f(x) \psi(x)\, dx
-&= \int_0^L -k\, u''(x) \psi(x)\, dx\\
-&\stackrel{(\ast)}{=} [-k\, u'(x) \psi(x)]_0^L + \int_0^L k u'(x) \psi'(x)\, dx\\
-&= \int_0^L k u'(x) \psi'(x)\, dx
+\int_{a}^b f(x)\, \psi(x)\, dx
+&= \int_a^b -\Big( κ(x)\, u'(x) \Big)\textcolor{red}{'} ψ(x) \, dx + \int_a^b σ(x)\, u(x)\, ψ(x) \, dx \\
+&\stackrel{(\ast)}{=} \left[-\Big( κ(x)\, u'(x) \Big) ψ(x) \right]_a^b
++ \int_a^b  κ(x)\, u'(x) \, ψ\textcolor{red}{'}(x) \, dx \\
+&\hspace{30pt}+ \int_a^b σ(x)\,u(x)\,ψ(x)\,dx\\
+&= \int_a^b  κ(x)\, u'(x) \, ψ'(x) \, dx + \int_a^b σ(x)\,u(x)\,ψ(x)\,dx
 \end{aligned}
 ```
-where we used partial integration in step $(\ast)$ and the property  $\psi(0) = \psi(L) = 0$ in the final step.
+where we used partial integration in step $(\ast)$ and the property  $\psi(a) = \psi(b) = 0$ in the final step.
 """
 
 # ╔═╡ 962ca311-c2ed-46eb-b043-827ecfb64ac3
 md"""
 Let us define the **set of all test functions** as
 ```math
-V_0 = \Big\{ \psi : [0, L] \to \mathbb{R} \ \Big|\ \text{$\psi$ smooth and $\psi(0) = \psi(L) = 0$} \Big\}.
+V_0 = \Big\{ \psi : [0, L] \to \mathbb{R} \ \Big|\ \text{$\psi$ smooth and $\psi(a) = \psi(b) = 0$} \Big\}.
 ```
-If $u : [0, L] \to \mathbb{R}$ is a solution to (17) than our discussion implies that (18) is satisfied for all functions from $V_0$:
+If $u : [a, b] \to \mathbb{R}$ is a solution to (8) than our discussion implies that (10) is satisfied for all functions from $V_0$:
 ```math
-\tag{19}
+\tag{11}
 \left\{
 \begin{aligned}
-\int_0^L k\, u'(x)\, \psi'(x)\, dx &= \int_{0}^L f(x)\, \psi(x)\, dx
+\int_a^b  κ(x)\, u'(x) \, ψ'(x)  +  σ(x)\,u(x)\,ψ(x) -  f(x)\, \psi(x)\, dx &= 0
 \qquad \forall\,\psi \in V_0\\
-u(0) &= b_0, \quad u(L) = b_L
+u(0) &= 0, \quad u(L) = 0
 \end{aligned}
 \right.
 ```
-Equation (19) is known as the **weak form** of the 1D heat equation equation (17)
+Equation (11) is known as the **weak form** of the 1D boundary value problem (8)
 and solving it is interesting in its own right:
 """
 
 # ╔═╡ 05999b01-4a41-480a-9f3a-2e04d97748b3
 md"""
 !!! info "Definition: Weak form and weak solution"
-	If a function $u : [0, L] \to \mathbb{R}$ satisfies
+	If a function $u : [a, b] \to \mathbb{R}$ satisfies
 	```math
 	\left\{
 	\begin{aligned}
-	\int_0^L k\, u'(x)\, \psi'(x)\, dx &= \int_{0}^L f(x)\, \psi(x)\, dx
-	\qquad \forall\,\psi \in V_0\\
-	u(0) &= b_0, \quad u(L) = b_L,
+	\int_a^b  κ(x)\, u'(x) \, ψ'(x)  +  σ(x)\,u(x)\,ψ(x) - f(x)\, \psi(x)\, dx &= 0 \qquad \forall ψ\in V_0 \\
+	u(0) &= 0, \quad u(L) = 0
 	\end{aligned}
 	\right.
 	```
 	for all choices of the test function $\psi$ we call $u$ a **weak solution**
-	of the boundary value problem (17).
+	of the boundary value problem (8).
 """
 
 # ╔═╡ 7a86c1db-e5be-4310-951a-4de51bec4e98
 md"""
-The original problem (17) is additionally called the **strong form** of the heat equation BVP and its solution $u$ the **strong solution**.
+The original problem (8) is additionally called the **strong form** of the BVP and its solution $u$ the **strong solution**.
 
 !!! info "Observation: Strong and weak solutions"
-	If $u$ is a solution to the strong form (17) of a BVP,
-	than it is also a solution to the weak form (19).
+	If $u$ is a solution to the strong form (8) of a BVP,
+	than it is also a solution to the weak form (11).
 	However, **not every weak solution is also a strong solution**.
 """
 
 # ╔═╡ 79816267-531b-4b99-bdea-1194574dd160
 md"""
-The weak form (19) looks unusual at first sight
+The weak form (11) looks unusual at first sight
 and additionally one might wonder why it is useful,
 since it can produce solutions, which do not satisfy
-the original strong problem (17).
+the original strong problem (8).
 
 But surprisingly for many problems from physics or engineering
 the situation turns out to be the reverse:
@@ -1101,7 +1120,7 @@ using the strong form  can lead to unphysical artifacts,
 which are in fact avoided when using the weak form.
 
 While we do not have time to discuss this further in this course,
-the interested reader is referred to the master course [MATH-500: Error control in scientific modelling](https://teaching.matmat.org/error-control/)
+the interested reader is referred to the master course [MATH-500: Mathematical aspects of materials modelling](https://teaching.matmat.org/math-materials/)
 where some of this is discussed.
 """
 
@@ -1109,49 +1128,29 @@ where some of this is discussed.
 md"""
 ### Discretisation of the weak form
 
-In order to solve (19) our goal is to rewrite the problem in the form of linear algebra --- vectors and matrices. For simplicity we will only consider the case $b_0=b_L=0$ in this section, i.e. we restrict ourselves to the **heat equation with a zero Dirichlet boundary**
-```math
-\tag{20}
-\left\{
-\begin{aligned}
--k \, \frac{\partial^2 u}{\partial x^2}(x) &=  f(x) \qquad x \in (0, L).\\
-u(0) &= u(L) = 0
-\end{aligned}
-\right.
-```
-and **corresponding weak form**
-```math
-\tag{21}
-\left\{
-\begin{aligned}
-\int_0^L k\, u'(x)\, \psi'(x)\, dx &= \int_{0}^L f(x)\, \psi(x)\, dx
-\qquad \forall\,\psi \in V_0\\
-u(0) &= u(L) = 0.
-\end{aligned}
-\right.
-```
-"""
+In order to solve (11) our goal is to rewrite the problem in the form of linear algebra --- vectors and matrices. 
 
-# ╔═╡ 43ade623-1b58-4035-a1e5-803911063833
-md"""
-One difficulty in this equation is that the condition $\forall \psi \in V_0$ corresponds to an infinite number of constraints to satisfy (as the set $V_0$ has infinitely many members). One idea is to approximate this condition by satisfying only finitely many constraints.
+One difficulty in this equation is that the condition $\forall \psi \in V_0$ corresponds to an *infinite* number of constraints to satisfy (as the set $V_0$ has infinitely many members). We therefore need to find a way to approximate this to only consider finitely many constraints without loosing too much on the quality of the solution.
 """
 
 # ╔═╡ e6f3450d-6fb7-4c59-a209-ae3587a43bab
 md"""
 To do so we assume that **$\psi$ can be written as a linear combination**
 ```math
-\tag{22}
+\tag{14}
 \psi(x) = \sum_{i=1}^m ξ_i\, \varphi_i(x),
 ```
 where $φ_1, φ_2, \ldots, φ_m$ are a selection of
 $m$ linearly independent functions from $V_0$,
-i.e. smooth functions which each satisfy $φ_i(0) = φ_i(L) = 0$.
-Inserting (22) into the first line of (21) leads to
+i.e. smooth functions mapping from the interval $[a, b]$ to $\mathbb{R}$,
+which each satisfy the boundary condition $φ_i(a) = φ_i(b) = 0$.
+Inserting (14) into the first line of (11) leads to
 ```math
 \begin{aligned}
-0 &= \int_0^L k\,u'(x)\,\psi'(x) - f(x)\psi(x)\,dx \\
-  &= \sum_{i=1}^m ξ_i \left[ \int_0^L k\,u'(x)\,\varphi_i'(x)  - f(x)\,\varphi_i(x) \,dx\right]
+0 &= \int_a^b  κ(x)\, u'(x) \, ψ'(x)  +  σ(x)\,u(x)\,ψ(x) -  f(x)\, \psi(x)\, dx \\
+  &= \sum_{i=1}^m ξ_i \left[ 
+	\int_a^b  κ(x)\, u'(x) \, φ_i'(x)  +  σ(x)\,u(x)\,φ_i(x) -  f(x)\, φ_i(x)\, dx
+	\right]
 \end{aligned}
 ```
 which should be true **independent of the values of $ξ_i$**.
@@ -1159,63 +1158,71 @@ As a result the above condition can be achieved if and only if
 the term in the **square bracket is zero all our functions $\varphi_i$**,
 that is if
 ```math
-\tag{23}
-\forall i = 1, \ldots, m: \qquad
-\int_0^L k\,u'(x)\,\varphi_i'(x)\,dx = \int_{0}^L f(x)\,\varphi_i(x)\,dx.
+\tag{15}
+\forall i = 1, \ldots, m: \quad
+\int_a^b  κ(x)\, u'(x) \, φ_i'(x)  +  σ(x)\,u(x)\,φ_i(x) - f(x)\, φ_i(x)\, dx = 0.
 ```
 """
 
 # ╔═╡ c7610b00-7277-46c3-881d-85d417db2e9e
 md"""
-Notice, that the condition (23) is independent of the actual
+Notice, that condition (15) is independent of the actual
 values taken by the coefficients $\{ξ_i\}_{i=1}^m$.
-Provided that (23) holds we thus do not need to worry about
+Provided that (15) holds we thus do not need to worry about
 determining the values of $\{ξ_i\}_{i=1}^m$.
 In fact in all following development these coefficients
 will play no further role.
 
 With this development we can replace the infinite number of constraints encoded
-by the $\forall \psi \in V_0$ in equation (21) by the approximate **version (23)**,
-which **only involves $m < \infty$ conditions** to satisfy.
+by the "$\forall \psi \in V_0$" in equation (11) by "$\forall i = 1, \ldots, m$"
+--- an **approximate version (15)**,
+which **only involves a finite number $m$ conditions** to satisfy.
 """
 
 # ╔═╡ 5e7387cc-f9eb-484e-ade7-c844bddeb716
 md"""
 Considering $u(x)$ we make an additional approximation,
-namely that --- similar to $\psi$ --- this function can **also be
+namely that this function can **be
 approximated by a linear combination of finitely many functions**.
-Here, for simplicity we employ the same selection of functions,
+Here, we choose to employ the same selection of functions,
 that we used for $\psi$ leading to an ansatz
 ```math
-\tag{24}
+\tag{16}
 u(x) = \sum_{j=1}^m c_j φ_j(x).
 ```
-Inserting (24) into (23) we obtain
+Inserting (16) into (15) we obtain
 ```math
-\forall i = 1, \ldots, m: \qquad
-\int_0^L k\,\sum_{j=1}^m c_j φ_j'(x)\,φ_i'(x)\,dx = \int_{0}^L f(x) \, \varphi_i(x)\,dx
+\forall i = 1, \ldots, m: \ 
+\int_a^b  κ(x)\, \sum_{j=1}^m c_j φ_j'(x) \, φ_i'(x)  +  σ(x)\,\sum_{j=1}^m c_j φ_j(x)\,φ_i(x) - f(x)\, φ_i(x)\, dx = 0.
 ```
 or arranged differently
 ```math
-\tag{25}
+\tag{17}
+\begin{aligned}
 \forall i = 1, \ldots, m: \qquad
-\sum_{j=1}^m c_j \int_0^L k\,φ_j'(x)\,φ_i'(x)\,dx = \int_{0}^L f(x)\,\varphi_i(x)\, dx
+&\sum_{j=1}^m c_j \underbrace{\int_a^b  κ(x)\, φ_j'(x) \, φ_i'(x)\, dx}_{=K_{ji}}
++ \underbrace{\int_a^b σ(x)\,φ_j(x)\,φ_i(x)\, dx}_{=S_{ji}}\\
+\hspace{30pt}&= \underbrace{\int_a^b f(x)\,\varphi_i(x)\, dx}_{=f_i}
+\end{aligned}
 ```
 """
 
 # ╔═╡ e32d65f1-9bf2-4043-811c-d47801d0f85e
 md"""
-Since $φ_j(0) = φ_j(L) = 0$ an immediate consequence is that
-such a $u$ satisfies the boundary condition $u(0) = u(L) = 0$
-independent of the choice of the coefficients $c_j$.
-Solving equation (25) therefore automatically ensures that the second line of the weak problem (21) is satisfied.
-Additionally this equation satisfies (23)
---- our approximation to the first line of (21).
+In this equations the coefficients $c_j$ are the unknows to be determined.
 
-In summary a **solution to equation (25)** thus **satisfies** (our approximation to)
+Notice that we took $φ_j(a) = φ_j(b) = 0$, such that by construction
+the linear combination $u$ also always satisfies
+the boundary condition $u(0) = u(L) = 0$
+independent of the choice of the coefficients $c_j$.
+Solving equation (17) therefore automatically ensures that the second line of the weak problem (11) is satisfied.
+Additionally this equation satisfies (15)
+--- our approximation to the first line of (11).
+
+In summary a **solution to equation (17)** thus **satisfies** (our approximation to)
 **both conditions required to be a solution
-to the weak problem** (21).
-Equation (25) is thus given a special name:
+to the weak problem** (11).
+Equation (17) is thus given a special name:
 """
 
 # ╔═╡ ef1ad23b-89bc-4b75-9560-4fa4fb96c802
@@ -1229,26 +1236,32 @@ md"""
 	if the coefficients $c_1, c_2, \ldots, c_m$
 	satisfy the **Galerkin conditions**
 	```math
-	\tag{25}
+	\tag{17}
 	\forall i = 1, \ldots, m: \qquad
-	\sum_{j=1}^m c_j \int_0^L k\,φ_j'(x)\,φ_i'(x)\,dx = \int_{0}^L f(x)\,\varphi_i(x)\, dx
+	\sum_{j=1}^m (K_{ij} + S_{ij}) c_j = f_i
 	```
-
-	Collecting the unknown coefficients into a vector $\mathbf{c} = (c_1, c_2, \ldots, c_m)^T \in \mathbb{R}^m$ and introducing
-	the matrix $\mathbf{A} \in \mathbb{R}^{m\times m}$
-	and the vector $\mathbf{f} \in \mathbb{R}^m$ with elements
+	where
 	```math
+	\tag{18}
 	\begin{aligned}
-	A_{ij} &= \int_0^L k\,φ_i'(x)\,φ_j'(x)\,dx, &
-	f_i    &= \int_0^L f(x)\,φ_i(x)\,dx
+	K_{ij} &= \int_a^b κ(x)\, φ_i'(x) \, φ_j'(x)\, dx, \\
+	S_{ij} &= \int_a^b σ(x)\,φ_i(x)\,φ_j(x)\, dx, \\
+	f_i &= \int_a^b f(x)\,\varphi_i(x)\, dx.
 	\end{aligned}
 	```
-	we can also write the Galerkin conditions more conveniently as the linear system
+	Collecting the unknown coefficients into a vector $\mathbf{c} = (c_1, c_2, \ldots, c_m)^T \in \mathbb{R}^m$ and employing the $m\times m$ matrices
+	$\mathbf{S}$ and $\mathbf{K}$ with elements defined above
+	we can also write the Galerkin conditions more conveniently
+	as the linear system
 	```math
-	\tag{26}
-	\mathbf{A} \mathbf{c} = \mathbf{f},
+	\tag{19}
+	(\mathbf{K} + \mathbf{S}) \mathbf{c} = \mathbf{f},
 	```
 	which one needs to solve for $\mathbf{c}$.
+
+	One typically calls $\mathbf{K}$ the **stiffness matrix**
+	and $\mathbf{S}$ the **mass matrix**.
+	By their definition they are both symmetric matrices.
 """
 
 # ╔═╡ fcd48a38-eca2-44d9-a32e-9dd65c58fb89
@@ -1260,11 +1273,14 @@ Let us consider the Dirichlet heat equation
 \left\{
 \begin{aligned}
 - \frac{\partial^2 u}{\partial x^2}(x) &= x \qquad x \in (0, π)\\
-u(0) &= u(L) = 0,
+u(0) &= u(π) = 0,
 \end{aligned}
 \right.
 ```
-i.e. where $k=1$, $L=π$ and $f(x) = x$.
+i.e. where in equation (8) we have the following parameters:
+```math
+	κ(x) = 1, \qquad σ(x) = 0, \qquad f(x) = x, \qquad a=0, \qquad b=π
+```
 """
 
 # ╔═╡ 4d7ae336-be84-4960-835f-aa81ab91c4e2
@@ -1273,15 +1289,16 @@ For the basis functions $\varphi_j$ we select the sine basis
 ```math
 \varphi_j(x) = \sin(j\,x) \qquad \text{for $j = 1, \ldots, m$}.
 ```
-It is easy to see that all of them satisfy $\varphi_j(0) = \varphi_j(2π) = 0$.
+It is easy to see that all of them satisfy $\varphi_j(0) = \varphi_j(π) = 0$.
 With these basis functions
-we can obtain the entries of $\mathbf{A}$ and $\mathbf{f}$
-in equation (26) as
+we can obtain the entries of $\mathbf{K}$, $\mathbf{S}$ and $\mathbf{f}$
+in equation (18) as
 ```math
 \begin{aligned}
-	A_{ij}
+	K_{ij}
 	&= \int_0^{π} \frac{d}{dx}\big[ \sin(i\, x)\big]\, \frac{d}{dx}\big[ \sin(j\, x)\big]\, dx \\
 	&= i\,j \int_0^{π} \cos(i\,x) \cos(j\,x)\,dx = \frac{π\,i^2}{2}\, δ_{ij} = \left\{\begin{array}{ll} \frac{π\,i^2}{2} &i=j \\ 0 & i\neq j\end{array}\right.\\[1em]
+	S_{ij} &= \int_a^b 0\,\sin(i\, x)\,\sin(j\, x)\, dx = 0 \\[1em]
 	f_i &= \int_0^{π} x \sin(i\,x) \,dx = \frac{(-1)^{i+1}\, π}{i}
 \end{aligned}
 ```
@@ -1291,7 +1308,7 @@ in equation (26) as
 md"""
 For example for $m=5$ we find the matrix and vector
 ```math
-\mathbf{A} = \frac{π}{2} \begin{pmatrix}
+\mathbf{K}+\mathbf{S} = \mathbf{K} = \frac{π}{2} \begin{pmatrix}
 1 \\
 & 4 \\
 &&9\\
@@ -1307,7 +1324,7 @@ For example for $m=5$ we find the matrix and vector
 
 # ╔═╡ 52716cfc-6dea-44ad-aa96-842332fe607b
 md"""
-Since $\mathbf{A}$ is diagonal we can directly compute
+Since $\mathbf{K}$ is diagonal we can directly compute
 the coefficient vector $\mathbf{c}$ as 
 ```math
 \mathbf{c} = 
@@ -1332,12 +1349,12 @@ u(x) = 2\sin(x) -\frac28 \sin(2x) + \frac2{27} \sin(3x) -\frac2{64} \sin(4x) + \
 md"""
 Generalising to arbitrary $m$ we find the solution coefficients
 ```math
-c_i = \frac{f_i}{A_{ii}} = \frac{2\, (-1)^{i+1}}{i^3} 
+c_i = \frac{f_i}{K_{ii}} = \frac{2\, (-1)^{i+1}}{i^3} 
 \qquad \forall \, i = 1, \ldots, m
 ```
 leading to the solution function
 ```math
-\tag{27}
+\tag{20}
 u(x) = \sum_{i=1}^m \frac{2\, (-1)^{i+1}}{i^3} \sin(i\, x),
 ```
 which can be implemented as:
@@ -1414,20 +1431,6 @@ let
 	p
 end
 
-# ╔═╡ 5f23627d-1d8e-4705-a9b8-155bb745cca9
-md"""
-## Comparison and conclusion
-"""
-
-# ╔═╡ 27fb5fde-566d-481b-b0d6-41c78c198eac
-TODO("Some conclusion chapter to provide direct comparison between finite differences and Galerkin methods and from that some conclusion why Galerkin methods can be better (numerical stability, less unknowns for a targeted accuracy etc.)")
-
-# ╔═╡ e88a64b8-1259-4320-9914-664bf30122a5
-TODO("To introduce FEM we need the concept of a mass matrix in the Galerkin development above as the basis functions are not orthonormal.
-
-	 See chapter 10.5 of Driscoll Brown
-	 ")
-
 # ╔═╡ 83fdd745-33e1-4e77-80a2-9008b0eb59b8
 md"""
 ### Optional: Finite elements
@@ -1448,10 +1451,10 @@ H_i(x) = \left\{ \begin{array}{ll}
 for $i = 0, \ldots, n$.
 In this discussion we will again only consider equispaced nodes
 for simplicity, i.e. we take the case with
-$0 = x_0 < x_1 < \cdots < x_{n} = L$ and where $x_{i+1} - x_i = \frac{L}{n}$.
-Defining $h = \frac{L}{n}$ the hat functions can thus equally be expressed as
+$a = x_0 < x_1 < \cdots < x_{n} = b$ and where $x_{i+1} - x_i = \frac{b-a}{n}$.
+Defining $h = \frac{b-a}{n}$ the hat functions can thus equally be expressed as
 ```math
-\tag{28}
+\tag{25}
 H_i(x) = \left\{ \begin{array}{ll}
 \frac{x - x_{i-1}}{\textcolor{red}{h}} & \text{if $i>0$ and $x\in [x_{i-1}, x_i]$}\\
 \frac{x_{i+1} - x}{\textcolor{red}{h}} & \text{if $i<n$ and $x\in [x_{i}, x_{i+1}]$}\\
@@ -1464,33 +1467,33 @@ for $i = 0, \ldots, n$.
 # ╔═╡ 57d511cc-aaae-42b3-80ec-7caf7d6f68ac
 md"""
 Due to the cardinality property of the hat functions $φ_i = H_{i}(x)$,
-i.e. $H_i(x_j) = δ_{ij}$, the expansion (24) of the unknown solution function
+i.e. $H_i(x_j) = δ_{ij}$, the expansion (16) of the unknown solution function
 can be simplified to
 ```math
-\tag{29}
-u(x) = \sum_{j=1}^{m} c_j φ_j(x) = \sum_{i=\textcolor{red}{1}}^{\textcolor{red}{n-1}} u_i\, H_i(x),
+\tag{26}
+u(x) = \sum_{i=0}^{n} c_i φ_i(x) = \sum_{i=\textcolor{red}{1}}^{\textcolor{red}{n-1}} u_i\, H_i(x),
 ```
 where $u_i = u(x_i)$, i.e. the numerical solution at the nodal points.
-Note that the last sum in (29) is deliberately truncated to omit
+Note that the last sum in (26) is deliberately truncated to omit
 the hat functions $H_0$ and $H_n$.
-The nodal points of these two functions are $x_0 = 0$ and $x_n = L$,
+The nodal points of these two functions are $x_0 = a$ and $x_n = b$,
 respectively,
 where these functions take by definition the value $1$.
 As a result these functions are unable to satisfy
-the condition $0 = φ_j(0) = φ_j(L)$ underlying $V_0$
+the condition $0 = φ_i(a) = φ_i(b)$ underlying $V_0$
 and are thus excluded.
 """
 
 # ╔═╡ 40c8b1a5-b61c-4af2-8b4b-f8b2b5e182dc
 md"""
-The importance of the hat functions for Galerkin methods stems from the fact that each hat function $H_i(x)$ is only non-zero in the interval $[x_{i-1}, x_{i+1}]$.
-As a result when evaluating the Galerkin conditions (26) one never has to integrate over the entire domain $[0, L]$, but only a much smaller subset of this interval where the involved hat functions are non-zero
+The importance of the hat functions for Galerkin methods stems from the fact that each hat function $H_i(x)$ is only non-zero in the interval $[x_\textcolor{red}{i-1}, x_\textcolor{red}{i+1}]$.
+As a result when evaluating the integrals (18) as part of the Galerkin conditions one never has to integrate over the entire domain $[a, b]$, but only a much smaller subset of this interval where the involved hat functions are non-zero
 --- a noteworthy reduction of the computational effort.
 """
 
 # ╔═╡ 4de7a48b-e825-4115-9269-edcbcaace19a
 md"""
-As an example consider the evaluation of the elements of the matrix $\mathbf{A} \in \mathbb{R}^{m\times m} = \mathbb{R}^{(n-1) \times (n-1)}$.
+As an example consider the evaluation of the elements of the matrix $\mathbf{K} \in \mathbb{R}^{m\times m} = \mathbb{R}^{(n-1) \times (n-1)}$.
 First note that the derivatives $H'_{i}$ are non-zero only where $H_{i}$
 itself is non-zero, i.e. $[x_{i-1}, x_{i+1}]$.
 Therefore the product $H'_{i}\, H'_{j}$
@@ -1500,142 +1503,169 @@ of $[x_{i-1}, x_{i+1}]$ and $[x_{j-1}, x_{j+1}]$.
 
 # ╔═╡ e72ea328-9ab3-4fc1-ad80-59091074c6f5
 md"""
-This intersection is empty, thus the matrix element $A_{ij}$ zero,
+This intersection is empty, thus the matrix element $K_{ij}$ zero,
 whenever $|i - j| > 2$, i.e. when the two indices are more than two
 apart from each other.
 For $|i - j| = 2$ the intersection contains only a single point,
-which similarly implies $A_{ij} = 0$.
+which similarly implies $K_{ij} = 0$.
 As a consequence
 ```math
-A_{i,i+d} = \int_0^L k\,H_{i}'(x)\,H_{i+d}'(x)\,dx = 0
+K_{i,i+d} = \int_a^b κ(x)\,H_{i}'(x)\,H_{i+d}'(x)\,dx = 0
 \qquad \text{if $d ≥ 2$}.
 ```
 where $i = 1, \ldots, n-3$ and similarly by symmetry
 ```math
-A_{i+d,i} = \int_0^L k\,H_{i+d}'(x)\,H_{i}'(x)\,dx = 0
+K_{i+d,i} = \int_a^b κ(x)\,H_{i+d}'(x)\,H_{i}'(x)\,dx = 0
 \qquad \text{if $d ≥ 2$}.
 ```
-again for $i = 1, \ldots, n-3$
-
+again for $i = 1, \ldots, n-3$.
 """
 
 # ╔═╡ 153850e9-8b5c-45f2-a27f-0cf0b7389b21
 md"""
-Now we consider the remaining three cases, namely
+Now we consider the remaining three cases. Let's start with
 ```math
 \begin{aligned}
-A_{ii} &= \int_0^L k\,H_{i}'(x)\,H_{i}'(x)\,dx\\
-	    &= \int_{x_{i-1}}^{x_{i}} k\,  H_{i}'(x)\,H_{i}'(x)\,dx
-			+ \int_{x_{i}}^{x_{i+1}} k\,  H_{i}'(x)\,H_{i}'(x)\,dx \\
-	    &= \int_{x_{i-1}}^{x_{i}} k\cdot  \frac{1}{h} \cdot\frac{1}{h}\,dx
-			+ \int_{x_{i}}^{x_{i+1}} k\cdot \frac{-1}{h}\cdot\frac{-1}{h}\,dx \\ 
-		&= \frac{k}{h^2} \left[ \int_{x_{i-1}}^{x_{i}} 1 \, dx
-			+ \int_{x_{i}}^{x_{i+1}} 1 \, dx
-		\right] \\
-		&= \frac{2k}{h}
+K_{ii} &= \int_a^b κ(x)\,H_{i}'(x)\,H_{i}'(x)\,dx\\
+	    &= \int_{x_{i-1}}^{x_{i}} κ(x)\,  H_{i}'(x)\,H_{i}'(x)\,dx
+			+ \int_{x_{i}}^{x_{i+1}} κ(x)\,  H_{i}'(x)\,H_{i}'(x)\,dx
 \end{aligned}
 ```
-for $i=1,\ldots,n-1$ as well as
+for $i=1,\ldots,n-1$.
+Unless we are lucky and $κ(x)$ is a particularly simple function,
+evaluating this integral is not feasible
+analytically and requires numerical integration.
+
+However, since in the constructed finite-element approach we are using hat functions $H_i$ as the basis functions we are constructing effectively a piecewise linear approximation to the solution $u$. As we saw in [chapter 7 on interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html), piecewise polynomial interpolation at most achieves second-order convergence to the true function $u$ as  $h\to0$.
+As one can prove this second-order convergence is
+retained if one makes an additional approximation,
+namely within each subinterval $[x_{i-1}, x_i]$ and $[x_{i}, x_{i+1}]$
+we replace the value of the functions $κ(x)$, $σ(x)$ and $f(x)$
+by their respective average, e.g.
+```math
+\tag{27}
+\overline{κ}_{i} = \frac{κ(x_{i-1}) + κ(x_{i})}{2}.
+```
+Based on this approximation we find
+```math
+\begin{aligned}
+K_{ii} &= \int_{x_{i-1}}^{x_{i}} κ(x)\,  H_{i}'(x)\,H_{i}'(x)\,dx
+			+ \int_{x_{i}}^{x_{i+1}} κ(x)\,  H_{i}'(x)\,H_{i}'(x)\,dx \\
+		&≈ \int_{x_{i-1}}^{x_{i}} \overline{κ}_{i}\,  H_{i}'(x)\,H_{i}'(x)\,dx
+			+ \int_{x_{i}}^{x_{i+1}} \overline{κ}_{i+1}\,  H_{i}'(x)\,H_{i}'(x)\,dx \\
+		&= \overline{κ}_{i} \int_{x_{i-1}}^{x_{i}}\frac{1}{h} \cdot\frac{1}{h}\,dx
+			+ \overline{κ}_{i+1}\int_{x_{i}}^{x_{i+1}}\frac{-1}{h} \cdot\frac{-1}{h}\,dx \\
+		&= \overline{κ}_{i} \frac{x_{i+1} - x_{i}}{h^2}
+			+ \overline{κ}_{i+1} \frac{x_{i} - x_{i-1}}{h^2} \\
+		&= \frac{1}{h} (\overline{κ}_{i} + \overline{κ}_{i+1}).
+\end{aligned}
+```
+By the similar trick we also obtain
 """
 
 # ╔═╡ 64977b68-8822-43e2-b2de-06b83b8a64e8
 md"""
 ```math
 \begin{aligned}
-A_{i+1,i} =
-A_{i,i+1} &= \int_0^L k\,H_{i}'(x)\,H_{i+1}'(x)\,dx\\
-	    &= \int_{x_{i}}^{x_{i+1}} k\, H_{i}'(x)\,H_{i+1}'(x)\,dx\\
-		&= \int_{x_{i}}^{x_{i+1}} k\cdot \frac{-1}{h} \cdot \,\frac{1}{h}\,dx\\
-		&= -\frac{k}{h}.
+K_{i+1,i} =
+K_{i,i+1} &= \int_a^b κ(x)\,H_{i}'(x)\,H_{i+1}'(x)\,dx\\
+	    &= \int_{x_{i}}^{x_{i+1}} κ(x)\, H_{i}'(x)\,H_{i+1}'(x)\,dx\\
+		&≈ \int_{x_{i}}^{x_{i+1}} \overline{κ}_{i+1}\, H_{i}'(x)\,H_{i+1}'(x)\,dx\\
+		&= \overline{κ}_{i+1} \int_{x_{i}}^{x_{i+1}} \frac{-1}{h} \cdot \frac{1}{h}\, dx\\
+		&= - \frac{\overline{κ}_{i+1}}{h}
 \end{aligned}
 ```
-for $i=1,\ldots,n-2$. We recover a tridiagonal matrix
+for $i=1,\ldots,n-2$. For $\mathbf{K}$ we thus obtain a **symmetric, tridiagonal matrix**
 ```math
-\tag{30}
-\mathbf{A} = \frac{k}{h} \begin{pmatrix}
-2  & -1 \\
--1 & 2 & -1\\
-   & -1 & 2 & \ddots \\
-   &  &  \ddots & \ddots & -1 \\
-&&& -1 & 2
+\tag{28}
+\mathbf{K} = \frac{1}{h} \begin{pmatrix}
+\overline{κ}_1 + \overline{κ}_2   & -\overline{κ}_2 \\
+-\overline{κ}_2  & \overline{κ}_2 + \overline{κ}_3 & -\overline{κ}_3 \\
+   & -\overline{κ}_3 & \overline{κ}_3 + \overline{κ}_4 & \ddots \\
+   &  &  \ddots & \ddots & -\overline{κ}_n \\
+&&& -\overline{κ}_n & \overline{κ}_{n-1} + \overline{κ}_n
 \end{pmatrix} \in \mathbb{R}^{(n-1)\times(n-1)}
 ```
 """
 
-# ╔═╡ a30354e0-6254-46fd-a10b-f28d1c9dd6d4
-TODO("Properly work the mass matrix stuff into this.")
+# ╔═╡ ea876869-03c9-4f15-99bf-00c961fb994f
+md"""
+For the stiffness matrix the development is similar and results in:
+```math
+\tag{29}
+\mathbf{S} = \frac{h}{6} \begin{pmatrix}
+2\overline{σ}_1 + 2\overline{σ}_2   & \overline{σ}_2 \\
+ \overline{σ}_2  & 2\overline{σ}_2 + 2\overline{σ}_3 & \overline{σ}_3 \\
+   & \overline{σ}_3 & 2\overline{σ}_3 + 2\overline{σ}_4 & \ddots \\
+   &  &  \ddots & \ddots & \overline{σ}_n \\
+&&& \overline{σ}_n & 2\overline{σ}_{n-1} + 2\overline{σ}_n
+\end{pmatrix}
+```
+where
+```math
+\overline{σ}_{i} = \frac{σ(x_{i-1}) + σ(x_{i})}{2}.
+```
+"""
 
 # ╔═╡ 8af2b992-5072-47e0-85fc-dd7d332d505f
-md"""
-Mass matrix
+Foldable("Details on the computation of S",
+md""" 
+Using similar arguments to above we obtain
 ```math
 \begin{aligned}
-M_{ii} &= \int_0^L H_{i}(x)\,H_{i}(x)\,dx\\
-	    &= \int_{x_{i-1}}^{x_{i}} H_{i}(x)\,H_{i}(x)\,dx
-			+ \int_{x_{i}}^{x_{i+1}} H_{i}(x)\,H_{i}(x)\,dx \\
-	    &= \int_{x_{i-1}}^{x_{i}} \frac{(x-x_{i-1}) (x-x_{i-1})}{h^2} \,dx
-			+ \int_{x_{i}}^{x_{i+1}} \frac{(x_{i+1}-x) (x_{i+1}-x)}{h^2} \,dx \\ 
-		&= \frac{(x_i-x_{i-1})^3}{3h^2} + \frac{(x_{i+1}-x_i)^3}{3h^2}\\
-		&= \frac{h^3}{3h^2} + \frac{h^3}{3h^2}\\
-		&= \frac{2}{3}h
+S_{ii} &= \int_a^b σ(x)\,H_{i}(x)\,H_{i}(x)\,dx
+	    = \int_{x_{i-1}}^{x_{i+1}} σ(x)\,H_{i}(x)\,H_{i}(x)\,dx \\
+	    &≈ \int_{x_{i-1}}^{x_{i}} \overline{σ}_i \frac{(x-x_{i-1}) (x-x_{i-1})}{h^2} \,dx
+			+ \int_{x_{i}}^{x_{i+1}} \overline{σ}_{i+1} \frac{(x_{i+1}-x) (x_{i+1}-x)}{h^2} \,dx \\ 
+		&= \overline{σ}_i\frac{(x_i-x_{i-1})^3}{3h^2} 
+			+ \overline{σ}_{i+1}\frac{(x_{i+1}-x_i)^3}{3h^2}\\
+		&= \overline{σ}_i\frac{h^3}{3h^2} + \overline{σ}_{i+1}\frac{h^3}{3h^2}\\
+		&= \frac{h}{3}(\overline{σ}_i + \overline{σ}_{i+1})
 \end{aligned}
 ```
 and
 ```math
 \begin{aligned}
-M_{i,i+1} &= \int_0^L H_{i}(x)\,H_{i+1}(x)\,dx
-	    = \int_{x_{i}}^{x_{i+1}} H_{i}(x)\,H_{i+1}(x)\,dx \\
-	    &= \int_{x_{i}}^{x_{i+1}} \frac{(x_{i+1}-x)(x-x_{i+1})}{h^2}\,dx\\ 
-		&= - \frac{(x_{i+1} - x_i)^3}{3h^2}\\
-		&= - \frac{h}{3}
+S_{i,i+1} &= \int_a^b \sigma(x)\,H_{i}(x)\,H_{i+1}(x)\,dx
+	    = \int_{x_{i}}^{x_{i+1}} \overline{\sigma}_{i+1}\,H_{i}(x)\,H_{i+1}(x)\,dx \\
+	    &= \overline{\sigma}_{i+1}\int_{x_{i}}^{x_{i+1}} \frac{(x_{i+1}-x)(x-x_{i+1})}{h^2}\,dx\\ 
+		&= \overline{\sigma}_{i+1} \frac{(x_{i+1} - x_i)^3}{3h^2}\\
+		&= \frac{h}{3} \overline{\sigma}_{i+1} 
 \end{aligned}
 ```
-
-"""
+""")
 
 # ╔═╡ fade56d1-7270-4070-baf8-9b32c07a0b9d
 md"""
 Finally we consider the elements of the vector $\mathbf{f}$.
-Since again $H_i$ is only non-zero in $[i-1, i+1]$,
-we need to perform the two integrals
+Making the similar ansatz to replace $f$ by the average
 ```math
-f_i  = \int_{0}^{L} f(x)\,H_i(x)\,dx
-= \int_{x_{i-1}}^{x_i} f(x)\,H_i(x)\,dx + \int_{x_i}^{x_{i+1}} f(x)\,H_i(x)\,dx
+\overline{f}_{i} = \frac{f(x_{i-1}) + f(x_{i})}{2}.
 ```
-for $i = 1, \ldots, n-1$.
-One can show that to a very good approximation one can replace
-$f(x)$ by the average value of the function over the respective integrals, i.e.
+in each subinterval and noting that
+$H_i$ is only non-zero in $[i-1, i+1]$
+we obtain
 ```math
+\tag{30}
 \begin{aligned}
-\int_{x_{i-1}}^{x_i} f(x)\,H_i(x)\,dx &≈  \frac{f(x_{i-1}) + f(x_{i})}{2} \int_{x_{i-1}}^{x_i} H_i(x)\,dx = \frac{f(x_{i-1}) + f(x_{i})}{2} \cdot \frac{h}{2} \\
-\int_{x_{i}}^{x_{i+1}} f(x)\,H_i(x)\,dx &≈  \frac{f(x_i) + f(x_{i+1})}{2}\int_{x_{i}}^{x_{i+1}}  H_i(x)\,dx = \frac{f(x_i) + f(x_{i+1})}{2} \cdot \frac{h}{2}.
+f_i &= \int_{a}^{b} f(x)\,H_i(x)\,dx
+= \int_{x_{i-1}}^{x_{i}} f(x)\,H_i(x)\,dx + \int_{x_i}^{x_{i+1}} f(x)\,H_i(x)\,dx \\
+&= \overline{f}_{i} \int_{x_{i-1}}^{x_{i}}H_i(x)\,dx
++ \overline{f}_{i+1} \int_{x_{i}}^{x_{i+1}}H_i(x)\,dx \\
+&= \frac{h}{2} (\overline{f}_{i} + \overline{f}_{i+1})
 \end{aligned}
 ```
-In particular this approximation converges quadratically as $h\to0$,
-which turns out to be exactly the order of approximation of the finite element method itself. Therefore putting in additional efforts to compute these integrals more accurately would not even improve the accuracy of our final result.
-"""
-
-# ╔═╡ 5a91ecbb-7ad9-4253-8dfb-f9afe2664f9b
-md"""
-Putting these developments tothere we obtain for $i=1,\ldots,n-1$ that
-```math
-\tag{31}
-\begin{aligned}
-f_i &= \frac{f(x_i) + f(x_{i-1})}{2} \frac{h}{2   }
-+ \frac{f(x_{i+1}) + f(x_{i})}{2} \frac{h}{2}  \\
-&= \frac{h}{4} \Big( f(x_{i-1}) + 2f(x_i) + f(x_{i+1}) \Big).
-\end{aligned}
-```
+for $i = 1,\ldots,n-1$.
 """
 
 # ╔═╡ 387244c2-2824-44cd-b413-45be7e447902
 md"""
 By solving the linear system
 ```math
-(\mathbf{A} + \mathbf{M})\, \mathbf{u} = \mathbf{f}
+(\mathbf{K} + \mathbf{S})\, \mathbf{u} = \mathbf{f}
 ```
 we then obtain the coefficients $\mathbf{u} = (u_1, u_2, \ldots, u_{n-1})^T$
-in the expansion (29).
+in the expansion (26).
 Notably, due to the cardinality property of the hat functions $u_i = u(x_i)$, i.e. these coefficients are equal to evaluating our numerical approximation $u(x)$
 at the nodal points $\{x_i\}_{i=1}^{n-1}$.
 
@@ -1643,41 +1673,66 @@ at the nodal points $\{x_i\}_{i=1}^{n-1}$.
 An implementation of this approch is given below:
 """
 
-# ╔═╡ 563e2c1f-3c51-4be4-9693-5a2cfb8e6eda
-function heat_equation_1d_fem(f, k, L, n)
-	# f:  Function describing the external heat source
-	# k:  thermal conductivity
-	# L:  Length of the metal rod
-	# N:  Number of nodal points for the finite element scheme
-	
-	h = L / n                 # Step size
-	x = [i * h for i in 0:n]  # Nodal points (x₀, x₁, ..., xₙ)
-	x_inner = x[2:n]          # Inner nodal points (x₁, ..., xₙ₋₁)
-	
+# ╔═╡ e4d68814-491f-4188-9e8e-ddb5ca21e06f
+function fem_bvp(n, a, b, κ, σ, f)
+	# Solves the differential equation
+	#    [κ(x) u'(x)]' + σ(x) u(x) = f(x)
+	# in the domain [a, b] with boundary conditions u(a) = u(b) = 0
+	#
+	# N:  Number of subintervals for discretisation, i.e. there will be N+1 nodes 
+	# a:  Starting point of the computational domain [a, b]
+	# b:  End point of the computational domain
+	# κ, σ, f:  Julia functions to define the unknowns in the equation above
 
-	# Build A and f: Note that these are a (n-1) × (n-1) matrix
-	# respectively a vector of length (n-1)
-	A = k/h * SymTridiagonal(2ones(n-1), -ones(n-2))
-	M = h/3 * SymTridiagonal(2ones(n-1), -ones(n-2))
-	f = h/4 * [f(x[i-1]) + 2f(x[i]) + f(x[i+1])
-	           for i in 2:n]   # Skip first/last nodal point, i.e. x[1] = x₀
+	# Define the FEM grid
+	h = (b - a) / n
+	x = [a + i * h for i in 0:n]  # Nodal points (x₀, x₁, ..., xₙ)
+	x_inner = x[2:n]              # Inner nodal points (x₁, ..., xₙ₋₁)
 
-	u = (A + M) \ f
-	(; x=x_inner, u)
+	# Evaluate coefficients:
+	κ_values = κ.(x)
+	σ_values = σ.(x)
+	f_values = f.(x)
+
+	# Find average values:
+	κ_bar = (κ_values[1:n] + κ_values[2:n+1]) / 2
+	σ_bar = (σ_values[1:n] + σ_values[2:n+1]) / 2
+	f_bar = (f_values[1:n] + f_values[2:n+1]) / 2
+
+	# Assemble K, making use of the fact that it's a symmetric tri-diagonal matrix
+	K_diagonal = κ_bar[1:n-1] + κ_bar[2:n]
+	K_subdiag  = -κ_bar[2:n]
+	K = 1/h * SymTridiagonal(K_diagonal, K_subdiag)
+
+	# Assemble S
+	S_diagonal = 2σ_bar[1:n-1] + 2σ_bar[2:n]
+	S_subdiag  = σ_bar[2:n]
+	S = h/6 * SymTridiagonal(S_diagonal, S_subdiag)
+
+	# Assemble f
+	f = [h/2 * (f_bar[i] + f_bar[i+1]) for i in 1:n-1]
+
+	# Solve linear system and return solution
+	u = (K + S) \ f
+
+	(; x=x_inner, u, K, S, f)
 end
 
-# ╔═╡ d1115511-a798-47e7-aeea-fc87ad77d2f7
+# ╔═╡ c6380ce5-83b7-4db4-9bd6-257e1b215b52
 md"""
-Let us return to the example we considered with the sine basis, i.e.
+To apply this algorithm we return to the Dirichlet heat equation
 ```math
 \left\{
 \begin{aligned}
 - \frac{\partial^2 u}{\partial x^2}(x) &= x \qquad x \in (0, π)\\
-u(0) &= u(L) = 0,
+u(0) &= u(π) = 0,
 \end{aligned}
 \right.
 ```
-i.e. the Dirichlet heat equation (20) with $k=1$, $L=π$ and $f(x) = x$.
+with the parameters:
+```math
+	κ(x) = 1, \qquad σ(x) = 0, \qquad f(x) = x, \qquad a=0, \qquad b=π
+```
 
 As a reference solution we consider the solution using the sine basis with $m=300$, which we know to be very accurate for this problem:
 """
@@ -1693,48 +1748,95 @@ md"""
 # ╔═╡ 1c8966d7-8a12-4b25-9c51-93dea0faeb14
 let
 	# Parameters of the problem
+	κ(x) = 1
+	σ(x) = 0
 	f(x) = x
-	k = 1
-	L = π
+	a = 0
+	b = π
 
 	# Plot the reference
-	p = plot(reference; lw=2.5, label="Reference", title="Solution", xlims=(-0.05, L + 0.05))
+	p = plot(reference; lw=2.5, label="Reference", title="Solution", xlims=(a -0.05, b + 0.05))
 
 	# Compute FEM solution and plot it
-	result = heat_equation_1d_fem(f, k, L, n)
+	result = fem_bvp(n, a, b, κ, σ, f)
 	plot!(p, result.x, result.u; lw=1.5, ls=:dash, label="Solution n=$n", mark=:o)
 
-	scatter!([0, L], [0, 0], label="Boundary values", mark=:o, c=3)
-end
-
-# ╔═╡ 25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
-let
-	f(x) = x
-	k = 1
-	L = π
-
-	ns = [5, 10, 20, 40, 50, 60, 80, 100, 200, 300, 500, 700]
-	errors = Float64[]
-	for n in ns
-		result = heat_equation_1d_fem(f, k, L, n)
-		error = abs.(result.u - reference.(result.x))
-		push!(errors, maximum(error))
-	end
-	
-	p = plot(ns, errors, yaxis=:log, xaxis=:log, lw=2, mark=:o, title=L"Convergence in $n$", xlabel=L"n", ylabel="maximal error", label="Error")
-	plot!(p, ns, 1 ./ns.^2, ls=:dash, lw=2, label=L"O(n^2)")
-
-	xticks!(p, 10.0 .^ (0:0.5:3))
-	yticks!(p, 10.0 .^ (0:-1:-6))
+	scatter!([a, b], [0, 0], label="Boundary values", mark=:o, c=3)
 end
 
 # ╔═╡ 8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
 md"""
-The finite element method is one of the most widely employed approaches in science and engineering to solve differential equations. With this short instroduction we only scratched the surface.
-
-More information on the approach can be found for example in
-[chapter 10.6](https://tobydriscoll.net/fnc-julia/bvp/galerkin.html) of Driscoll, Brown: *Fundamentals of Numerical Computation*.
+The finite element method is one of the most widely employed approaches in science and engineering to solve differential equations. With this short introduction we only scratched the surface.
 """
+
+# ╔═╡ 5f23627d-1d8e-4705-a9b8-155bb745cca9
+md"""
+## Comparison and conclusion
+"""
+
+# ╔═╡ 27fb5fde-566d-481b-b0d6-41c78c198eac
+# TODO("Some conclusion section to provide direct comparison between finite differences and Galerkin methods and from that some conclusion why Galerkin methods can be better (numerical stability, less unknowns for a targeted accuracy etc.)")
+
+# ╔═╡ a9e95236-ed7d-4f1b-a5c3-048ca0fd7828
+md"## Appendix
+
+This appendix contains the `hatfun` function from the interpolation chapter.
+"
+
+# ╔═╡ 219457b9-7cdc-4fc3-85ae-c4c694264196
+function hatfun(nodes, i)
+	# Function to generate the i-th hat function corresponding to nodal
+	# points given in the vector nodes. It is assumed that nodes is sorted
+	n = length(nodes) - 1
+
+	# Define an inner function, which is returned
+	return function (x)
+		if i > 1 && nodes[i-1] ≤ x ≤ nodes[i]
+			return (x - nodes[i-1]) / (nodes[i] - nodes[i-1])
+		elseif i ≤ n && nodes[i] ≤ x ≤ nodes[i+1]
+			return (nodes[i+1] - x) / (nodes[i+1] - nodes[i])
+		else
+			return 0
+		end
+	end
+end
+
+# ╔═╡ 25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
+let
+	κ(x) = 1
+	σ(x) = 0
+	f(x) = x
+	a = 0
+	b = π
+
+	fine = range(a, b, length=3000)
+	ns = [5, 10, 20, 40, 50, 60, 80, 100, 200, 300, 500]
+	errors    = Float64[]
+	errors_l2 = Float64[]
+	for n in ns
+		result = fem_bvp(n, a, b, κ, σ, f)
+
+		# Interpolate FE-based function on the fine points
+		result_on_fine = [sum(result.u[i] * hatfun(result.x, i)(fx)
+			                  for i in 1:length(result.x))
+						  for fx in fine]
+		
+		error = maximum(abs, result_on_fine - reference.(fine))
+		push!(errors, error)
+
+		error_l2 = norm(result_on_fine - reference.(fine)) * sqrt(fine[2] - fine[1])
+		push!(errors_l2, error_l2)
+	end
+	
+	p = plot(ns, errors, yaxis=:log, xaxis=:log, lw=2, mark=:o, title=L"Convergence in $n$", xlabel=L"n", ylabel="maximal error", label="Maximal error")
+	plot!(p, ns, errors_l2, lw=2, mark=:o, label="Root-mean square error")
+
+	plot!(p, ns, 4 ./ns, ls=:dash, lw=2, label=L"1/n")
+	plot!(p, ns, 40 ./ns .^ 2, ls=:dash, lw=2, label=L"1/n^2")
+
+	xticks!(p, 10.0 .^ (0:0.5:3))
+	yticks!(p, 10.0 .^ (0:-1:-6))
+end
 
 # ╔═╡ 9143e06a-9f27-44d1-ae2c-c50ce8dfdd30
 md"Show outline $(@bind show_outline CheckBox(default=true))"
@@ -1744,7 +1846,7 @@ if show_outline
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 400)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 420)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2985,6 +3087,7 @@ version = "1.13.0+0"
 # ╟─0bb8239c-22c0-4420-8ae7-59c5c00436a2
 # ╟─69ca61cc-5482-45c1-99fc-0ef780771759
 # ╟─814ac12b-5ed7-4512-b053-fbe729b90ce6
+# ╠═789ce0a6-21f0-44ec-b792-645054f5b9d5
 # ╠═7a647ffe-000e-4bb7-a348-033cd75b1369
 # ╟─52961854-695e-44e7-b8e2-20ed7ff07cda
 # ╟─359e61a3-d7fc-402f-ad6c-24b4301885d6
@@ -2997,15 +3100,14 @@ version = "1.13.0+0"
 # ╟─8039250a-c79a-4009-9a53-81307b8e0ace
 # ╟─f3819d92-c61a-49b2-a77b-9837cbed0cae
 # ╟─30b8bac2-7c95-4fee-bbde-b04a36258857
-# ╠═858a60ba-8d0c-43d8-908d-0bb413c79285
-# ╟─23307b35-c76e-487d-906a-18f65b691d79
+# ╟─9543b810-8773-4b74-9e1c-21bb790c467c
+# ╟─bb2ff930-ca44-4ef8-a342-b050db548a0f
 # ╟─7ae614fb-f2e0-46af-a557-6a378f6553e8
 # ╟─962ca311-c2ed-46eb-b043-827ecfb64ac3
 # ╟─05999b01-4a41-480a-9f3a-2e04d97748b3
 # ╟─7a86c1db-e5be-4310-951a-4de51bec4e98
 # ╟─79816267-531b-4b99-bdea-1194574dd160
 # ╟─bbb839d2-599f-40e2-a1f7-2419d07c96a8
-# ╟─43ade623-1b58-4035-a1e5-803911063833
 # ╟─e6f3450d-6fb7-4c59-a209-ae3587a43bab
 # ╟─c7610b00-7277-46c3-881d-85d417db2e9e
 # ╟─5e7387cc-f9eb-484e-ade7-c844bddeb716
@@ -3021,9 +3123,6 @@ version = "1.13.0+0"
 # ╟─aa589aa5-1a5c-4782-af66-2509f21ac891
 # ╟─4fee47fc-077d-4921-8572-7820ab84988e
 # ╠═1d55c98e-4ed9-4ac4-a847-b18432483472
-# ╟─5f23627d-1d8e-4705-a9b8-155bb745cca9
-# ╠═27fb5fde-566d-481b-b0d6-41c78c198eac
-# ╠═e88a64b8-1259-4320-9914-664bf30122a5
 # ╟─83fdd745-33e1-4e77-80a2-9008b0eb59b8
 # ╟─57d511cc-aaae-42b3-80ec-7caf7d6f68ac
 # ╟─40c8b1a5-b61c-4af2-8b4b-f8b2b5e182dc
@@ -3031,18 +3130,21 @@ version = "1.13.0+0"
 # ╟─e72ea328-9ab3-4fc1-ad80-59091074c6f5
 # ╟─153850e9-8b5c-45f2-a27f-0cf0b7389b21
 # ╟─64977b68-8822-43e2-b2de-06b83b8a64e8
-# ╠═a30354e0-6254-46fd-a10b-f28d1c9dd6d4
+# ╟─ea876869-03c9-4f15-99bf-00c961fb994f
 # ╟─8af2b992-5072-47e0-85fc-dd7d332d505f
 # ╟─fade56d1-7270-4070-baf8-9b32c07a0b9d
-# ╟─5a91ecbb-7ad9-4253-8dfb-f9afe2664f9b
 # ╟─387244c2-2824-44cd-b413-45be7e447902
-# ╠═563e2c1f-3c51-4be4-9693-5a2cfb8e6eda
-# ╟─d1115511-a798-47e7-aeea-fc87ad77d2f7
+# ╠═e4d68814-491f-4188-9e8e-ddb5ca21e06f
+# ╟─c6380ce5-83b7-4db4-9bd6-257e1b215b52
 # ╠═72b37ada-df37-4bfa-a2da-ae56026625dd
 # ╟─4042ff5d-3da6-418f-816b-905318e10f39
 # ╠═1c8966d7-8a12-4b25-9c51-93dea0faeb14
-# ╠═25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
+# ╟─25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
 # ╟─8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
+# ╟─5f23627d-1d8e-4705-a9b8-155bb745cca9
+# ╠═27fb5fde-566d-481b-b0d6-41c78c198eac
+# ╟─a9e95236-ed7d-4f1b-a5c3-048ca0fd7828
+# ╠═219457b9-7cdc-4fc3-85ae-c4c694264196
 # ╟─9143e06a-9f27-44d1-ae2c-c50ce8dfdd30
 # ╟─3348115a-2fd4-4935-9dba-b85d9e0c95f5
 # ╟─00000000-0000-0000-0000-000000000001
