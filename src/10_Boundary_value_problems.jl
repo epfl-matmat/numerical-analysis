@@ -919,7 +919,7 @@ function fd_bvp_fast(N, a, b, p, q, r, γa, γb)
 	# Solve the linear system
 	u = A \ b
 
-	(; x, u, h, A, b, Dₓ, Dₓₓ)
+	(; x, u, h, A, b, Dₓ=nothing, Dₓₓ)
 end
 
 # ╔═╡ b482d8e2-901a-4d8b-85af-e0fbc5c46d4f

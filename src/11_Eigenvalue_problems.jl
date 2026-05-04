@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -36,9 +36,6 @@ md"""
 # ╔═╡ 13298dc4-9800-476d-9474-182359a7671b
 TableOfContents()
 
-# ╔═╡ 1980cffb-4b56-4b66-8100-a730da0c89f5
-TODO(md"""If we do this chapter *after* boundary value problems, we can actually motivate eigenvalue problems from solving an equation like $-\Delta u = f$ in a bounded domain (discretised e.g. using sine functions). This is nice because (a) it is related to the Resonance phaenomena equations, that lead to the resonance catastrophe in bridges (if $f$ hits an eigenvector of the laplacian) and (b) it makes the whole eigenvalue problems better embedded into the rest of the course and as an "application". """)
-
 # ╔═╡ a138fb39-aae0-41b4-bd7b-d2f7eaad7a53
 md"""
 # Eigenvalue problems
@@ -63,9 +60,20 @@ We note that the **largest eigenvalue of $\mathbf A$**
 provides a **bound to the action of $\mathbf{A}$**.
 """
 
+# ╔═╡ 73889935-2e4c-4a15-a281-b155cf1ca1c9
+md"""
+In this notebook we will discuss some simple iterative methods for actually computing  eigenpairs. However, the topic is vast and we will only scratch the surface. 
+Readers interested in a more in-depth treatment
+of eigenvalue problems are encouraged to attend the master class
+[MATH-500: Error control in scientific modelling](https://teaching.matmat.org/error-control/).
+Some recommended further reading can also be found in the book [Numerical Methods for Large Eigenvalue Problems](https://epubs.siam.org/doi/book/10.1137/1.9781611970739) by Youssef Saad as well as the [Lecture notes on Large Scale Eigenvalue Problems](https://people.inf.ethz.ch/arbenz/ewp/Lnotes/lsevp.pdf) by Peter Arbenz.
+"""
+
 # ╔═╡ a702d4b6-e70c-417d-ac98-92c534d52770
 md"""
-This may sound technical, but as **matrices are common
+### Physical motivation
+
+**Matrices are common
 in physics and engineering**
 and since their **eigenpairs characterise the action of these matrices**,
 the computation of
@@ -80,13 +88,57 @@ with the motion of humans or cars this can lead to a [Resonance disaster](https:
 Analysing the eigenfrequencies of bridges is nowadays required as part of the procedure to obtain the permissons for construction.
 """
 
-# ╔═╡ 73889935-2e4c-4a15-a281-b155cf1ca1c9
+# ╔═╡ 68b637a4-01a9-41d7-ba10-f629d02fb1a8
 md"""
-In this notebook we will discuss some simple iterative methods for actually computing  eigenpairs. However, the topic is vast and we will only scratch the surface. 
-Readers interested in a more in-depth treatment
-of eigenvalue problems are encouraged to attend the master class
-[MATH-500: Error control in scientific modelling](https://teaching.matmat.org/error-control/).
-Some recommended further reading can also be found in the book [Numerical Methods for Large Eigenvalue Problems](https://epubs.siam.org/doi/book/10.1137/1.9781611970739) by Youssef Saad as well as the [Lecture notes on Large Scale Eigenvalue Problems](https://people.inf.ethz.ch/arbenz/ewp/Lnotes/lsevp.pdf) by Peter Arbenz.
+### Numerical analysis motivation
+
+In the chapter on [Boundary value problems](https://teaching.matmat.org/numerical-analysis/10_Boundary_value_problems.html) we noticed that boundary value problems
+```math
+\left\{
+\begin{aligned}
+u''(x) + p(x) \, u'(x) + q(x) \, u(x) &= r(x) \qquad x \in (a, b),\\
+u(a) &= γ_a \\
+u(b) &= γ_b
+\end{aligned}
+\right.
+```
+lead to linear systems
+```math
+\tag{BVP}
+\mathbf{L} \mathbf{u} = \mathbf{r}
+\quad \text{where} \quad \mathbf{L} = \mathbf{E} (\mathbf{D}_{xx} +  \mathbf{P} \mathbf{D}_x + \mathbf{Q})
+```
+where $\mathbf{D}_\text{xx}$ and $\mathbf{D}_\text{x}$ are differentiation matrices
+and $\mathbf{P}$ and $\mathbf{Q}$ discretised representations of $p$ and $q$ and the matrix $\mathbf{E}$ takes care of introducing the appropriate boundary conditions. 
+
+This linear system in equation (BVP) is an $(N+1) \times (N+1)$ linear system where $N$ is the number of subintervals we use for the discretisation. In the [Boundary value problems chapter](https://teaching.matmat.org/numerical-analysis/10_Boundary_value_problems.html) we solved this system of equations using LU factorisation (using `\` in Julia).
+
+However, in practical applications $N$ can be very large (think $10^6$), such that LU factorisation is not always feasible. Since the matrix $\mathbf{L}$ is usually structured and sparse using a variant of [Richardson iterations](https://teaching.matmat.org/numerical-analysis/06_Iterative_methods.html#Richardson-iterations) is therefore very common in Boundary value problems.
+
+However, already for small $N$ and the simple BVP $u''(x) = 1, u(0) = u(2) = 0$, i.e. the parameters
+"""
+
+# ╔═╡ 104eabba-681f-4371-a17d-199271c14dc4
+begin  # Set some parameters get a simple 
+	a = 0
+	b = 2
+	p(x) = 0
+	q(x) = 0
+	r(x) = -1.0
+	γa = γb = 0
+end;
+
+# ╔═╡ d0151313-5dcb-4db2-8311-39e0fa96a2b6
+md"""We notice that things are tricky:"""
+
+# ╔═╡ 9c868c4c-8d20-4e1d-9adf-82f77d479155
+md"""
+We see: As we make the discretisation finer (go from $N=5$ to $N=20$) the convergence of Richardson iterations get **very slow** despite us using a preconditioner $\mathbf{P}_L$ in form of the diagonal of the matrix $\mathbf{L}$.
+For typical problems $N$ can be very large (think $10^6$)
+
+To understand this behaviour we would need to look at the condition number of $\mathbf{B} = \mathbf{I} - \mathbf{P}_L^{-1} \mathbf{L}$, i.e. determine the largest and smallest eigenvalues of $\mathbf{B}^T \mathbf{B}$. Notice, that the matrix $\mathbf{B}^T \mathbf{B}$ is also a  $(N+1) \times (N+1)$ matrix.
+
+In the practical setting if $N \approx 10^6$, then also diagonalising $\mathbf{B}^T \mathbf{B}$ is a $(N+1) \times (N+1)$ using a standard call to the `eigen` function of Julia is not feasible. We therefore need an **iterative approach to computing eigenvalues**. This is what we will develop in this chapter.
 """
 
 # ╔═╡ 71d74b6a-96b2-4855-b20f-59b00c8f560b
@@ -626,13 +678,10 @@ the **spectral transformations**.
 We explore based on a few examples. Consider
 """
 
-# ╔═╡ 506145ea-399a-4f22-bae3-25257fd0b154
-TODO("Maybe pick a matrix with simpler eigenvalues")
-
 # ╔═╡ 4fbed8eb-a929-4afb-a971-d37a75377d8f
-Ashift = [ 0.4 -0.6 0.2;
-	      -0.3 0.7 -0.4;
-	      -0.1 -0.4 0.5]
+Ashift = [ 2.0  2.0  -2.0;
+		   2.0  0.5   0.5;
+		  -2.0  0.5   0.5]
 
 # ╔═╡ 8290d531-bad1-40b8-a1e9-49cb3a9dae4c
 md"Its eigenvalues and eigenvectors are:"
@@ -644,7 +693,7 @@ eigen(Ashift)
 md"Now we add a multiple of the identity matrix, e.g.:"
 
 # ╔═╡ 2d5eabf9-ba09-43f8-8ee6-9b35bd826640
-σ = 2  # Shift
+σ = 1  # Shift
 
 # ╔═╡ 2dbd51f3-6629-456d-9f45-bf6aeea07be4
 eigen(Ashift + σ * I)  # Add 2 * identity matrix
@@ -1099,8 +1148,99 @@ let
 	plot(p, q; layout=(1, 2))
 end
 
-# ╔═╡ 1601c0a2-877c-43ed-b692-0754363c7ec4
+# ╔═╡ 19ea02de-1da8-42a9-8391-a230870efc3a
+md"""## Appendix
+
+Functions we discussed previously
+"""
+
+# ╔═╡ 2ffb3b83-f65b-4448-a3a6-cf1ecb75e9db
+function fd_bvp_fast(N, a, b, p, q, r, γa, γb)
+	# Solves the differential equation
+	#   u''(x) + p(x) u'(x) + q(x) u(x) = r(x)
+	# in the domain [a, b] with Dirichlet boundary conditions u(a) = γa, u(b) = γb
+	#
+	# N:  Number of subintervals for discretisation, i.e. there will be N+1 nodes 
+	# a:  Starting point of the computational domain [a, b]
+	# b:  End point of the computational domain
+	# p, q, r:  Julia functions to define the unknowns in the equation above
+	# γa, γb:   Dirichlet boundary values
+	@assert iszero(p(randn()))  # Assume p(x) = 0.0 for now
+
+	# Faster version of fd_bvp by building a sparse matrix A
+	h = (b-a) / N
+	x = [a + i*h for i in 0:N]  # Nodes
+
+	# Build Dₓₓ, but without first and last row
+	dxx_main  = [0.0; fill(-2.0, N-1); 0.0] ./ h^2
+	dxx_sub   = [fill(1.0, N-1); 0.0] ./ h^2
+	dxx_super = [0.0; fill(1.0, N-1)] ./ h^2
+	Dₓₓ = Tridiagonal(dxx_sub, dxx_main, dxx_super)
+
+	# Assemble discretised differential equation operator
+	# (but without first and last row)
+	Q = Diagonal([0; q.(x[2:end-1]); 0])
+	A = Dₓₓ + Q
+
+	# Apply boundary conditions
+	A[1, 1] = A[end, end] = 1.0
+
+	b = [γa; r.(x[2:end-1]); γb]
+	
+	# Solve the linear system
+	u = A \ b
+
+	(; x, u, h, A, b, Dₓ=nothing, Dₓₓ)
+end
+
+# ╔═╡ 17246e46-2b46-4f58-a396-69e85b901175
+function richardson(A, b, P; x=zero(b), tol=1e-6, maxiter=100)
+	history  = [float(x)]  # Keep history of xs
+	relnorms = Float64[]   # Track relative residual norm
+	for k in 1:maxiter
+		r = b - A * x
+
+		relnorm = norm(r) / norm(b)
+		push!(relnorms, relnorm)
+		if relnorm < tol
+			break
+		end
+		
+		u = P \ r
+		x = x + u 
+
+		push!(history, x)
+	end
+	(; x, relnorms, history)  # Return current iterate and history
+end
+
+# ╔═╡ 8789c420-e2a1-4df5-a046-1a71e6ca005a
 let
+	function get_resnorms(N)
+		# Setup BVP matrix and rhs
+		bvp = fd_bvp_fast(N, a, b, p, q, r, γa, γb)
+
+		# Run Richardson and record results
+		# Use diagonal preconditioner
+		res = richardson(bvp.A, bvp.b, Diagonal(bvp.A))
+
+		res.relnorms
+	end
+
+	pl = plot(; yaxis=:log, legend=:bottomright, xlabel="Number of iterations", ylabel="Residual norm", title="Convergence of preconditioned Richardson iterations")
+
+	plot!(pl, get_resnorms(5);  mark=:o, lw=2, label="N = 5")
+	plot!(pl, get_resnorms(10); mark=:o, lw=2, label="N = 10")
+	plot!(pl, get_resnorms(20); mark=:o, lw=2, label="N = 20")
+		
+	pl
+end
+
+# ╔═╡ f20895a4-a199-4cd0-bb8e-ff97b3814b8c
+md"Show outline $(@bind show_outline CheckBox(default=true))"
+
+# ╔═╡ 1601c0a2-877c-43ed-b692-0754363c7ec4
+if show_outline
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
@@ -1294,7 +1434,7 @@ uuid = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
 version = "0.4.5"
 
 [[deps.FFMPEG_jll]]
-deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
 git-tree-sha1 = "01ba9d15e9eae375dc1eb9589df76b3572acd3f2"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "8.0.1+0"
@@ -2095,6 +2235,12 @@ git-tree-sha1 = "7ed9347888fac59a618302ee38216dd0379c480d"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
 version = "0.9.12+0"
 
+[[deps.Xorg_libpciaccess_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "4909eb8f1cbf6bd4b1c30dd18b2ead9019ef2fad"
+uuid = "a65dc6b1-eb27-53a1-bb3e-dea574b5389e"
+version = "0.18.1+0"
+
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
 git-tree-sha1 = "bfcaf7ec088eaba362093393fe11aa141fa15422"
@@ -2207,6 +2353,12 @@ git-tree-sha1 = "9bf7903af251d2050b467f76bdbe57ce541f7f4f"
 uuid = "1183f4f0-6f2a-5f1a-908b-139f9cdfea6f"
 version = "0.2.2+0"
 
+[[deps.libdrm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libpciaccess_jll"]
+git-tree-sha1 = "63aac0bcb0b582e11bad965cef4a689905456c03"
+uuid = "8e53e030-5e6c-5a89-a30b-be5b7263a166"
+version = "2.4.125+1"
+
 [[deps.libevdev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "56d643b57b188d30cccc25e331d416d3d358e557"
@@ -2230,6 +2382,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "6ab498eaf50e0495f89e7a5b582816e2efb95f64"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
 version = "1.6.54+0"
+
+[[deps.libva_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
+git-tree-sha1 = "7dbf96baae3310fe2fa0df0ccbb3c6288d5816c9"
+uuid = "9a156e7d-b971-5f62-b2c9-67348b8fb97c"
+version = "2.23.0+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll"]
@@ -2276,10 +2434,14 @@ version = "1.13.0+0"
 # ╟─34beda8f-7e5f-42eb-b32c-73cfc724062e
 # ╠═4949225a-ccf2-11ee-299b-9b834eb6bd42
 # ╟─13298dc4-9800-476d-9474-182359a7671b
-# ╠═1980cffb-4b56-4b66-8100-a730da0c89f5
 # ╟─a138fb39-aae0-41b4-bd7b-d2f7eaad7a53
-# ╟─a702d4b6-e70c-417d-ac98-92c534d52770
 # ╟─73889935-2e4c-4a15-a281-b155cf1ca1c9
+# ╟─a702d4b6-e70c-417d-ac98-92c534d52770
+# ╟─68b637a4-01a9-41d7-ba10-f629d02fb1a8
+# ╠═104eabba-681f-4371-a17d-199271c14dc4
+# ╟─d0151313-5dcb-4db2-8311-39e0fa96a2b6
+# ╟─8789c420-e2a1-4df5-a046-1a71e6ca005a
+# ╟─9c868c4c-8d20-4e1d-9adf-82f77d479155
 # ╟─71d74b6a-96b2-4855-b20f-59b00c8f560b
 # ╠═6db511ac-a217-49e2-a508-2590b64ea636
 # ╟─814e602d-1afa-44ba-bb25-ed32dd66e2b9
@@ -2325,7 +2487,6 @@ version = "1.13.0+0"
 # ╟─385b07d6-15ef-40ee-8d2e-b3b6505a4171
 # ╠═5d4697b4-2f3e-452b-afb8-78443efa1f25
 # ╟─0e4a443b-e99d-436f-8151-d6cfed9b773b
-# ╠═506145ea-399a-4f22-bae3-25257fd0b154
 # ╠═4fbed8eb-a929-4afb-a971-d37a75377d8f
 # ╟─8290d531-bad1-40b8-a1e9-49cb3a9dae4c
 # ╠═2f97e0aa-e9b1-4bdf-bc81-968a3217b2e6
@@ -2370,6 +2531,10 @@ version = "1.13.0+0"
 # ╟─9a72aec8-81fc-4b76-a163-d1fce03bc3d8
 # ╟─63b946a7-fa76-4367-98bf-0c52230ef158
 # ╠═234362c4-7607-45ec-b4b9-a7c5a08bf350
+# ╟─19ea02de-1da8-42a9-8391-a230870efc3a
+# ╟─2ffb3b83-f65b-4448-a3a6-cf1ecb75e9db
+# ╠═17246e46-2b46-4f58-a396-69e85b901175
+# ╟─f20895a4-a199-4cd0-bb8e-ff97b3814b8c
 # ╟─1601c0a2-877c-43ed-b692-0754363c7ec4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
