@@ -152,7 +152,7 @@ md"""
 	```math
 	\left\{
 	\begin{aligned}
-	u''(x) &=  ϕ(x, u, u'') \qquad x \in (a, b),\\
+	u''(x) &=  ϕ(x, u, u') \qquad x \in (a, b),\\
 	g_{a}(u(a), u'(a)) &= 0, \\
 	g_{b}(u(b), u'(b)) &= 0
 	\end{aligned}
@@ -1061,7 +1061,7 @@ where we used partial integration in step $(\ast)$ and the property  $\psi(a) = 
 md"""
 Let us define the **set of all test functions** as
 ```math
-V_0 = \Big\{ \psi : [0, L] \to \mathbb{R} \ \Big|\ \text{$\psi$ smooth and $\psi(a) = \psi(b) = 0$} \Big\}.
+V_0 = \Big\{ \psi : [a, b] \to \mathbb{R} \ \Big|\ \text{$\psi$ smooth and $\psi(a) = \psi(b) = 0$} \Big\}.
 ```
 If $u : [a, b] \to \mathbb{R}$ is a solution to (8) than our discussion implies that (10) is satisfied for all functions from $V_0$:
 ```math
@@ -1070,11 +1070,14 @@ If $u : [a, b] \to \mathbb{R}$ is a solution to (8) than our discussion implies 
 \begin{aligned}
 \int_a^b  κ(x)\, u'(x) \, ψ'(x)  +  σ(x)\,u(x)\,ψ(x) -  f(x)\, \psi(x)\, dx &= 0
 \qquad \forall\,\psi \in V_0\\
-u(0) &= 0, \quad u(L) = 0
+u(a) &= 0, \quad u(b) = 0
 \end{aligned}
 \right.
 ```
-Equation (11) is known as the **weak form** of the 1D boundary value problem (8)
+Notice, that here the integrand is the entire expression between the "$\int_a^b$" and the "$dx$".
+
+
+Equation (11) is also known as the **weak form** of the 1D boundary value problem (8)
 and solving it is interesting in its own right:
 """
 
@@ -1086,7 +1089,7 @@ md"""
 	\left\{
 	\begin{aligned}
 	\int_a^b  κ(x)\, u'(x) \, ψ'(x)  +  σ(x)\,u(x)\,ψ(x) - f(x)\, \psi(x)\, dx &= 0 \qquad \forall ψ\in V_0 \\
-	u(0) &= 0, \quad u(L) = 0
+	u(a) &= 0, \quad u(b) = 0
 	\end{aligned}
 	\right.
 	```
@@ -1124,27 +1127,46 @@ the interested reader is referred to the master course [MATH-500: Mathematical a
 where some of this is discussed.
 """
 
-# ╔═╡ bbb839d2-599f-40e2-a1f7-2419d07c96a8
+# ╔═╡ ca71e6e4-bf21-4f01-b6ac-a9bac0d1d76f
 md"""
 ### Discretisation of the weak form
 
-In order to solve (11) our goal is to rewrite the problem in the form of linear algebra --- vectors and matrices. 
+In order to solve (11) our goal is to rewrite the problem in the form of linear algebra --- vectors and matrices.
 
-One difficulty in this equation is that the condition $\forall \psi \in V_0$ corresponds to an *infinite* number of constraints to satisfy (as the set $V_0$ has infinitely many members). We therefore need to find a way to approximate this to only consider finitely many constraints without loosing too much on the quality of the solution.
+To make progress in this direction **we select a set $φ_1, φ_2, \ldots, φ_m$** of linearly independent functions, which individually **satisfy the boundary condition**, i.e. $φ_i(a) = φ_i(b) = 0$. We further make two assumptions:
+
+  1. We assume a **solution** $u(x)$ of (11)
+     can be written as a **linear combination**
+     ```math
+     \tag{14}
+     u(x) = \sum_{j=1}^m c_j\, φ_j(x)
+     ```
+
+  2. We assume that instead of satisfying the condition in (11) for all possible
+     $\psi \in V_0$ it sufficies to satisfy them only for our selected basis
+     functions $φ_i$. We obtain:
+     ```math
+     \tag{15}
+     \begin{aligned}
+     &\forall\ i = 1, \ldots, m: \\
+     &\hspace{20pt}\int_a^b  κ(x)\, u'(x) \, φ_i'(x)  +  σ(x)\,u(x)\,φ_i(x) - f(x)\, φ_i(x)\, dx =  0.
+     \end{aligned}
+     ```
+
+Assumption 1 ensures that any such $u$ automatically satisfies the boundary conditions, since the $φ_j$ do so individually. As a result the second line of (11) is always satisfied.
+
+Assumption 2 makes Equation (11) much more tractable, namely by replacing the condition involving all members of the infinite set $V_0$ (i.e. $\forall \psi \in V_0$) by a condition involving only the finite number of basis functions $φ_1, φ_2, \ldots, φ_m$. Some more details why this is not such a crude approximation (for suitable choices of basis functions) is given below.
 """
 
 # ╔═╡ e6f3450d-6fb7-4c59-a209-ae3587a43bab
+Foldable("Justification of Assumption 2 (Optional)", 
 md"""
-To do so we assume that **$\psi$ can be written as a linear combination**
+Assumption 2, i.e. the restriction from the condition "$\forall \psi \in V_0$" to the check over only the finite set $\{φ_1, φ_2, φ_3, \ldots, φ_m\}$ seems very restrictive. However, it arises rather naturally if we use our basis set not only to approximate $u$, but also to approximate $\psi$ itself. For this assume that $\psi$ can indeed be written as 
 ```math
-\tag{14}
-\psi(x) = \sum_{i=1}^m ξ_i\, \varphi_i(x),
+\tag{16}
+\psi(x) = \sum_{i=1}^m ξ_i\, \varphi_i(x).
 ```
-where $φ_1, φ_2, \ldots, φ_m$ are a selection of
-$m$ linearly independent functions from $V_0$,
-i.e. smooth functions mapping from the interval $[a, b]$ to $\mathbb{R}$,
-which each satisfy the boundary condition $φ_i(a) = φ_i(b) = 0$.
-Inserting (14) into the first line of (11) leads to
+Inserting (16) into the first line of (11) leads to
 ```math
 \begin{aligned}
 0 &= \int_a^b  κ(x)\, u'(x) \, ψ'(x)  +  σ(x)\,u(x)\,ψ(x) -  f(x)\, \psi(x)\, dx \\
@@ -1156,41 +1178,24 @@ Inserting (14) into the first line of (11) leads to
 which should be true **independent of the values of $ξ_i$**.
 As a result the above condition can be achieved if and only if
 the term in the **square bracket is zero all our functions $\varphi_i$**,
-that is if
+that is Equation (15)
 ```math
-\tag{15}
 \forall i = 1, \ldots, m: \quad
 \int_a^b  κ(x)\, u'(x) \, φ_i'(x)  +  σ(x)\,u(x)\,φ_i(x) - f(x)\, φ_i(x)\, dx = 0.
 ```
-"""
-
-# ╔═╡ c7610b00-7277-46c3-881d-85d417db2e9e
-md"""
 Notice, that condition (15) is independent of the actual
 values taken by the coefficients $\{ξ_i\}_{i=1}^m$.
 Provided that (15) holds we thus do not need to worry about
 determining the values of $\{ξ_i\}_{i=1}^m$.
-In fact in all following development these coefficients
-will play no further role.
 
-With this development we can replace the infinite number of constraints encoded
-by the "$\forall \psi \in V_0$" in equation (11) by "$\forall i = 1, \ldots, m$"
---- an **approximate version (15)**,
-which **only involves a finite number $m$ conditions** to satisfy.
-"""
+Provided that the basis set $\{\varphi_i\}_{i=1}^m$ is chosen sufficiently good, i.e. $m$ is large enough and the functions themselves are chosen that the error $\psi(x) - \sum_{i=1}^m ξ_i\, \varphi_i(x)$ is small for all $x$ and all $\psi\in V_0$, then just employing Equation (15), i.e. just checking the condition for all basis functions, is not an inaccurate approximation.
 
-# ╔═╡ 5e7387cc-f9eb-484e-ade7-c844bddeb716
+In fact, typical choices for $\{\varphi_i\}_{i=1}^m$ are such that are based on well-defined schemes that enable to systematically improve the approximations (14) and (16) as one makes the basis set size $m$ larger and larger.
+""")
+
+# ╔═╡ d7a8cbbf-3a3a-4612-8404-57aa867711f2
 md"""
-Considering $u(x)$ we make an additional approximation,
-namely that this function can **be
-approximated by a linear combination of finitely many functions**.
-Here, we choose to employ the same selection of functions,
-that we used for $\psi$ leading to an ansatz
-```math
-\tag{16}
-u(x) = \sum_{j=1}^m c_j φ_j(x).
-```
-Inserting (16) into (15) we obtain
+Combining Equations (14) and (15) from our two assumptions, we obtain:
 ```math
 \forall i = 1, \ldots, m: \ 
 \int_a^b  κ(x)\, \sum_{j=1}^m c_j φ_j'(x) \, φ_i'(x)  +  σ(x)\,\sum_{j=1}^m c_j φ_j(x)\,φ_i(x) - f(x)\, φ_i(x)\, dx = 0.
@@ -1205,24 +1210,9 @@ or arranged differently
 \hspace{30pt}&= \underbrace{\int_a^b f(x)\,\varphi_i(x)\, dx}_{=f_i}
 \end{aligned}
 ```
-"""
+In this equations **the expansion coefficients $c_j$ are the unknows to be determined**.
 
-# ╔═╡ e32d65f1-9bf2-4043-811c-d47801d0f85e
-md"""
-In this equations the coefficients $c_j$ are the unknows to be determined.
-
-Notice that we took $φ_j(a) = φ_j(b) = 0$, such that by construction
-the linear combination $u$ also always satisfies
-the boundary condition $u(0) = u(L) = 0$
-independent of the choice of the coefficients $c_j$.
-Solving equation (17) therefore automatically ensures that the second line of the weak problem (11) is satisfied.
-Additionally this equation satisfies (15)
---- our approximation to the first line of (11).
-
-In summary a **solution to equation (17)** thus **satisfies** (our approximation to)
-**both conditions required to be a solution
-to the weak problem** (11).
-Equation (17) is thus given a special name:
+Introducing appropriate matrices equation (17) can indeed be cast as a linear algebra problem, as the following shows:
 """
 
 # ╔═╡ ef1ad23b-89bc-4b75-9560-4fa4fb96c802
@@ -1329,11 +1319,11 @@ the coefficient vector $\mathbf{c}$ as
 ```math
 \mathbf{c} = 
 \begin{pmatrix}
-f_1 / A_{11} \\
-f_2 / A_{22} \\
-f_3 / A_{33} \\
-f_4 / A_{44} \\
-f_5 / A_{55}
+f_1 / K_{11} \\
+f_2 / K_{22} \\
+f_3 / K_{33} \\
+f_4 / K_{44} \\
+f_5 / K_{55}
 \end{pmatrix}
 = \begin{pmatrix}
 2 \\ -\frac28 \\ \frac2{27} \\ -\frac2{64} \\ \frac2{125}
@@ -3108,11 +3098,9 @@ version = "1.13.0+0"
 # ╟─05999b01-4a41-480a-9f3a-2e04d97748b3
 # ╟─7a86c1db-e5be-4310-951a-4de51bec4e98
 # ╟─79816267-531b-4b99-bdea-1194574dd160
-# ╟─bbb839d2-599f-40e2-a1f7-2419d07c96a8
+# ╟─ca71e6e4-bf21-4f01-b6ac-a9bac0d1d76f
 # ╟─e6f3450d-6fb7-4c59-a209-ae3587a43bab
-# ╟─c7610b00-7277-46c3-881d-85d417db2e9e
-# ╟─5e7387cc-f9eb-484e-ade7-c844bddeb716
-# ╟─e32d65f1-9bf2-4043-811c-d47801d0f85e
+# ╟─d7a8cbbf-3a3a-4612-8404-57aa867711f2
 # ╟─ef1ad23b-89bc-4b75-9560-4fa4fb96c802
 # ╟─fcd48a38-eca2-44d9-a32e-9dd65c58fb89
 # ╟─4d7ae336-be84-4960-835f-aa81ab91c4e2

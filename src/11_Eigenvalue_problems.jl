@@ -1244,7 +1244,7 @@ if show_outline
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 320)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 370)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2440,7 +2440,7 @@ version = "1.13.0+0"
 # ╟─68b637a4-01a9-41d7-ba10-f629d02fb1a8
 # ╠═104eabba-681f-4371-a17d-199271c14dc4
 # ╟─d0151313-5dcb-4db2-8311-39e0fa96a2b6
-# ╟─8789c420-e2a1-4df5-a046-1a71e6ca005a
+# ╠═8789c420-e2a1-4df5-a046-1a71e6ca005a
 # ╟─9c868c4c-8d20-4e1d-9adf-82f77d479155
 # ╟─71d74b6a-96b2-4855-b20f-59b00c8f560b
 # ╠═6db511ac-a217-49e2-a508-2590b64ea636
