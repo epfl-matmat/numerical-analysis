@@ -360,7 +360,7 @@ end
 # ╔═╡ e2ed03ad-f720-4e29-afdc-1c1c6bc233c0
 md"""
 !!! warning "Example: Using differentiation matrices"
-	In this example we want to test the first-order and second-order differentiation matrices $D_x$ and $D_{xx}$. We consider the following function
+	In this example we want to test the differentiation matrices $D_x$ and $D_{xx}$ for first and second derivatives. We consider the following function
 	```math
 	f_\text{exp} = x + e^{\sin(4x)}
 	```
@@ -416,7 +416,7 @@ end
 
 # ╔═╡ 78cf3006-47c8-48c2-be3a-2a518ff4731d
 md"""
-Since we took a second-order finite difference formula, we would expect a second-order convergence. Plotting the maximal error of the approximated derivative values `dx_fexp_t` respectively `dx2_fexp_t`, that is
+Since we took second-order finite difference formulas in $\mathbf{D}_x$ and $\mathbf{D}_{xx}$, we would expect a second-order convergence. Plotting the maximal error of the approximated derivative values `dx_fexp_t` respectively `dx2_fexp_t`, that is
 ```julia
 maximum(abs.(dx_fexp.(t)  - dx_fexp_t))
 ```
@@ -1010,7 +1010,7 @@ u(a) = γ_a, \quad u(b) &= γ_b,
 \end{aligned}
 \right.
 ```
-where the function $u : [a, b] \to \mathbb{R}$ is the principle unknown. Our approach relied on discretising this problem and employing finite-fifference differentiation matrices instead of exact derivatives.
+where the function $u : [a, b] \to \mathbb{R}$ is the principle unknown. Our approach relied on discretising this problem and employing finite-difference differentiation matrices instead of exact derivatives.
 
 This worked, but the maximal total accuracy was limited due to the increasing condition number of the system matrix $\mathbf{A}$ as we increase the number of subintervals $N$. As a resut it was **impossible to obtain the solution to arbitrary accuracy**.
 """
@@ -1433,7 +1433,8 @@ end
 
 # ╔═╡ 83fdd745-33e1-4e77-80a2-9008b0eb59b8
 md"""
-### Optional: Finite elements
+### Finite elements
+*(We will only discuss this on a high level in this class. You can expect that there will not be any detailed questions on this topic.)*
 
 A widely employed set of basis functions for Galerkin approximations
 are the hat functions $φ_i = H_i$,
