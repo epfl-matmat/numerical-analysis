@@ -50,7 +50,7 @@ In computational science we are often faced with quantitites that change continu
 # ╔═╡ 05ef8174-e9a6-4280-8640-08d74635fba2
 md"""
 !!! warning "Example: Ducks on the Leman"
-	Suppose we want to model the population of ducks on the Leman, i.e. let $u(t)$ denote the number of ducks on the lake at time $t$. To simplify the mdoelling we  allow for "fractional ducks", i.e. we allow $u$ to be any real number.
+	Suppose we want to model the population of ducks on the Leman, i.e. let $u(t)$ denote the number of ducks on the lake at time $t$. To simplify the modelling we  allow for "fractional ducks", i.e. we allow $u$ to be any real number.
 
 	First we assume a constant growth rate $C$ for the number of ducks at any time $t$, i.e. that the number of ducks born minus the number of ducks deceased in one unit of time is proportional to $u(t)$ --- the current population of ducks. This leads to the ordinary differential equation (ODE)
 	```math
@@ -60,9 +60,6 @@ md"""
 		\end{aligned}\right.
 	```
 	where $u_0$ is the initial number of ducks we observed at $t = 0$.
-    In comparison to the general definition shown above
-    we thus have $f(t, u) = C\, u$.
-
 	The solution of this linear equation is
 	```math
 	u(t) = u_0 \, e^{Ct},
@@ -79,11 +76,8 @@ md"""
 		\left\{\begin{aligned}
 		\frac{d u(t)}{d t} &= b\, u(t) - d \, \left(u(t) \right)^2 &&t > 0\\
 		u(0) = u_0
-		\end{aligned}\right.
+		\end{aligned}\right. .
 	```
-	i.e. we have the case of $f(u, t) = b\, u - d \, u^2$
-	when considering the above definition.
-
 	This is the **logistic equation**, which in fact has multiple solutions.
 	The solution relevant for population models has the form
 	```math
@@ -104,10 +98,10 @@ let
 end
 
 # ╔═╡ 1e65223e-9a12-4a4c-8b5e-31bfe4f813ec
-md"""This problem is an example for the a class of problems one calls **initial value problem**, because based on some initial knowledge at $t=0$ one wants to know how a quantity (e.g. here the population) evolves.
+md"""These two problems are examples for the a general class called **initial value problems**, because based on some initial knowledge at $t=0$ one wants to know how a quantity (e.g. here the population) evolves.
 """
 
-# ╔═╡ 64fe575e-0d47-4949-a9e8-2056ddee45df
+# ╔═╡ 7ccda7cc-b5bf-4848-8633-81e32879fae1
 md"""
 !!! info "Definition: Initial-value problem"
 	A scalar, first-order initial value problem (IVP) can be formulated as
@@ -130,6 +124,23 @@ md"""
 	For the specific case where $f(t, u) = g(t) + u h(t)$ for two functions $g$ and $h$ the differential equation (1) is called **linear**.
 
 Often (but not always) $t$ plays the role of time and (1) thus models the time-dependence of a quantity $u$.
+"""
+
+# ╔═╡ 5baad4fc-fe2f-4f48-9183-e8170e9ada8c
+md"""
+!!! warning "Example: Ducks on the Leman (continued)"
+	We compare our two examples to the general definition.
+	- For the first exponential grotwh problem
+	  ```math
+	  \frac{d u(t)}{d t} = C\, u(t) \quad \text{for $t>0$ and $u(0) = u_0$}
+	  ```
+	  we notice $f(t, u) = C\, u$.
+	- For the logistic growth problem 
+	  ```math
+	  \frac{d u(t)}{d t} = b\, u(t) - d \, \left(u(t) \right)^2
+	  \quad \text{for $t>0$ and $u(0) = u_0$}
+	  ```
+	  we identify $f(u, t) = b\, u - d \, u^2$.
 """
 
 # ╔═╡ 1dbe5d72-17d9-4f20-b365-ad913cd607c3
@@ -230,7 +241,7 @@ If you are curious, the precise conditions for existence and uniqueness are give
 """
 
 # ╔═╡ bc840e8d-77d9-4a4a-a908-3e9b4a8d253b
-Foldable("Optional: Theorem governing Existence and uniquens of first-order ODEs",
+Foldable("Optional: Theorem governing Existence and uniquness of first-order ODEs",
 md"""
 !!! info "Theorem 1: Existence and uniquens of first-order ODEs"
 	Given $f : \mathbb{R} \times \mathbb{R} \to \mathbb{R}$ a continuous function
@@ -263,7 +274,9 @@ md"""
 Since the entire time interval $[a, b]$ could be large,
 we will not attempt to solve this problem in one step.
 Instead we will perform a **time discretisation**.
-That is we  split this time interval even further into smaller subintervals $[t_n, t_{n+1}]$ with
+Similar to other techniques discussed in the course
+we will split the time interval $[a, b]$
+into $N$ subintervals $[t_n, t_{n+1}]$ with
 ```math
 a = t_0 < t_1 < \cdots < t_n < t_{n+1} < \cdots t_N = b
 ```
@@ -354,6 +367,7 @@ function forward_euler(f, u₀, a, b, N)
 	# u₀: Initial value
 	# a:  Start of the time interval
 	# b:  End of the time interval
+	# N:  Number of subintervals
 
 	# Discrete time nodes to consider:
     h = (b - a) / N
@@ -458,7 +472,7 @@ end
 md"""
 Forward Euler is just one example of a broader class of so-called **explicit numerical methods** for initial value problems, which broadly speaking differ by the operations performed to obtain $u^{(n+1)}$ from $u^{(n)}$. We denote
 
-!!! info "Explicit methods for solving initial value problems"
+!!! info "Definition: Explicit methods for solving initial value problems"
 	An **explicit method** to solve (1) is a method of the form
 	```math
 	\tag{8}
@@ -568,8 +582,8 @@ More precisely one can formulate:
 	where $C > 0$ and $L > 0$ are constants.
 
 We note:
-- If the local truncation error $τ^{(n)}_h$ converges with order $p$, then the explicit methods also converges globally with order $p$.
-- However, the global error has an **additional prefactor** $(e^{L (t_n-a)} -1)$, which **grows exponentially in time**. This is an effect of the accumulation of error from one time step to the next. In particular if $b \gg a$ or results can get rather inaccurate **even for higher-order methods** beyond Forward Euler where $p > 1$. This point we will pick up in the section on *Stability and implicit methods* below.
+- If the **local truncation error $τ^{(n)}_h$ converges with order $p$**, then the **explicit methods also converges globally with order $p$**.
+- However, the global error has an **additional prefactor** $(e^{L (t_n-a)} -1)$, which **grows exponentially in time**. This is an effect of the accumulation of error from one time step to the next. In particular if $b \gg a$ or results can get rather inaccurate **even for higher-order methods** beyond Forward Euler where $p > 1$. This point we will pick up in the section on [Stability and implicit methods](#Stability-and-implicit-methods) below.
 - For Theorem 2 to hold there are a few more details to consider (e.g. problem (1) should have  a unique solution). More information can be unfolded below.
 """
 
@@ -951,7 +965,7 @@ let
 	res_midpoint = midpoint(f, u₀, tstart, tend, N)
 	res_rk4      = rk4(f, u₀, tstart, tend, N)
 	plot(sol.t, sol.u; label="reference", lw=2, ylabel=L"u(t)", xlabel="",
-	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 0.5), titlefontsize=12)
+	 title=L"\frac{du}{dt} = \sin((t+u)^2)", ylims=(-2, 0.5), titlefontsize=12, legend=:topright)
 	plot!(res_euler.t, res_euler.u; label="Euler", mark=:o, lw=2, ls=:dash, markersize=3)
 	plot!(res_midpoint.t, res_midpoint.u; label="Midpoint", mark=:o, lw=2, ls=:dash, markersize=3)
 	p = plot!(res_rk4.t, res_rk4.u; label="RK4", mark=:o, lw=2, ls=:dash, markersize=3)
@@ -1070,6 +1084,7 @@ Let us consider the innocent looking initial value problem
 u(0) &= 10.
 \end{aligned}\right.
 ```
+with $C>0$.
 This model governs for example the decay of a radioactive species with initial concentration $10$ over time. The rate of decay is $C$ ≈  $(round(C; sigdigits=3)).
 
 By simple integration we find the exact solution of this problem as:
@@ -1119,42 +1134,55 @@ the numerical methods are **all qualitatively wrong**:
 instead of the reproducing the correct long-time limit numerically,
 i.e. $\lim_{n\to\infty} u^{(n)} = 0$,
 the numerical solution actually grows over time.
+
+Notice, that this growth of error is already contained in Theorem 2.
+Below the formulation of this theorem we already discussed that the global error contains an exponentially growing factor $(e^{L (t_n-a)} -1) = e^{L\,hn} -1$, which thus may cause the error to grow in time --- exactly what we observe here.
 """
 
-# ╔═╡ 32eca5ea-5f0f-49ef-ae5f-b9e47e3d8dce
+# ╔═╡ 89d6904a-b3b4-4743-8313-7479004032e3
 md"""
-Recall that in Theorem 2 we found that the global error satisfies
+Let us investigate this situation more closely for the forward Euler method (7). For a given stepsize $h$ the forward Euler method computes the sequence
 ```math
-|e^{(n)}| ≤ \frac{C h^p}{L} \left(e^{L (t_n-a)} -1 \right)
-= \frac{C h^p}{L} \left(e^{L\,hn} -1 \right).
+u^{(n+1)} = u^{(n)} + h\, f(t_n, u^{(n)}) = u^{(n)} - h\,C\,u^{(n)}
+= (1-hC)\,u^{(n)}
 ```
-In the limit of infinite time,
-i.e. $n\to \infty$, the upper bound on the RHS thus grows exponentially.
-This bound is in general pessimistic, i.e. not all numerical methods may actually reproduce the exponentially increasing error behaviour, but it clearly shows that unless one demands additional properties from a method for solving IVPs, one may fail to reproduce a limiting behaviour like $\lim_{t\to\infty} u(t) = 0$.
+To achieve a condition $\lim_{n\to\infty} u^{(n)} = 0$ we thus necessarily require
+that $-1 < 1 - hC < 1$ or rearranged differently that
+```math
+-1 < 1 - hC < 1 \quad \Leftrightarrow \quad
+-2 < -hC < 0 \quad \Leftrightarrow \quad
+0 < h < \frac{2}{C},
+```
+since $C>0$. Keeping in mind that $h = \frac{b-a}{N}$ where $N$ is the number of subintervals one similarly has
+```math
+\tag{19}
+h = \frac{b-a}{N} < \frac{2}{C} \quad \Leftrightarrow \quad
+N > \frac{C\,(b-a)}{2}
+```
+
+For our example with $C ≈ 6.31$, $a=0$ and $b=10$ this implies $N$ larger than $(round(C*(dcy_tend-dcy_tstart)/2; sigdigits=3)), which explains the condition we chose to switch the axis limits in the plot above.
 """
 
-# ╔═╡ d0d3e3c4-244a-4224-a7ce-8bd12f461989
+# ╔═╡ a4637a7a-20cf-4cbe-a0fc-b745fd63d0d3
 md"""
-Without going into further details the property we ask for is called **stability**:
+We notice that some IVP algorithms only reproduce a limit $\lim_{n\to\infty} u^{(n)} = 0$ if additionally conditions such as (19) on the time step $h$, respectively $N$ are satisfied. Such conditions are called **stability conditions**. We define formally:
+"""
 
+# ╔═╡ 6d45e5a9-251d-4e76-9f2c-c2ba1c243134
+md"""
 !!! info "Definition: Absolute stability"
 	Given an initial value problem (1) with exact solution $u(t)$ satisfying
 	$\lim_{t\to\infty} u(t) = u_\ast$ for any initial condition $u_0$. In other words we have a problem where the solution converges to $u_\ast$ independent of the initial value $u_0$.
 
-	Then a numerical method is called **absolutely stable** for a fixed stepsize $h$ if
+	Then a numerical method is called **absolutely stable** if for a given stepsize $h$
 	```math
 	\lim_{n\to\infty} u^{(n)} = u_\ast \qquad \text{for any } u_0.
 	```
+	Conditions on the stepsize $h$ (respectively subinterval number $N$) which ensure such a limit is attained are called **stability conditions**.
 
 	A method is further called **unconditionally absolutely stable** if it is stable for all $h > 0$.
 
-In the case of our decay problem, one can show for example that the forward Euler method is absolutely stable if
-```math
-h < \frac{2}{C},
-```
-which explains the condition we chose to switch the axis limits in the plot above.
-
-We also observe that **none of our explicit methods is unconditionally absolutely stable**.
+We observe that **none of our explicit methods is unconditionally absolutely stable**.
 """
 
 # ╔═╡ 87e9f852-ab54-4b89-9342-7e7ec3c4603d
@@ -1197,7 +1225,7 @@ we obtain from (20) and (21):
 \tag{22}
 \frac{u^{(n+1)} - u^{(n)}}{h} = f(t_{n+1}, u^{(n+1)}), \qquad\forall n = 0, \ldots, N-1,
 ```
-which is the **Backwards Euler method**.
+which is the **Backward Euler method**.
 """
 
 # ╔═╡ ce7556eb-55b4-4188-b058-6c2c595c2ec8
@@ -1229,15 +1257,49 @@ In summary our algorithm becomes:
 # ╔═╡ 5075f5e4-af28-4a93-b8e6-d71f96cf2b89
 md"""An implementation of Backward Euler employing Newton's method to solve the fixed-point problem is given below. The implementation of Newton's method is repeated in the  appendix."""
 
+# ╔═╡ 2a79b6a2-f5b5-4bb2-9dec-03612d3cbb8d
+md"""
+We again solve our radioactive decay initial value problem from earlier
+```math
+\left\{
+\begin{aligned}
+\frac{d u(t)}{d t} &= -Cu(t) && t > 0 \\
+u(0) &= 10.
+\end{aligned}\right.
+```
+with $C>0$ using both forward and backward Euler:
+"""
+
 # ╔═╡ 37bb847f-aa6b-4efe-8538-e580159d2892
 md"""
 - `Nbw = ` $(@bind Nbw Slider(15:5:40; show_value=true, default=15) )
 """
 
-# ╔═╡ e031fb26-dc5e-44e9-ba4c-a642c62b7930
+# ╔═╡ 01436981-ef93-484b-9c51-facd5353751f
 md"""
-While Forward Euler stays absolutely stable only for large values of `Nbw` (respectively small values of $h$), Backward Euler stays stable no matter what value of `Nbw` is chosen.
+We find that while Forward Euler stays absolutely stable only for large values of `Nbw` (respectively small values of $h$), Backward Euler stays stable no matter what value of `Nbw` is chosen.
 
+Similar to the Forward Euler case we want to understand this by considering the sequence of function values $u^{(n)}$ produced by the Backward Euler algorithm.
+We insert the definition $f(t, u) = -C u$ for the radioactive decay problem into Equation (22). With this we find
+```math
+\begin{aligned}
+\frac{u^{(n+1)} - u^{(n)}}{h} = f(t_{n+1}, u^{(n+1)})
+\quad&\Leftrightarrow\quad
+\frac{u^{(n+1)} - u^{(n)}}{h} = -C u^{(n+1)}\\
+&\Leftrightarrow\quad
+(u^{(n+1)} - u^{(n)}) = -C\,h\, u^{(n+1)} \\
+&\Leftrightarrow\quad
+(1 + C\,h)\,u^{(n+1)} = u^{(n)} \\
+&\Leftrightarrow\quad u^{(n+1)} = \frac{1}{1 + C\,h} u^{(n)}
+\end{aligned}
+```
+Since $C > 0$ and $h>0$ we have $\frac{1}{1 + C\,h} < 1$, such that $\lim_{n\to\infty} u^{(n)} = 0$ as required
+independent of the choice of $h$.
+**Backward Euler is unconditionally absolutely stable**.
+"""
+
+# ╔═╡ 1102a66c-e877-449f-b06b-7b8d86c54042
+md"""
 Let us conclude by mentioning that similar to Forward Euler, **Backward Euler** is also only a **first order method**. Higher-order implicit methods can also be constructed. E.g. the Runge-Kutta family of methods can be extended to the implicit setting as well. An example is the [Crank–Nicolson method](https://en.wikipedia.org/wiki/Crank%E2%80%93Nicolson_method), a second-order implicit Runge-Kutta method.
 
 In standard libraries, such as DifferentialEquatios.jl a [zoo of ODE methods](https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/) is typically available.
@@ -1405,18 +1467,18 @@ end
 # ╔═╡ 366477ed-5532-44fa-97e0-fc0ab564fabe
 md"""## Appendix"""
 
-# ╔═╡ d3855794-f57d-4fc5-bf97-63ce44582139
-function newton(f, df, xstart; maxiter=40, tol=1e-6)
-	# f:  Function of which we seek the roots
-	# df: Function, which evaluates its derivatives
+# ╔═╡ dc0eceb4-ae43-470e-bffe-77059e173783
+function newton(f, jac, xstart; maxiter=40, tol=1e-8) 
+	# f: Function of which we seek the roots
+	# jac: Function, which evaluates its Jacobian or derivative
 	# xstart: Start of the iterations
 	# maxiter: Maximal number of iterations
 	# tol: Convergence tolerance
-
 	history_x = [float(xstart)]
 	history_r = empty(history_x)
 
-	r = Inf  # Dummy to enter the while loop
+	r = Inf     # Dummy to enter the while loop
+	x = xstart  # Initial iterate
 	k = 0
 
 	# Keep running the loop when the residual norm is beyond the tolerance
@@ -1424,17 +1486,16 @@ function newton(f, df, xstart; maxiter=40, tol=1e-6)
 	while norm(r) ≥ tol && k < maxiter
 		k = k + 1
 		
-		# Pick most recent entry from history_x (i.e. current iterate)
-		x = last(history_x)
-
-		# Evaluate function, gradient and residual
-		r = - f(x) / df(x)
+		y = f(x)      # Step 1: Compute function value
+		A = jac(x)    # Step 1: Compute Jacobian
+		r = -(A \ y)  # Step 2: Newton step; obtain residual
+		x = x + r     # Step 3: Form next iterate
 		
-		push!(history_r, r)      # Push residual and
-		push!(history_x, x + r)  # next iterate to history
+		push!(history_r, r)  # Push newton step and
+		push!(history_x, x)  # next iterate to history
 	end
 
-	(; root=last(history_x), n_iter=k, history_x, history_r)
+	(; root=x, n_iter=k, history_x, history_r)
 end
 
 # ╔═╡ 7867834d-e5d5-4ae5-946b-8ea6ec6a91c9
@@ -4438,7 +4499,8 @@ version = "1.13.0+0"
 # ╟─05ef8174-e9a6-4280-8640-08d74635fba2
 # ╠═31332dd6-1ef2-4181-a638-35980f470552
 # ╟─1e65223e-9a12-4a4c-8b5e-31bfe4f813ec
-# ╟─64fe575e-0d47-4949-a9e8-2056ddee45df
+# ╟─7ccda7cc-b5bf-4848-8633-81e32879fae1
+# ╟─5baad4fc-fe2f-4f48-9183-e8170e9ada8c
 # ╟─1dbe5d72-17d9-4f20-b365-ad913cd607c3
 # ╟─6c2f1cd1-e79a-4790-9871-0a8825b5c02e
 # ╠═8f159939-4bf4-4151-bd3e-a84c5e1493db
@@ -4510,17 +4572,20 @@ version = "1.13.0+0"
 # ╟─1f1af0d4-3c5d-4e38-9eda-c307100bd61f
 # ╟─e4fa9b2d-8a81-4439-84ff-8529a7421ae9
 # ╟─c064f18b-c70c-4192-b1ea-0a1503ffceef
-# ╟─32eca5ea-5f0f-49ef-ae5f-b9e47e3d8dce
-# ╟─d0d3e3c4-244a-4224-a7ce-8bd12f461989
+# ╟─89d6904a-b3b4-4743-8313-7479004032e3
+# ╟─a4637a7a-20cf-4cbe-a0fc-b745fd63d0d3
+# ╟─6d45e5a9-251d-4e76-9f2c-c2ba1c243134
 # ╟─87e9f852-ab54-4b89-9342-7e7ec3c4603d
 # ╟─54953db0-2b39-4231-b800-e846db8d58eb
 # ╟─ce7556eb-55b4-4188-b058-6c2c595c2ec8
 # ╟─378d9f4f-7e11-44f8-a0e0-847945ce6774
 # ╟─5075f5e4-af28-4a93-b8e6-d71f96cf2b89
 # ╠═58f37900-0e6a-4d00-adb3-ec82cbfbcf4c
+# ╟─2a79b6a2-f5b5-4bb2-9dec-03612d3cbb8d
 # ╟─37bb847f-aa6b-4efe-8538-e580159d2892
 # ╠═cceb1700-55fc-4e5a-a2f2-81137fad5c1f
-# ╟─e031fb26-dc5e-44e9-ba4c-a642c62b7930
+# ╟─01436981-ef93-484b-9c51-facd5353751f
+# ╟─1102a66c-e877-449f-b06b-7b8d86c54042
 # ╟─35b8a591-62ea-4836-aa02-e1aaa584621d
 # ╠═6b5ac847-ea65-4d44-9379-5cc755908521
 # ╟─d8e1eb69-9f8f-47c3-a3f8-bf7f725959de
@@ -4535,7 +4600,7 @@ version = "1.13.0+0"
 # ╟─828d31d2-6816-47fa-8789-fe370e1deb06
 # ╟─366477ed-5532-44fa-97e0-fc0ab564fabe
 # ╠═7867834d-e5d5-4ae5-946b-8ea6ec6a91c9
-# ╠═d3855794-f57d-4fc5-bf97-63ce44582139
+# ╠═dc0eceb4-ae43-470e-bffe-77059e173783
 # ╟─2a43fc36-80b9-4f4e-bcf0-06296277ddac
 # ╟─403993d0-1613-4ac1-a527-9362993e28e6
 # ╟─00000000-0000-0000-0000-000000000001
