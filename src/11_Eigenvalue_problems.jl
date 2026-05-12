@@ -185,7 +185,7 @@ A * x
 begin
 	history = [x]
 	for j in 1:6
-		x = A * x
+		x = A * x   # Overwrite x by A*x
 		push!(history, x)
 		@printf "Iteration %i:  x = [%12.4f, %12.4f]\n" j x[1] x[2]
 	end
@@ -208,7 +208,10 @@ let
 end
 
 # ╔═╡ db0c875b-9955-4bc1-bdb1-ec2e1a44942d
-md"""Note how the iterations stabilise, i.e. that $\textbf{x}$ and $\textbf{A} \textbf{x}$ start to be alike. In other words we seem to achieve $\mathbf{A} \mathbf{x} = \mathbf{x}$, which is nothing else than saying that $\mathbf{x}$ is an eigenvector of $\mathbf{A}$ with eigenvalue $1$.
+md"""
+In the iterations we keep overwriting $\mathbf x$ by $\mathbf A \mathbf x$.
+
+Already after $6$ iterations the iterations stabilise, i.e. we obtain that the input vector $\textbf{x}$ of the $6$-th iteration and the output $\textbf{A} \textbf{x}$ start to be alike. In other words we seem to achieve $\mathbf{A} \mathbf{x} = \mathbf{x}$, which is nothing else than saying that $\mathbf{x}$ is an eigenvector of $\mathbf{A}$ with eigenvalue $1$.
 """
 
 # ╔═╡ 73c62d23-ac2a-48be-b3c7-0d51ffce773c
@@ -331,7 +334,7 @@ But this time this does not work ... unless `λₙ` happens to be 1.0.
 
 - This can be understood looking at equation (2): if $λ_n > 1.0$,
   then $λ_n^k$ becomes extremely large, such that $\mathbf{A}^k \mathbf{x}^{(1)}
-  ≈ λ_n^k z_n \mathbf v^k$, which grows significantly from one iteration to the next,
+  ≈ λ_n^k z_n \mathbf v_k$, which grows significantly from one iteration to the next,
   such that no stabilisation is achieved.
   Similarly if $λ_n < 1.0$ then as $k\to \infty$ the $λ_n^k$ becomes smaller
   and smaller.
@@ -375,7 +378,18 @@ let
 end;
 
 # ╔═╡ a11825e7-9ee5-416c-b170-edd1c5eb746c
-md"We also note in passing that $\|x\|_\infty$ seems to converge to the dominant eigenvalue."
+md"""
+We also note in passing that $\|x\|_\infty$ seems to converge to the dominant eigenvalue.
+"""
+
+# ╔═╡ 0174f991-559c-48b3-b59a-f3b8a9f5ff89
+Foldable("Aside: Why use the infinity norm and not the standard Euclidean norm for normalisation ?",
+md"""
+One may wonder why we employ the $‖\mathbf x^{(k)}‖_\infty$ norm for normalising the vectors
+instead of using the Euclidean norm $‖\mathbf x^{(k)}‖_2 = \sqrt{\sum_{i=0}^n \left(x^{(k)}_i\right)^2}$ as we did in previous discussions. There are two reasons:
+- While $\|\mathbf x^{(k)}\|_\infty$ converges to the dominant eigenvalue, $\|\mathbf x^{(k)}\|_2$ does not, so computing $\|\mathbf x^{(k)}\|_\infty$ for the purpose of normalisation *also* provides us direct access to an estimate of the largest eigenvalue as we will see in more detail below.
+- The convergence proof we will discuss for the power method after equation (4) is more cumbersome if we use the $\|\mathbf x^{(k)}\|_2$ norm.
+""")
 
 # ╔═╡ b69a8d6c-364a-4951-afd9-24588ac10b64
 md"""
@@ -392,7 +406,7 @@ Keeping this in mind we formulate the algorithm
     1. Set $\mathbf y^{(k)} = \mathbf A \, \mathbf x^{(k)}$
     2. Find the index $m$ such that $\left|y_m^{(k)}\right| = \left\|y^{(k)}\right\|_\infty$
     3. Compute $α^{(k)} = \frac{1}{y^{(k)}_m}$ and set $β^{(k)} = \frac{y^{(k)}_m}{x^{(k)}_m}$ *(see below why)*
-    4. Set $\mathbf x^{(k+1)} = α^{(k)} \mathbf y^{(k)}$ *(Normalisation)*
+    4. Set $\mathbf x^{(k+1)} = α^{(k)} \mathbf y^{(k)}$ *(Normalisation; the largest entry of $\mathbf x^{(k+1)}$ is now $1$)*
 
     We obtain $β^{(k)}$ as the estimate to the dominant eigenvalue
     and $\mathbf x^{(k)}$ as the estimate of the corresponding eigenvector.
@@ -1244,7 +1258,7 @@ if show_outline
 	RobustLocalResource("https://teaching.matmat.org/numerical-analysis/sidebar.md", "sidebar.md")
 	Sidebar(toc, ypos) = @htl("""<aside class="plutoui-toc aside indent"
 		style='top:$(ypos)px; max-height: calc(100vh - $(ypos)px - 55px);' >$toc</aside>""")
-	Sidebar(Markdown.parse(read("sidebar.md", String)), 370)
+	Sidebar(Markdown.parse(read("sidebar.md", String)), 375)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2468,6 +2482,7 @@ version = "1.13.0+0"
 # ╟─b728388d-e6e4-475a-adce-149b2b53a1d4
 # ╠═2425ae53-d861-47f7-9f86-750cf4f363c1
 # ╟─a11825e7-9ee5-416c-b170-edd1c5eb746c
+# ╟─0174f991-559c-48b3-b59a-f3b8a9f5ff89
 # ╟─b69a8d6c-364a-4951-afd9-24588ac10b64
 # ╟─4ebfc860-e179-4c76-8fc5-8c1089301078
 # ╠═01186225-602f-4637-99f2-0a6dd569a703

@@ -1453,6 +1453,9 @@ H_i(x) = \left\{ \begin{array}{ll}
 \end{array}\right.
 ```
 for $i = 0, \ldots, n$.
+
+As a reminder on the shape of the hat functions,
+here we show the functions $H_0, H_1, H_2$ and $H_3$ for $n=3$, $a=0$ and $b=1$, i.e. the discretisation interval $[0, 1]$.
 """
 
 # ╔═╡ 57d511cc-aaae-42b3-80ec-7caf7d6f68ac
@@ -1477,8 +1480,10 @@ and are thus excluded.
 
 # ╔═╡ 40c8b1a5-b61c-4af2-8b4b-f8b2b5e182dc
 md"""
-The importance of the hat functions for Galerkin methods stems from the fact that each hat function $H_i(x)$ is only non-zero in the interval $[x_\textcolor{red}{i-1}, x_\textcolor{red}{i+1}]$.
-As a result when evaluating the integrals (18) as part of the Galerkin conditions one never has to integrate over the entire domain $[a, b]$, but only a much smaller subset of this interval where the involved hat functions are non-zero
+#### Derivation of the Galerkin conditions
+
+The importance of the hat functions for Galerkin methods stems from the fact that **each hat function $H_i(x)$ is only non-zero in the interval $[x_\textcolor{red}{i-1}, x_\textcolor{red}{i+1}]$**.
+As a result when evaluating the integrals (18) as part of the Galerkin conditions one **never has to integrate over the entire domain** $[a, b]$, but only a much smaller subset of this interval where the involved hat functions are non-zero
 --- a noteworthy reduction of the computational effort.
 """
 
@@ -1487,9 +1492,17 @@ md"""
 As an example consider the evaluation of the elements of the matrix $\mathbf{K} \in \mathbb{R}^{m\times m} = \mathbb{R}^{(n-1) \times (n-1)}$.
 First note that the derivatives $H'_{i}$ are non-zero only where $H_{i}$
 itself is non-zero, i.e. $[x_{i-1}, x_{i+1}]$.
-Therefore the product $H'_{i}\, H'_{j}$
+Therefore the **product $H'_{i}\, H'_{j}$
 is only non-zero in the intersection
-of $[x_{i-1}, x_{i+1}]$ and $[x_{j-1}, x_{j+1}]$.
+of $[x_{i-1}, x_{i+1}]$ and $[x_{j-1}, x_{j+1}]$**.
+"""
+
+# ╔═╡ 39bc4332-4a6b-4b08-8470-8421f31c8cc1
+md"""
+Use the sliders to illustrate this based on the hat function basis for $n=5$ subintervals:
+
+- `i = ` $(@bind plt_i Slider(1:4, show_value=true, default=2))
+- `j = ` $(@bind plt_j Slider(1:4, show_value=true, default=3))
 """
 
 # ╔═╡ e72ea328-9ab3-4fc1-ad80-59091074c6f5
@@ -1527,12 +1540,12 @@ Unless we are lucky and $κ(x)$ is a particularly simple function,
 evaluating this integral is not feasible
 analytically and requires numerical integration.
 
-However, since in the constructed finite-element approach we are using hat functions $H_i$ as the basis functions we are constructing effectively a piecewise linear approximation to the solution $u$. As we saw in [chapter 7 on interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html), piecewise polynomial interpolation at most achieves second-order convergence to the true function $u$ as  $h\to0$.
+However, since in this finite-element approach we are using **hat functions $H_i$ as basis functions** we are constructing a **piecewise linear approximation of the solution $u$**. As we saw in [chapter 7 on interpolation](https://teaching.matmat.org/numerical-analysis/07_Interpolation.html), piecewise polynomial interpolation at most achieves second-order convergence to the true function $u$ as  $h\to0$.
 As one can prove this second-order convergence is
-retained if one makes an additional approximation,
+retained if one makes an **additional approximation**,
 namely within each subinterval $[x_{i-1}, x_i]$ and $[x_{i}, x_{i+1}]$
-we replace the value of the functions $κ(x)$, $σ(x)$ and $f(x)$
-by their respective average, e.g.
+we replace the **value of the functions $κ(x)$, $σ(x)$ and $f(x)$
+by their respective average**, e.g.
 ```math
 \tag{27}
 \overline{κ}_{i} = \frac{κ(x_{i-1}) + κ(x_{i})}{2}.
@@ -1711,6 +1724,8 @@ end
 
 # ╔═╡ c6380ce5-83b7-4db4-9bd6-257e1b215b52
 md"""
+#### Example: Dirichlet heat equation
+
 To apply this algorithm we return to the Dirichlet heat equation
 ```math
 \left\{
@@ -1757,8 +1772,24 @@ end
 
 # ╔═╡ 8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
 md"""
+### Finite element examples
+
 The finite element method is one of the most widely employed approaches in science and engineering to solve differential equations. With this short introduction we only scratched the surface.
+See for example the wikipedia article on [Finite Element Methods](https://en.wikipedia.org/wiki/Finite_element_method) for some interesting technical application.
+
+For example, the modelling of the tress of a knee joint:
 """
+
+# ╔═╡ 4d17619e-c3d6-467c-9a0a-366d9a6c5196
+RemoteResource("https://upload.wikimedia.org/wikipedia/commons/3/3b/Human_knee_joint_FE_model.png")
+
+# ╔═╡ cac1d10f-f32f-43e0-8678-8c9e2aecd87e
+md"""
+or the temperature field in a cavity:
+"""
+
+# ╔═╡ 722c4115-9b73-4570-99d3-13d289b7171e
+RemoteResource("https://upload.wikimedia.org/wikipedia/commons/6/6e/Temperature_Field.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original")
 
 # ╔═╡ 5f23627d-1d8e-4705-a9b8-155bb745cca9
 md"""
@@ -1790,6 +1821,78 @@ function hatfun(nodes, i)
 			return 0
 		end
 	end
+end
+
+# ╔═╡ d59b03ed-91d8-4a5b-871e-90c0a0c254be
+let
+	nodes = [0.0, 0.3333, 0.666666, 1.0]
+
+	p = plot(; layout=(4, 1), xlabel=L"x", ylims=[-0.1, 1.1], ytick=[0.0, 1.0])
+	for i in 1:length(nodes)
+		Hᵢ = hatfun(nodes, i)
+		plot!(p, Hᵢ, 0, 1; subplot=i, label=LaTeXString("\$H_$(i-1)\$"), lw=2, c=i)
+		for (ii, node) in enumerate(nodes)
+			scatter!(p, [node], [Hᵢ(node)]; subplot=i, c=ii, label="")
+		end
+		xticks!(p, nodes, [L"a = x_0", L"x_1", L"x_2", L"x_3 = b"])
+	end
+	
+	p
+end
+
+# ╔═╡ 3fb0e5c2-be45-4ff5-87b3-9234d34a18a6
+let
+	# Derivative of hat functions
+	function dhatfun(nodes, i)
+		n = length(nodes) - 1
+		return function (x)
+			if i > 1 && nodes[i-1] ≤ x ≤ nodes[i]
+				return 1 / (nodes[i] - nodes[i-1])
+			elseif i ≤ n && nodes[i] ≤ x ≤ nodes[i+1]
+				return -1 / (nodes[i+1] - nodes[i])
+			else
+				return 0
+			end
+		end
+	end
+
+	nodes = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+	p = plot(hatfun(nodes, plt_i+1), 0, 1; layout=(2, 1),
+			 label=LaTeXString("\$H_$(plt_i)\$"), lw=2, ls=:dash, c=1)
+	plot!(p, hatfun(nodes, plt_j+1), 0, 1;
+		  label=LaTeXString("\$H_$(plt_j)\$"), lw=2, ls=:dash, c=2)
+	plot!(p, x -> hatfun(nodes, plt_i+1)(x) * hatfun(nodes, plt_j+1)(x), 0, 1;
+		  label=LaTeXString("\$H_$(plt_i) \\cdot H_$(plt_j) \$"), lw=2, c=3)
+	
+	plot!(p, dhatfun(nodes, plt_i+1), 0, 1; subplot=2,
+			 label=LaTeXString("\$H'_$(plt_i)\$"), lw=2, ls=:dash, c=1)
+	plot!(p, dhatfun(nodes, plt_j+1), 0, 1; subplot=2,
+		  label=LaTeXString("\$H'_$(plt_j)\$"), lw=2, ls=:dash, c=2)
+	plot!(p, x -> dhatfun(nodes, plt_i+1)(x) * dhatfun(nodes, plt_j+1)(x), 0, 1;
+		  subplot=2, ylims=(-26, 26),
+		  label=LaTeXString("\$H'_$(plt_i) \\cdot H'_$(plt_j) \$"), lw=2, c=3)
+	
+
+	xticks!(p, nodes, [L"a = x_0", L"x_1", L"x_2", L"x_3", L"x_4", L"x_5 = b"])
+	p
+
+	#=
+	
+
+	p = plot(; layout=(4, 1), xlabel=L"x", ylims=[-0.1, 1.1], ytick=[1.0])
+	for i in 1:length(nodes)
+		Hᵢ = hatfun(nodes, i)
+		plot!(p, Hᵢ, 0, 1; subplot=i, label=LaTeXString("\$H_$(i-1)\$"), lw=2, c=i)
+		for (ii, node) in enumerate(nodes)
+			scatter!(p, [node], [Hᵢ(node)]; subplot=i, c=ii, label="")
+		end
+	end
+	p
+
+
+		
+
+	=#
 end
 
 # ╔═╡ 25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
@@ -3113,9 +3216,12 @@ version = "1.13.0+0"
 # ╟─4fee47fc-077d-4921-8572-7820ab84988e
 # ╠═1d55c98e-4ed9-4ac4-a847-b18432483472
 # ╟─83fdd745-33e1-4e77-80a2-9008b0eb59b8
+# ╟─d59b03ed-91d8-4a5b-871e-90c0a0c254be
 # ╟─57d511cc-aaae-42b3-80ec-7caf7d6f68ac
 # ╟─40c8b1a5-b61c-4af2-8b4b-f8b2b5e182dc
 # ╟─4de7a48b-e825-4115-9269-edcbcaace19a
+# ╟─39bc4332-4a6b-4b08-8470-8421f31c8cc1
+# ╟─3fb0e5c2-be45-4ff5-87b3-9234d34a18a6
 # ╟─e72ea328-9ab3-4fc1-ad80-59091074c6f5
 # ╟─153850e9-8b5c-45f2-a27f-0cf0b7389b21
 # ╟─64977b68-8822-43e2-b2de-06b83b8a64e8
@@ -3130,6 +3236,9 @@ version = "1.13.0+0"
 # ╠═1c8966d7-8a12-4b25-9c51-93dea0faeb14
 # ╟─25b07bb7-3ed3-4c7e-bbd6-d74c6a094127
 # ╟─8fc6ab34-4c99-4764-a58e-8ad300f3a6ff
+# ╟─4d17619e-c3d6-467c-9a0a-366d9a6c5196
+# ╟─cac1d10f-f32f-43e0-8678-8c9e2aecd87e
+# ╟─722c4115-9b73-4570-99d3-13d289b7171e
 # ╟─5f23627d-1d8e-4705-a9b8-155bb745cca9
 # ╠═27fb5fde-566d-481b-b0d6-41c78c198eac
 # ╟─a9e95236-ed7d-4f1b-a5c3-048ca0fd7828
