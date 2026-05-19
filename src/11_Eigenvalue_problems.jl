@@ -25,6 +25,7 @@ begin
 	using LaTeXStrings
 	using HypertextLiteral
 	using Printf
+	using Random
 end
 
 # ╔═╡ 34beda8f-7e5f-42eb-b32c-73cfc724062e
@@ -821,26 +822,8 @@ From this value we can deduce $λ_1$, since we know $σ$.
 In other words by **applying Algorithm 1** to the
 **shift-and-invert matrix** $(\mathbf A - σ \mathbf I)^{-1}$
 enables us to find the **eigenvalue of $\mathbf A$ closest to $σ$**.
-"""
 
-# ╔═╡ 29a4d3a6-29e0-4067-b703-43da5171f7bf
-md"""
-A naive application of Algorithm 1 would first compute $\mathbf{P} = (\mathbf A - σ \mathbf I)^{-1}$ and then apply 
-```math
-\mathbf y^{(k)} = \mathbf{P} \mathbf x^{(k)}
-```
-in each step of the power iteration.
-However, for many problems the explicit computation of the inverse
-$\mathbf{P}$ is numerically unstable.
-Instead of computing $\mathbf{P}$ explicitly
-one instead obtains $\mathbf y^{(k)}$ by **solving a linear system**
-```math
-(\mathbf A - σ \mathbf I) \, \mathbf y^{(k)} = \mathbf x^{(k)}
-```
-for $\mathbf y^{(k)}$,
-which is done **using LU factorisation**.
-We arrive at the following algorithm,
-where the changes compared to Algorithm 1 are marked in red.
+This leads to
 """
 
 # ╔═╡ 49838e6f-63c2-4494-a5d8-9e3dd25554d3
@@ -859,16 +842,25 @@ md"""
      4. Set $\mathbf x^{(k+1)} = α^{(k)} \mathbf y^{(k)}$
 """
 
+# ╔═╡ 29a4d3a6-29e0-4067-b703-43da5171f7bf
+md"""
+Notice, that compared to a naive application of Algorithm 1 to a precomputed matrix $\mathbf{P}$ with $\mathbf{P} = (\mathbf A - \sigma \mathbf I)^{-1}$, this algorithm features two differences, which are marked in red.
+
+First, in step 1, instead of computing the shifted inverse $\mathbf{P} = (\mathbf A - σ \mathbf I)^{-1}$ as a matrix and then in the iterations apply $\mathbf{P}$ to vectors $\mathbf x^{(k)}$, we instead obtain $\mathbf y^{(k)}$ by **solving a linear system**
+```math
+(\mathbf A - σ \mathbf I) \, \mathbf y^{(k)} = \mathbf x^{(k)}
+```
+in each iteration of Algortihm 2 **using LU factorisation**. The main reason for doing this is that an explicit computation of the inverse $\mathbf{P}$ as a matrix is numerically less stable than solving linear systems.
+"""
+
 # ╔═╡ 3e0e12ad-4d09-4128-9175-14e71c7de5a2
 md"""
-Note the additional change in step 3: In Algorithm 1 we obtained the estimate of the dominant eigenvalue as $y^{(k)}_m / x^{(k)}_m$.
-Here this estimate approximates $\frac 1 {λ_1 - σ}$, the dominant eigenvalue of $(\mathbf A - σ \mathbf I)^{-1}$.
-Therefore an estimate of $λ_1$ itself is obtained by solving
+Second, in step 3, we adapt our formula for estimating the eigenvalue to account for the spectral transformations we do in the inverse iterations. As Algorithm 2 computes the eigenvalues of the matrix $\mathbf A$ to $(\mathbf{A} - \sigma \mathbf I)^{-1}$, the ratio $y^{(k)}_m / x^{(k)}_m$ we employed in Algorithm 1 ends up converging to the dominant eigenvalue of $(\mathbf{A} - \sigma \mathbf I)^{-1}$. If we assume this dominant eigenvalue to be $\frac 1 {λ_1 - σ}$, than we have
 ```math
 \frac {y^{(k)}_m} {x^{(k)}_m} = \frac 1 {λ_1 - σ} \quad\Longrightarrow\quad
-λ_1 = σ + \frac{x^{(k)}_m}{y^{(k)}_m}
+λ_1 = σ + \frac{x^{(k)}_m}{y^{(k)}_m}.
 ```
-for $λ_1$, which yields exactly the expression shown in step 3 of Algorithm 2.
+In other words the expression of step 3 in Algorithm 2 ensures that the eigenvalue estimate we report as $β^{(k)}$ is an approximate eigenvalue of $\mathbf A$.
 
 An implementation of this algorithm is given in:
 """
@@ -934,7 +926,7 @@ Since it has no unique dominant eigenvalue ($|λ_1| = |λ_2| = 4$)
 
 # ╔═╡ fe15a206-e650-4d59-962c-a00bc226bf48
 let
-	xinit = randn(size(C, 2))
+	xinit = randn(Xoshiro(2349), size(C, 2))
 	res = power_method(C, xinit; maxiter=30)
 
 	plot(res.history; mark=:o, c=1, label="", lw=1.5, ylabel=L"β^{(k)}", xlabel=L"k",
@@ -1271,6 +1263,7 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 HypertextLiteral = "~1.0.0"
@@ -1286,7 +1279,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.4"
 manifest_format = "2.0"
-project_hash = "2edee8875767210044492f2c9213053eeb3bc5ea"
+project_hash = "977faf6405e352dfac38b4aa6bd2364bce75ec00"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -2518,8 +2511,8 @@ version = "1.13.0+0"
 # ╟─5ea67b6d-a297-403e-bb3e-e69f647f90a8
 # ╟─9b32cc52-b74d-49fe-ba3f-192f5efc4ef2
 # ╟─36dc90e6-fd8a-4c88-a816-140b663532ef
-# ╟─29a4d3a6-29e0-4067-b703-43da5171f7bf
 # ╟─49838e6f-63c2-4494-a5d8-9e3dd25554d3
+# ╟─29a4d3a6-29e0-4067-b703-43da5171f7bf
 # ╟─3e0e12ad-4d09-4128-9175-14e71c7de5a2
 # ╠═4873fe3b-d411-4e06-92b3-8cfbed493a12
 # ╟─67d258d1-9959-46ad-9f13-2bc9abb4da37
