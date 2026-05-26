@@ -1073,8 +1073,8 @@ md"""... and try it on our previously implemented methods:"""
 
 # ╔═╡ 1f1af0d4-3c5d-4e38-9eda-c307100bd61f
 md"""
-- `C = `: $(@bind C Slider(10 .^ (-4:0.2:1); show_value=true, default=10^0.8))
-- `Ndecay = `: $(@bind Ndecay Slider(15:5:50; show_value=true, default=25))
+- `C = `: $(@bind C Slider([1e-4, 1e-3, 1e-2, 1e-1, 1, 5, 10]; default=5, show_value=true))
+- `Ndecay = `: $(@bind Ndecay Slider(15:5:50; show_value=true, default=20))
 """
 
 # ╔═╡ 85b121ef-9f4c-483e-a04b-a49c1c6c4624
