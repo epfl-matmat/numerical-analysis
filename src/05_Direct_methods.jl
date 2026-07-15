@@ -1188,7 +1188,7 @@ linear problems with more than around $n \simeq 60000$ unknows cannot be treated
 md"""
 !!! warning "Examples of full matrices"
 	- **Generic matrices are full.** If we can say nothing specific about a matrix, all its entries $A_{ij}$ may be non-zero. Thus we have $n^2 = O(n^2)$ non-zero entries and the matrix is full.
-	- **Upper-triangular matrices are full.** For an upper-triangular matrix all entries $A_{ij}$ with $i<j$ are zero. The first row thus has all $n$ entries, the second $n-1$ and the last just $1$. We obtain $\sum_{i=1}^n (n-i+1) = n (n+1) + \sum_{i=1}^n i = \frac{n (n+1)}{2} = O(n^2)$. The same holds for lower-triangular matrices.
+	- **Upper-triangular matrices are full.** For an upper-triangular matrix all entries $A_{ij}$ with $i<j$ are zero. The first row thus has all $n$ entries, the second $n-1$ and the last just $1$. We obtain $\sum_{i=1}^n (n-i+1) = n (n+1) - \sum_{i=1}^n i = \frac{n (n+1)}{2} = O(n^2)$. The same holds for lower-triangular matrices.
 	- **Symmetric matrices are full.** If a matrix is symmetric, then we can get away storing only the the upper triangle. Same as above, the storage cost is $O(n^2)$.
 """
 
